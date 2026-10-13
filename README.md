@@ -58,7 +58,7 @@ Cliff detection is deliberately not exposed.
 - Several robots on one Home Assistant; every service takes an optional serial.
 - An on-demand robot camera snapshot (see below).
 - Admin-only raw request services for protocol discovery.
-- English, German, Spanish, French, Italian and Polish.
+- Interface in English, German, Spanish, French, Italian and Polish.
 
 Rooms and schedules are read when the integration starts. Reload it after
 editing the map or adding a schedule in the app.
