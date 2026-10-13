@@ -205,8 +205,8 @@
         "state": {
           "sweep": "Aspiration uniquement",
           "mop": "Lavage uniquement",
-          "sweepAndMop": "Aspirer et laver",
-          "sweepThenMop": "Aspirer puis laver"
+          "sweep_and_mop": "Aspirer et laver",
+          "sweep_then_mop": "Aspirer puis laver"
         }
       },
       "room_settings": {

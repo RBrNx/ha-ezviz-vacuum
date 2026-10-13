@@ -205,8 +205,8 @@
         "state": {
           "sweep": "Tylko odkurzanie",
           "mop": "Tylko mopowanie",
-          "sweepAndMop": "Odkurzanie i mopowanie",
-          "sweepThenMop": "Najpierw odkurzanie, potem mopowanie"
+          "sweep_and_mop": "Odkurzanie i mopowanie",
+          "sweep_then_mop": "Najpierw odkurzanie, potem mopowanie"
         }
       },
       "room_settings": {

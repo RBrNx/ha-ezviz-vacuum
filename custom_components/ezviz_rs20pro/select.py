@@ -32,6 +32,17 @@ class Rs20SelectDescription(SelectEntityDescription):
 
     setting: Setting
     entity_category: EntityCategory | None = EntityCategory.CONFIG
+    values: dict[str, str] | None = None
+    """Option -> robot value, when the robot's values are not valid option keys."""
+
+
+# Home Assistant option keys must be snake_case; the robot uses camelCase.
+CLEAN_MODE_OPTIONS: Final = {
+    "sweep": "sweep",
+    "mop": "mop",
+    "sweepAndMop": "sweep_and_mop",
+    "sweepThenMop": "sweep_then_mop",
+}
 
 
 SELECTS: Final[tuple[Rs20SelectDescription, ...]] = (
@@ -46,7 +57,8 @@ SELECTS: Final[tuple[Rs20SelectDescription, ...]] = (
         key="cleaning_mode",
         translation_key="cleaning_mode",
         icon="mdi:broom",
-        options=list(CLEAN_MODES),
+        options=[CLEAN_MODE_OPTIONS[mode] for mode in CLEAN_MODES],
+        values={option: mode for mode, option in CLEAN_MODE_OPTIONS.items()},
         setting=ScalarSetting("SweeperCleanTask", "SweepMopMode"),
         entity_category=None,
     ),
@@ -136,8 +148,12 @@ class Rs20SettingSelect(Rs20SettingEntity, SelectEntity):
     def current_option(self) -> str | None:
         """Return the reported value when it is a known option."""
         value = self.setting_value
+        values = self.entity_description.values
+        if values:
+            value = next((key for key, item in values.items() if item == value), None)
         return value if value in self.options else None
 
     async def async_select_option(self, option: str) -> None:
         """Send the chosen value to the robot."""
-        await self.async_write_setting(option)
+        values = self.entity_description.values
+        await self.async_write_setting(values.get(option, option) if values else option)

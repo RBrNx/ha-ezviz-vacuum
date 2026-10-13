@@ -205,8 +205,8 @@
         "state": {
           "sweep": "Solo aspirar",
           "mop": "Solo fregar",
-          "sweepAndMop": "Aspirar y fregar",
-          "sweepThenMop": "Aspirar y después fregar"
+          "sweep_and_mop": "Aspirar y fregar",
+          "sweep_then_mop": "Aspirar y después fregar"
         }
       },
       "room_settings": {

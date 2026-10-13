@@ -205,8 +205,8 @@
         "state": {
           "sweep": "Nur saugen",
           "mop": "Nur wischen",
-          "sweepAndMop": "Saugen und wischen",
-          "sweepThenMop": "Erst saugen, dann wischen"
+          "sweep_and_mop": "Saugen und wischen",
+          "sweep_then_mop": "Erst saugen, dann wischen"
         }
       },
       "room_settings": {

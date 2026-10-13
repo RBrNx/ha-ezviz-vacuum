@@ -205,8 +205,8 @@
         "state": {
           "sweep": "Vacuum only",
           "mop": "Mop only",
-          "sweepAndMop": "Vacuum and mop",
-          "sweepThenMop": "Vacuum, then mop"
+          "sweep_and_mop": "Vacuum and mop",
+          "sweep_then_mop": "Vacuum, then mop"
         }
       },
       "room_settings": {
