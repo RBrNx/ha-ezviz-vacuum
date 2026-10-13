@@ -199,6 +199,9 @@
       },
       "mop_drying_time": {
         "name": "Mop drying time"
+      },
+      "dust_collection_frequency": {
+        "name": "Empty dust bin every N cleanings"
       }
     },
     "time": {

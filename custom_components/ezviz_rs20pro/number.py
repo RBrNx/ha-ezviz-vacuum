@@ -60,6 +60,16 @@ NUMBERS: Final[tuple[Rs20NumberDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         setting=FieldSetting("SweeperCleanTask", "DryMopDuration", "duration"),
     ),
+    Rs20NumberDescription(
+        key="dust_collection_frequency",
+        translation_key="dust_collection_frequency",
+        icon="mdi:delete-clock-outline",
+        native_min_value=1,
+        native_max_value=10,
+        setting=FieldSetting(
+            "SweeperCleanTask", "DustCollectionCfg", "frequencyAfterClean"
+        ),
+    ),
 )
 
 
