@@ -19,8 +19,23 @@ The EZVIZ app (7.6.3) picks a control plugin from the robot's sub-category:
 | RS2 manufacturer variant | `DeviceRS2ODM` | 2.0.1 |
 
 The app treats RE3 Plus, RE4, RE4P, RE5 and RE5P as OEM devices. "RS20 Hair
-Free" exists as a sub-category in the app, but no product of that name could be
-found for sale.
+Free" and "RE3 Plus" exist as sub-categories in the app, but no products of
+those names could be found. EZVIZ's current lineup is the RE7 Edge, RS20 Max,
+RS20 Pro, RS2, RE5S Plus, RE4C Plus, RE5 Plus, RE4 Plus, RE5, RE4 and RE4C.
+
+## What the integration does for each
+
+- **CleanControl / CleanCtrl:** sends `CleanControl`; if the robot answers that
+  the function is not declared (`设备功能未报备`), it switches to `CleanCtrl`
+  and remembers that for the robot.
+- **RechargeControl / RechargeCtrl:** the same, with
+  `{"action": "start", "source": "mobile"}` for `RechargeCtrl`.
+- **Suction and water:** sends `SetFanModeOfStdClean` /
+  `SetWaterQuantityOfStdClean`; on the same answer it switches to
+  `SetGlobalCleanCfg` built from the robot's `GlobalCleanCfg`, as the RE7 Edge
+  app does. The current value is read from `GlobalCleanCfg` when the robot has
+  no `StdCleanCfg`.
+- Settings the robot does not report are not created.
 
 ## Commands compared with the RS20 Max
 

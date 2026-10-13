@@ -1,8 +1,11 @@
-EZVIZ RS20 Pro custom integration
+EZVIZ Robot Vacuum for Home Assistant
+Copyright 2026 Stefan Ciubotaru
+
+Based on the EZVIZ RS20 Pro custom integration
 Copyright 2026 Dmgerr
 
 The camera transport compatibility code in
-custom_components/ezviz_rs20pro/vtm_stream.py is derived from pyEzvizApi:
+custom_components/ezviz_vacuum/vtm_stream.py is derived from pyEzvizApi:
 https://github.com/RenierM26/pyEzvizApi
 Copyright its respective contributors, licensed under Apache-2.0.
 

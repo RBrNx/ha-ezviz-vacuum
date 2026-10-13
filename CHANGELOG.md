@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.0.0
+
+The integration is now **EZVIZ Robot Vacuum** (`ezviz_vacuum`) and supports
+EZVIZ's current robots. Upgrading from 0.x needs the integration to be added
+again; see the README.
+
+- Renamed from `ezviz_rs20pro` / EZVIZ RS20 to `ezviz_vacuum` / EZVIZ Robot
+  Vacuum; services are now `ezviz_vacuum.*`. The repository moved to
+  `stefanelul2000/ha-ezviz-vacuum`.
+- Support for the RS20 Pro, RS2, RE4, RE4C, RE4 Plus, RE4C Plus, RE5, RE5 Plus,
+  RE5S Plus and RE7 Edge, built from the EZVIZ app's own plugins (untested).
+  Robots that use different command names (some RS2 units, the RE7 Edge) are
+  detected and handled automatically.
+- A robot named in the EZVIZ app keeps that name in Home Assistant; only the
+  default model name gets the "EZVIZ" prefix.
+- Cleaning mode options are now `sweep`, `mop`, `sweep_and_mop` and
+  `sweep_then_mop`, as Home Assistant requires.
+- Issue forms for model reports, bugs and feature requests.
+- GitHub checks: HACS, Hassfest, Ruff, tests on Python 3.13 and 3.14,
+  translation keys, and a release zip.
+
 ## 0.7.0
 
 - Live map: a new **Map** image entity draws the active map with coloured,

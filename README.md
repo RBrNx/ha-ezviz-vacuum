@@ -1,13 +1,13 @@
-# EZVIZ RS20 for Home Assistant
+# EZVIZ Robot Vacuum for Home Assistant
 
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories)
-[![Version](https://img.shields.io/github/v/release/stefanelul2000/ha-ezviz-rs20)](https://github.com/stefanelul2000/ha-ezviz-rs20/releases)
+[![Version](https://img.shields.io/github/v/release/stefanelul2000/ha-ezviz-vacuum)](https://github.com/stefanelul2000/ha-ezviz-vacuum/releases)
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2026.7%2B-18BCF2)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
-[![Tests](https://github.com/stefanelul2000/ha-ezviz-rs20/actions/workflows/tests.yml/badge.svg)](https://github.com/stefanelul2000/ha-ezviz-rs20/actions/workflows/tests.yml)
-[![Validate](https://github.com/stefanelul2000/ha-ezviz-rs20/actions/workflows/validate.yml/badge.svg)](https://github.com/stefanelul2000/ha-ezviz-rs20/actions/workflows/validate.yml)
+[![Tests](https://github.com/stefanelul2000/ha-ezviz-vacuum/actions/workflows/tests.yml/badge.svg)](https://github.com/stefanelul2000/ha-ezviz-vacuum/actions/workflows/tests.yml)
+[![Validate](https://github.com/stefanelul2000/ha-ezviz-vacuum/actions/workflows/validate.yml/badge.svg)](https://github.com/stefanelul2000/ha-ezviz-vacuum/actions/workflows/validate.yml)
 
-Full control of an **EZVIZ RS20** robot vacuum and its base station from Home
+Full control of an **EZVIZ robot vacuum** and its base station from Home
 Assistant: a live map, room cleaning, every cleaning setting the app offers,
 consumables and history.
 
@@ -16,8 +16,8 @@ consumables and history.
   <br><sub>The live map, drawn by the integration (example floor plan).</sub>
 </p>
 
-Developed and tested with an **RS20 Max**. Other EZVIZ robots are detected
-and will often work, but are untested; see [Supported models](#supported-models).
+Developed and tested with an **RS20 Max**. The other current EZVIZ robots are
+supported too, but untested; see [Supported models](#supported-models).
 
 > [!NOTE]
 > EZVIZ does not publish an API for its robots. This integration talks to the
@@ -43,18 +43,23 @@ and will often work, but are untested; see [Supported models](#supported-models)
 | Model | Status | Notes |
 |---|---|---|
 | RS20 Max | ✅ Tested | Firmware V2.0.2417. Everything in this README. |
-| RS20 Pro | 🟡 Very likely | Its app plugin uses the same commands as the RS20 Max. |
-| RS2, RE4, RE5 | 🟡 Partly | Same cleaning and suction commands; no base-station or do-not-disturb settings. |
-| RE7 Edge | 🟠 Partly | Start, stop and dock match; suction and water use different commands, not supported yet. |
-| RS2 (manufacturer variant) | 🟠 Partly | Uses differently named start and dock commands, not supported yet. |
-| RE3 Plus | ❓ Unknown | EZVIZ did not return an app plugin for it. |
+| RS20 Pro | 🟡 Untested | Same commands as the RS20 Max; very likely works fully. |
+| RS2 | 🟡 Untested | Same cleaning, docking, room and suction commands. No base-station or do-not-disturb settings. |
+| RE4, RE4C, RE4 Plus, RE4C Plus | 🟡 Untested | As the RS2. |
+| RE5, RE5 Plus, RE5S Plus | 🟡 Untested | As the RS2. |
+| RE7 Edge | 🟡 Untested | Suction and water use the RE7's own command, which the integration switches to automatically. No mop-washing or dust settings. |
+
+Some RS2 units use differently named start and dock commands; the integration
+detects this and switches automatically. Older robots such as the RC3 Plus use
+a different app plugin and are unknown.
 
 Settings only appear when the robot reports them, so a model without, say,
 carpet settings simply won't get those switches. The comparison behind this
-table is in [docs/models.md](docs/models.md).
+table is in [docs/models.md](docs/models.md). Untested means the integration was
+built from what the EZVIZ app sends to that model, without the robot itself.
 
 **Have a robot that isn't marked tested?** Please
-[report how it works](https://github.com/stefanelul2000/ha-ezviz-rs20/issues/new?template=model_report.yml).
+[report how it works](https://github.com/stefanelul2000/ha-ezviz-vacuum/issues/new?template=model_report.yml).
 A few minutes with the form tells us what to fix for your model.
 
 ## Features
@@ -128,25 +133,41 @@ Cliff detection is deliberately not exposed.
 ### HACS
 
 1. In HACS, open the three-dot menu and choose **Custom repositories**.
-2. Add `https://github.com/stefanelul2000/ha-ezviz-rs20` with the type
+2. Add `https://github.com/stefanelul2000/ha-ezviz-vacuum` with the type
    **Integration**.
-3. Download **EZVIZ RS20**, then restart Home Assistant.
+3. Download **EZVIZ Robot Vacuum**, then restart Home Assistant.
 4. Go to **Settings → Devices & services → Add integration** and choose
-   **EZVIZ RS20**. With several robots on the account, pick one and repeat for
+   **EZVIZ Robot Vacuum**. With several robots on the account, pick one and repeat for
    the others.
 
 ### Manually
 
-Copy `custom_components/ezviz_rs20pro` into the `custom_components` folder of
+Copy `custom_components/ezviz_vacuum` into the `custom_components` folder of
 your Home Assistant configuration, restart, and add the integration as in
 step 4.
 
-### Coming from the original integration
+### Upgrading from 0.x (EZVIZ RS20)
 
-The integration domain is still `ezviz_rs20pro`, so it replaces
-[Dmgerr/home-assistant-ezviz-rs20-pro](https://github.com/Dmgerr/home-assistant-ezviz-rs20-pro)
-in place. Remove that repository from HACS, add this one and download it.
-Existing entities are kept.
+Version 1.0 renamed the integration from `ezviz_rs20pro` to `ezviz_vacuum`, so
+Home Assistant treats it as a new integration:
+
+1. Note any rooms you mapped to areas.
+2. Delete the **EZVIZ RS20** integration under **Settings → Devices &
+   services**, then remove it from HACS.
+3. Install **EZVIZ Robot Vacuum** as above and add it again.
+4. Map the rooms to areas again.
+
+Entity IDs come out the same as before, so dashboards and automations keep
+working. Services are now called `ezviz_vacuum.*`.
+
+### Naming several robots
+
+The device takes the name the robot has in the EZVIZ app. Give each robot its
+own name there, such as "Upstairs" and "Downstairs", before adding the
+integration, and the entities follow: `vacuum.upstairs`,
+`vacuum.downstairs`. A robot still called by its model name becomes "EZVIZ
+RS20 Max". Every entity is tied to the robot's serial number, so two identical
+robots never clash.
 
 ## Room cleaning
 
@@ -209,19 +230,19 @@ show_state: false
 - **Refusals.** If the robot refuses a command, for example while it is busy,
   the reason is shown in English instead of the robot's Chinese message.
 - **Camera privacy.** The camera opens for a few seconds only when
-  `ezviz_rs20pro.refresh_camera_snapshot` is called. One frame is kept in
+  `ezviz_vacuum.refresh_camera_snapshot` is called. One frame is kept in
   memory; nothing is recorded or written to disk.
 
 ## Services
 
 | Service | What it does |
 |---|---|
-| `ezviz_rs20pro.refresh_camera_snapshot` | Opens the camera briefly and stores one frame in memory. |
-| `ezviz_rs20pro.inspect` | Returns the device data with credentials removed, for bug reports. |
-| `ezviz_rs20pro.map_diagnostics` | Summarises the map layers without returning the map itself. |
-| `ezviz_rs20pro.camera_diagnostics` | Tests the camera connection without saving an image. |
-| `ezviz_rs20pro.feature_request` | Admin only. Raw request to the robot's cloud feature endpoint. |
-| `ezviz_rs20pro.api_request` | Admin only. Raw request to the EZVIZ API. |
+| `ezviz_vacuum.refresh_camera_snapshot` | Opens the camera briefly and stores one frame in memory. |
+| `ezviz_vacuum.inspect` | Returns the device data with credentials removed, for bug reports. |
+| `ezviz_vacuum.map_diagnostics` | Summarises the map layers without returning the map itself. |
+| `ezviz_vacuum.camera_diagnostics` | Tests the camera connection without saving an image. |
+| `ezviz_vacuum.feature_request` | Admin only. Raw request to the robot's cloud feature endpoint. |
+| `ezviz_vacuum.api_request` | Admin only. Raw request to the EZVIZ API. |
 
 The two raw request services exist for protocol discovery. A wrong write can
 change robot settings, so use them with care.
@@ -234,7 +255,7 @@ change robot settings, so use them with care.
 - **A room is missing or wrongly named:** reload the integration after
   changing the map in the app.
 - **Reporting a problem:** use the
-  [bug report form](https://github.com/stefanelul2000/ha-ezviz-rs20/issues/new?template=bug_report.yml).
+  [bug report form](https://github.com/stefanelul2000/ha-ezviz-vacuum/issues/new?template=bug_report.yml).
   It asks for your versions and the output of **Inspect robot**, which removes
   credentials; read it before posting anyway.
 
