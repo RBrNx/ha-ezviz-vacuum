@@ -115,6 +115,9 @@
       },
       "battery_cycles": {
         "name": "Battery charge cycles"
+      },
+      "dirty_water_filter": {
+        "name": "Dirty water tank filter"
       }
     },
     "switch": {

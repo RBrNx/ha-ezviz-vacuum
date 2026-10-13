@@ -172,6 +172,15 @@ SENSORS: Final = (
         icon="mdi:radar",
     ),
     Rs20SensorDescription(
+        key="dirty_water_filter",
+        translation_key="dirty_water_filter",
+        source_key="SewageTankFilterWorkingTime",
+        remaining_percent=True,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:filter-outline",
+    ),
+    Rs20SensorDescription(
         key="cleaning_solution",
         translation_key="cleaning_solution",
         source_key="CleaningSolutionStatus",
