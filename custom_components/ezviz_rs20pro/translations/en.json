@@ -118,6 +118,15 @@
       },
       "dirty_water_filter": {
         "name": "Dirty water tank filter"
+      },
+      "current_task": {
+        "name": "Current task"
+      },
+      "task_duration": {
+        "name": "Task duration"
+      },
+      "relocation_failures": {
+        "name": "Relocation failures"
       }
     },
     "switch": {
@@ -261,6 +270,14 @@
       },
       "off_peak_charging_end": {
         "name": "Off-peak charging end"
+      }
+    },
+    "binary_sensor": {
+      "on_base_station": {
+        "name": "On base station"
+      },
+      "do_not_disturb_active": {
+        "name": "Do not disturb active"
       }
     }
   },

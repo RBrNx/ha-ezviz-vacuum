@@ -29,6 +29,7 @@ from .coordinator import EzvizRs20ProCoordinator, get_source_entry
 from .helpers import feature
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.IMAGE,
     Platform.NUMBER,
     Platform.SELECT,

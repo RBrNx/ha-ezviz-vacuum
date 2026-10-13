@@ -17,6 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfArea, UnitOfTime
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import robot
 from .coordinator import EzvizRs20ProCoordinator
 from .entity import Rs20Entity
 from .helpers import (
@@ -49,6 +50,11 @@ def _permanent(field: str) -> Callable[[Data], Any]:
         return permanent.get(field) if isinstance(permanent, Mapping) else None
 
     return read
+
+
+def _task(field: str) -> Callable[[Data], Any]:
+    """Read a field of the live task."""
+    return lambda data: robot.task_data(data.get("task")).get(field)
 
 
 def _battery_cycles(data: Data) -> Any:
@@ -116,6 +122,32 @@ SENSORS: Final = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:battery-sync-outline",
+    ),
+    Rs20SensorDescription(
+        key="current_task",
+        translation_key="current_task",
+        value_fn=lambda data: robot.current_task(data.get("task")) or None,
+        attributes_fn=lambda data: {
+            "previous_task": robot.task_data(data.get("task")).get("preTask")
+        },
+        icon="mdi:robot-vacuum-variant",
+    ),
+    Rs20SensorDescription(
+        key="task_duration",
+        translation_key="task_duration",
+        value_fn=_task("taskDuration"),
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        icon="mdi:timer-sand",
+    ),
+    Rs20SensorDescription(
+        key="relocation_failures",
+        translation_key="relocation_failures",
+        value_fn=_task("relocationFailCount"),
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:map-marker-question-outline",
     ),
     Rs20SensorDescription(
         key="main_brush",
