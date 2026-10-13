@@ -245,6 +245,19 @@ def _normalize_station_value(value: Any) -> str | None:
     }
     return aliases.get(normalized, normalized)
 
+def _consumable_attributes(
+    block: Mapping[str, Any] | None, hours: bool
+) -> dict[str, Any] | None:
+    """Return remaining and used life (hours for wear parts)."""
+    if block is None:
+        return None
+    suffix = "_hours" if hours else ""
+    return {
+        f"remaining{suffix}": block.get("rest"),
+        f"used{suffix}": block.get("used"),
+    }
+
+
 async def async_setup_entry(
     hass: Any,
     entry: ConfigEntry[EzvizRs20ProCoordinator],
@@ -309,6 +322,14 @@ class Rs20Sensor(Rs20Entity, SensorEntity):
         """Expose extra details and the original vendor station state."""
         if self.entity_description.attributes_fn is not None:
             return self.entity_description.attributes_fn(self.coordinator.data)
+        if self.entity_description.remaining_percent:
+            return _consumable_attributes(
+                _find_mapping(
+                    self.coordinator.data["device"],
+                    self.entity_description.source_key,
+                ),
+                self.entity_description.source_key.endswith("WorkingTime"),
+            )
         if self.entity_description.value_field is None:
             return None
         block = _find_mapping(
