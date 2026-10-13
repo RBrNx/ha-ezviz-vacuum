@@ -223,6 +223,9 @@
       },
       "dust_collection_frequency": {
         "name": "Empty dust bin every N cleanings"
+      },
+      "voice_volume": {
+        "name": "Voice volume"
       }
     },
     "time": {

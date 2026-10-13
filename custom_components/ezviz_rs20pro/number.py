@@ -11,13 +11,19 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, UnitOfTime
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import robot
 from .coordinator import EzvizRs20ProCoordinator
 from .entity import Rs20SettingEntity
-from .settings import FieldSetting, MapCleanSetting, RoomCleanSetting, Setting
+from .settings import (
+    FieldSetting,
+    MapCleanSetting,
+    RoomCleanSetting,
+    ScalarSetting,
+    Setting,
+)
 
 MAX_PASSES = 3
 
@@ -69,6 +75,17 @@ NUMBERS: Final[tuple[Rs20NumberDescription, ...]] = (
         setting=FieldSetting(
             "SweeperCleanTask", "DustCollectionCfg", "frequencyAfterClean"
         ),
+    ),
+    Rs20NumberDescription(
+        key="voice_volume",
+        translation_key="voice_volume",
+        icon="mdi:volume-high",
+        native_min_value=0,
+        native_max_value=100,
+        native_step=10,
+        native_unit_of_measurement=PERCENTAGE,
+        mode=NumberMode.SLIDER,
+        setting=ScalarSetting("SoundSetting", "PromptToneVolume"),
     ),
 )
 
