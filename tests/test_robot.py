@@ -56,5 +56,16 @@ class ModeTests(unittest.TestCase):
         self.assertIsNone(robot.clean_mode(device))
 
 
+class DeviceTests(unittest.TestCase):
+    """Device registry details."""
+
+    def test_firmware_comes_from_device_infos(self) -> None:
+        details = robot.device_details(fixtures.device())
+        self.assertEqual(details["sw_version"], "V2.0.2417 build 250331")
+
+    def test_missing_firmware(self) -> None:
+        self.assertIsNone(robot.device_details({})["sw_version"])
+
+
 if __name__ == "__main__":
     unittest.main()

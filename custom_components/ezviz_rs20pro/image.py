@@ -6,12 +6,10 @@ from typing import Any
 
 from homeassistant.components.image import ImageEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import EzvizRs20ProCoordinator
+from .entity import Rs20Entity
 
 
 async def async_setup_entry(
@@ -23,26 +21,15 @@ async def async_setup_entry(
     async_add_entities([EzvizRs20ProCameraImage(hass, entry.runtime_data)])
 
 
-class EzvizRs20ProCameraImage(
-    CoordinatorEntity[EzvizRs20ProCoordinator], ImageEntity
-):
+class EzvizRs20ProCameraImage(Rs20Entity, ImageEntity):
     """Last image captured after an explicit service call."""
 
-    _attr_has_entity_name = True
     _attr_translation_key = "camera_snapshot"
     _attr_content_type = "image/jpeg"
 
     def __init__(self, hass: Any, coordinator: EzvizRs20ProCoordinator) -> None:
         ImageEntity.__init__(self, hass)
-        CoordinatorEntity.__init__(self, coordinator)
-        serial = coordinator.data["serial"]
-        self._attr_unique_id = f"{serial}_camera_snapshot"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, serial)},
-            manufacturer="EZVIZ",
-            model="RS20 Pro",
-            name="EZVIZ RS20 Pro",
-        )
+        Rs20Entity.__init__(self, coordinator, "camera_snapshot")
 
     @property
     def image_last_updated(self):

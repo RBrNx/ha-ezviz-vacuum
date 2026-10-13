@@ -14,12 +14,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfArea
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import EzvizRs20ProCoordinator
+from .entity import Rs20Entity
 from .helpers import find_mapping as _find_mapping, find_scalar as _find_scalar
 
 
@@ -195,10 +193,9 @@ async def async_setup_entry(
     )
 
 
-class Rs20Sensor(CoordinatorEntity[EzvizRs20ProCoordinator], SensorEntity):
+class Rs20Sensor(Rs20Entity, SensorEntity):
     """A sensor sourced from the RS20 feature report."""
 
-    _attr_has_entity_name = True
     entity_description: Rs20SensorDescription
 
     def __init__(
@@ -206,16 +203,8 @@ class Rs20Sensor(CoordinatorEntity[EzvizRs20ProCoordinator], SensorEntity):
         coordinator: EzvizRs20ProCoordinator,
         description: Rs20SensorDescription,
     ) -> None:
-        super().__init__(coordinator)
+        super().__init__(coordinator, description.key)
         self.entity_description = description
-        serial = coordinator.data["serial"]
-        self._attr_unique_id = f"{serial}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, serial)},
-            manufacturer="EZVIZ",
-            model="RS20 Pro",
-            name="EZVIZ RS20 Pro",
-        )
 
     @property
     def native_value(self) -> int | float | str | None:

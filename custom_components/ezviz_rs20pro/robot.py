@@ -135,3 +135,15 @@ def clean_mode(device: Mapping[str, Any] | None) -> str | None:
     """Return the configured sweep/mop mode, if it is a known value."""
     mode = feature(device, "SweeperCleanTask", "SweepMopMode")
     return mode if mode in CLEAN_MODES else None
+
+
+def device_details(device: Mapping[str, Any] | None) -> dict[str, str | None]:
+    """Return model, name and firmware for the device registry."""
+    info = device.get("deviceInfos") if isinstance(device, Mapping) else None
+    info = info if isinstance(info, Mapping) else {}
+    version = info.get("version")
+    return {
+        "model": "RS20 Pro",
+        "name": "EZVIZ RS20 Pro",
+        "sw_version": str(version) if version else None,
+    }

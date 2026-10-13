@@ -11,12 +11,10 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import EzvizRs20ProCoordinator
+from .entity import Rs20Entity
 from . import robot
 from .helpers import find_value as _find_value
 
@@ -38,10 +36,9 @@ async def async_setup_entry(
     async_add_entities([EzvizRs20ProVacuum(entry.runtime_data)])
 
 
-class EzvizRs20ProVacuum(CoordinatorEntity[EzvizRs20ProCoordinator], StateVacuumEntity):
+class EzvizRs20ProVacuum(Rs20Entity, StateVacuumEntity):
     """EZVIZ RS20 Pro vacuum entity."""
 
-    _attr_has_entity_name = True
     _attr_name = None
     _attr_supported_features = (
         VacuumEntityFeature.STATE
@@ -53,18 +50,7 @@ class EzvizRs20ProVacuum(CoordinatorEntity[EzvizRs20ProCoordinator], StateVacuum
     )
 
     def __init__(self, coordinator: EzvizRs20ProCoordinator) -> None:
-        super().__init__(coordinator)
-        serial = coordinator.data["serial"]
-        self._attr_unique_id = f"{serial}_vacuum"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, serial)},
-            manufacturer="EZVIZ",
-            model="RS20 Pro",
-            name="EZVIZ RS20 Pro",
-            sw_version=str(
-                _find_value(coordinator.data["device"], ("version",)) or ""
-            ),
-        )
+        super().__init__(coordinator, "vacuum")
 
     @property
     def activity(self) -> VacuumActivity:

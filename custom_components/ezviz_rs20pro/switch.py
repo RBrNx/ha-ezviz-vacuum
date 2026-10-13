@@ -7,12 +7,10 @@ from typing import Any, Final
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import EzvizRs20ProCoordinator
+from .entity import Rs20Entity
 from .helpers import find_mapping as _find_mapping
 
 
@@ -71,12 +69,9 @@ async def async_setup_entry(
     )
 
 
-class Rs20StationSwitch(
-    CoordinatorEntity[EzvizRs20ProCoordinator], SwitchEntity
-):
+class Rs20StationSwitch(Rs20Entity, SwitchEntity):
     """A configurable RS20 Pro station feature."""
 
-    _attr_has_entity_name = True
     entity_description: Rs20StationSwitchDescription
 
     def __init__(
@@ -84,16 +79,8 @@ class Rs20StationSwitch(
         coordinator: EzvizRs20ProCoordinator,
         description: Rs20StationSwitchDescription,
     ) -> None:
-        super().__init__(coordinator)
+        super().__init__(coordinator, description.key)
         self.entity_description = description
-        serial = coordinator.data["serial"]
-        self._attr_unique_id = f"{serial}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, serial)},
-            manufacturer="EZVIZ",
-            model="RS20 Pro",
-            name="EZVIZ RS20 Pro",
-        )
 
     @property
     def is_on(self) -> bool | None:
