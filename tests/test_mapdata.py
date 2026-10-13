@@ -95,6 +95,8 @@ class RenderTests(unittest.TestCase):
         self.assertIn("<polyline", svg)
         self.assertIn("Bed &amp; Room", svg)
         self.assertIn("<circle", svg)
+        hidden = maprender.render_svg(layers, {}, show_path=False).decode()
+        self.assertNotIn("<polyline", hidden)
 
     def test_no_grid(self) -> None:
         maprender = load("maprender")

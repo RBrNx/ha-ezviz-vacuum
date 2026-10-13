@@ -81,6 +81,7 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.map_image_updated: datetime | None = None
         self.map_error: str | None = None
         self._map_cache: dict[str, tuple[int | None, dict[str, Any]]] = {}
+        self._map_show_path: bool | None = None
         self._map_cache_id: int | None = None
         self.camera_snapshot: bytes | None = None
         self.camera_snapshot_updated: datetime | None = None
@@ -220,6 +221,11 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.logger.debug("Could not read the robot map: %s", err)
         else:
             self.map_error = None
+        # The path of a finished clean is hidden once the robot is docked.
+        show_path = robot.activity(task, self._device) != robot.ACTIVITY_DOCKED
+        if show_path != self._map_show_path:
+            self._map_show_path = show_path
+            changed = True
         if not changed and self.map_image is not None:
             return
 
@@ -229,7 +235,9 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         names = {
             int(room_id): name for room_id, name in robot.rooms(self._device, map_id)
         }
-        image = await self.hass.async_add_executor_job(render_svg, layers, names)
+        image = await self.hass.async_add_executor_job(
+            partial(render_svg, layers, names, show_path=show_path)
+        )
         if image is not None and image != self.map_image:
             self.map_image = image
             self.map_image_updated = dt_util.utcnow()
