@@ -1,0 +1,78 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install Ruff
+        run: pip install ruff
+      - name: Ruff check
+        run: ruff check --output-format=github custom_components tests
+      - name: Ruff format
+        run: ruff format --check custom_components tests
+
+  tests:
+    name: Tests (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Run tests
+        run: python -m unittest discover -s tests -t tests -v
+
+  translations:
+    name: Translations
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Every language has the same keys as English
+        shell: python
+        run: |
+          import json, pathlib, sys
+
+          def keys(node, prefix=""):
+              if isinstance(node, dict):
+                  for key, value in node.items():
+                      yield from keys(value, f"{prefix}{key}.")
+              else:
+                  yield prefix.rstrip(".")
+
+          folder = pathlib.Path("custom_components/ezviz_rs20pro/translations")
+          english = set(keys(json.loads((folder / "en.json").read_text())))
+          failed = False
+          for path in sorted(folder.glob("*.json")):
+              found = set(keys(json.loads(path.read_text())))
+              for key in sorted(english - found):
+                  print(f"::error file={path}::missing {key}")
+                  failed = True
+              for key in sorted(found - english):
+                  print(f"::error file={path}::extra {key}")
+                  failed = True
+          sys.exit(1 if failed else 0)

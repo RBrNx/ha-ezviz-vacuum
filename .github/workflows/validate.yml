@@ -2,15 +2,22 @@ name: Validate
 
 on:
   push:
+    branches: [main]
   pull_request:
   schedule:
-    - cron: "0 0 * * *"
+    - cron: "0 3 * * 1"
   workflow_dispatch:
 
-permissions: {}
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  validate-hacs:
+  hacs:
+    name: HACS
     runs-on: ubuntu-latest
     steps:
       - name: HACS validation
@@ -19,21 +26,9 @@ jobs:
           category: integration
 
   hassfest:
+    name: Hassfest
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
       - name: Hassfest validation
         uses: home-assistant/actions/hassfest@master
-
-  tests:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Run adapter tests
-        run: python -m unittest discover -s tests -t tests -v
