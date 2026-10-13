@@ -172,7 +172,7 @@ async def async_setup_entry(
             entries = hass.config_entries.async_entries(DOMAIN)
             runtime = getattr(entries[0], "runtime_data", None) if entries else None
             if not isinstance(runtime, EzvizRs20ProCoordinator):
-                raise RuntimeError("EZVIZ RS20 integration is not loaded")
+                raise HomeAssistantError("EZVIZ RS20 integration is not loaded")
             ffmpeg = hass.data.get("ffmpeg")
             ffmpeg_path = str(getattr(ffmpeg, "binary", "ffmpeg"))
             await runtime.async_refresh_camera_snapshot(ffmpeg_path)
