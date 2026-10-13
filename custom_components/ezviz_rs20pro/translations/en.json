@@ -3,17 +3,25 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect EZVIZ RS20 Pro",
-        "description": "This integration reuses the active session of the official EZVIZ integration. Leave the serial number empty to discover an RS20 Pro automatically.",
+        "title": "Connect an EZVIZ robot vacuum",
+        "description": "This integration reuses the active session of the official EZVIZ integration. Choose the EZVIZ account the robot belongs to.",
         "data": {
-          "source_entry_id": "EZVIZ account",
-          "serial": "Serial number (optional)"
+          "source_entry_id": "EZVIZ account"
+        }
+      },
+      "robot": {
+        "title": "Choose the robot",
+        "description": "The account has several robot vacuums. Choose the one to add; repeat the setup to add the others.",
+        "data": {
+          "serial": "Robot"
         }
       }
     },
     "abort": {
-      "already_configured": "EZVIZ RS20 Pro is already configured.",
-      "ezviz_not_configured": "Set up the official EZVIZ integration first."
+      "already_configured": "This robot is already configured.",
+      "ezviz_not_configured": "Set up the official EZVIZ integration first.",
+      "ezviz_not_loaded": "The official EZVIZ integration is not loaded or could not list devices. Reload it and try again.",
+      "no_robots": "No robot vacuum that is not already configured was found on this EZVIZ account."
     }
   },
   "entity": {
@@ -112,19 +120,43 @@
   "services": {
     "inspect": {
       "name": "Inspect RS20 Pro",
-      "description": "Returns sanitized device data for protocol diagnostics."
+      "description": "Returns sanitized device data for protocol diagnostics.",
+      "fields": {
+        "serial": {
+          "name": "Robot serial",
+          "description": "Serial number of the robot. Leave empty to use the first configured robot."
+        }
+      }
     },
     "map_diagnostics": {
       "name": "Inspect RS20 Pro map",
-      "description": "Tests read-only map and route access without controlling the robot."
+      "description": "Tests read-only map and route access without controlling the robot.",
+      "fields": {
+        "serial": {
+          "name": "Robot serial",
+          "description": "Serial number of the robot. Leave empty to use the first configured robot."
+        }
+      }
     },
     "camera_diagnostics": {
       "name": "Inspect RS20 Pro camera",
-      "description": "Opens a short transport diagnostic without saving an image."
+      "description": "Opens a short transport diagnostic without saving an image.",
+      "fields": {
+        "serial": {
+          "name": "Robot serial",
+          "description": "Serial number of the robot. Leave empty to use the first configured robot."
+        }
+      }
     },
     "refresh_camera_snapshot": {
       "name": "Capture RS20 Pro snapshot",
-      "description": "Opens the camera briefly, stores one frame in memory and closes the stream."
+      "description": "Opens the camera briefly, stores one frame in memory and closes the stream.",
+      "fields": {
+        "serial": {
+          "name": "Robot serial",
+          "description": "Serial number of the robot. Leave empty to use the first configured robot."
+        }
+      }
     },
     "feature_request": {
       "name": "Send raw feature request",
@@ -157,6 +189,10 @@
         "local_index": {
           "name": "Local index",
           "description": "Resource channel, default 0."
+        },
+        "serial": {
+          "name": "Robot serial",
+          "description": "Serial number of the robot. Leave empty to use the first configured robot."
         }
       }
     },
@@ -179,6 +215,10 @@
         "data": {
           "name": "Form data",
           "description": "Optional form body."
+        },
+        "serial": {
+          "name": "Robot serial",
+          "description": "Serial number of the robot. Leave empty to use the first configured robot."
         }
       }
     }

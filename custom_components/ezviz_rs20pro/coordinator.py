@@ -30,7 +30,7 @@ from .const import (
 )
 
 
-def _find_api(runtime_data: Any) -> Any | None:
+def find_api(runtime_data: Any) -> Any | None:
     """Find the pyezviz client without depending on HA's private data class."""
     candidates = (
         runtime_data,
@@ -74,7 +74,7 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def _api(self) -> Any:
         if self.source_entry.state is not ConfigEntryState.LOADED:
             raise ConfigEntryNotReady("Official EZVIZ integration is not loaded")
-        api = _find_api(getattr(self.source_entry, "runtime_data", None))
+        api = find_api(getattr(self.source_entry, "runtime_data", None))
         if api is None:
             raise ConfigEntryNotReady("No active EZVIZ session found")
         return api
@@ -97,10 +97,17 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if not isinstance(selected, Mapping):
                 raise UpdateFailed(f"Device not found: {selected_serial}")
         else:
+            taken = {
+                str(entry.unique_id).upper()
+                for entry in self.hass.config_entries.async_entries(DOMAIN)
+                if entry.entry_id != self.entry.entry_id and entry.unique_id
+            }
             matches = [
                 (str(serial), payload)
                 for serial, payload in raw.items()
-                if isinstance(payload, Mapping) and robot.is_robot(payload)
+                if isinstance(payload, Mapping)
+                and robot.is_robot(payload)
+                and str(serial).upper() not in taken
             ]
             if not matches:
                 raise UpdateFailed("No EZVIZ robot vacuum found on the account")

@@ -1,9 +1,28 @@
-inspect: {}
-map_diagnostics: {}
-camera_diagnostics: {}
-refresh_camera_snapshot: {}
+inspect:
+  fields:
+    serial:
+      selector:
+        text:
+map_diagnostics:
+  fields:
+    serial:
+      selector:
+        text:
+camera_diagnostics:
+  fields:
+    serial:
+      selector:
+        text:
+refresh_camera_snapshot:
+  fields:
+    serial:
+      selector:
+        text:
 feature_request:
   fields:
+    serial:
+      selector:
+        text:
     method:
       required: true
       selector:
@@ -33,6 +52,9 @@ feature_request:
         text:
 api_request:
   fields:
+    serial:
+      selector:
+        text:
     method:
       required: true
       selector:
