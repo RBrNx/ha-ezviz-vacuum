@@ -34,7 +34,7 @@ without losing entities.
 - Carpet detection, suction boost, extra cleaning and crossing carpets.
 - Mop washing (after an interval or after each room), wash interval and drying
   time; how often the station empties the dust bin.
-- Pet mode, smart dirt detection, enhanced obstacle recognition, debris boost,
+- Pet mode, smart dirt detection, debris boost,
   deep edge cleaning, voice assistant, voice volume and off-peak charging.
 - Station child lock, automatic dust collection, cleaning-solution dosing and
   rotating-brush self-cleaning.

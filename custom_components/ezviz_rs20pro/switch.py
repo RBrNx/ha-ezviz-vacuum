@@ -109,12 +109,6 @@ SWITCHES: Final[tuple[Rs20SwitchDescription, ...]] = (
         setting=_enabled("SweeperMgr", "SmartDirtDetectionCfg"),
     ),
     Rs20SwitchDescription(
-        key="ai_obstacle_detection_boost",
-        translation_key="ai_obstacle_detection_boost",
-        icon="mdi:eye-plus-outline",
-        setting=_enabled("SweeperMgr", "AIDetectionEnhanceCfg"),
-    ),
-    Rs20SwitchDescription(
         key="debris_boost",
         translation_key="debris_boost",
         icon="mdi:grain",

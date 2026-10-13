@@ -178,9 +178,6 @@
       "smart_dirt_detection": {
         "name": "Détection intelligente de la saleté"
       },
-      "ai_obstacle_detection_boost": {
-        "name": "Reconnaissance d'obstacles améliorée"
-      },
       "debris_boost": {
         "name": "Renfort pour gros débris"
       },

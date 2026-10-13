@@ -178,9 +178,6 @@
       "smart_dirt_detection": {
         "name": "Detección inteligente de suciedad"
       },
-      "ai_obstacle_detection_boost": {
-        "name": "Reconocimiento de obstáculos mejorado"
-      },
       "debris_boost": {
         "name": "Refuerzo para suciedad gruesa"
       },

@@ -178,9 +178,6 @@
       "smart_dirt_detection": {
         "name": "Rilevamento intelligente dello sporco"
       },
-      "ai_obstacle_detection_boost": {
-        "name": "Riconoscimento ostacoli avanzato"
-      },
       "debris_boost": {
         "name": "Potenziamento per sporco grossolano"
       },

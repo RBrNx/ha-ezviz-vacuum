@@ -178,9 +178,6 @@
       "smart_dirt_detection": {
         "name": "Intelligente Schmutzerkennung"
       },
-      "ai_obstacle_detection_boost": {
-        "name": "Erweiterte Hinderniserkennung"
-      },
       "debris_boost": {
         "name": "Verstärkung bei grobem Schmutz"
       },
