@@ -1,90 +1,119 @@
-# EZVIZ RS20 Pro for Home Assistant
+# EZVIZ RS20 for Home Assistant
 
-[Polski](README.pl.md) · English
+An unofficial Home Assistant custom integration for **EZVIZ RS20** robot
+vacuums and their base stations. Developed and tested with an RS20 Max
+(`CS-RS20-MAX-TGA`, firmware V2.0.2417); the RS20 Pro and other EZVIZ robots
+that use the same cloud protocol are detected as well.
 
-An unofficial Home Assistant custom integration for the **EZVIZ RS20 Pro**
-robot vacuum and its base station. Tested with model `CS-RS20-PRO-PGA2`.
+This is a fork of
+[Dmgerr/home-assistant-ezviz-rs20-pro](https://github.com/Dmgerr/home-assistant-ezviz-rs20-pro).
+The integration domain is still `ezviz_rs20pro`, so it replaces the original
+without losing entities.
 
-> This project is experimental and uses cloud endpoints observed in the EZVIZ
-> app because EZVIZ does not publish an API for the robot. Firmware or cloud
-> changes may temporarily break individual features.
+> EZVIZ does not publish an API for its robots. The integration uses the cloud
+> endpoints of the EZVIZ app, so firmware or cloud changes can break features.
+> The robot cannot be controlled locally.
 
 ## Features
 
-- Start, pause, stop and return the robot to the dock.
-- Native room selection and room cleaning in Home Assistant.
-- Battery, cleaned area and consumable-life sensors.
-- Base-station status: mop washing, mop drying, dust collection, tank draining
-  and optional water inlet/outlet module detection.
-- Base-station settings: child lock, automatic dust collection, automatic
-  cleaning-solution dosing and rotating-brush self-cleaning.
-- Privacy-first robot-camera snapshot, captured only after an explicit action.
-- Sanitized protocol, map and camera diagnostics.
-- UI translations: English, Polish, German, French, Spanish and Italian.
+**Vacuum**
+- Start, pause, stop and return to the dock, with the state taken from the
+  robot's live task (cleaning, paused, returning, docked, error).
+- Suction level (Quiet, Normal, Strong, Max) from the vacuum entity.
+- Room cleaning through Home Assistant areas, using the robot's active map and
+  the selected cleaning mode.
+- Robot errors in English, with the error code.
 
-Manual station actions that directly start the heater, pump or dust motor are
-not exposed until their protocol is verified. The setting switches above use
-confirmed feature identifiers and do not run a maintenance cycle when the
-integration starts.
+**Settings**
+- Cleaning mode (vacuum only, mop only, vacuum and mop, vacuum then mop),
+  water level and cleaning passes.
+- Per-room suction, water level and passes, and the switch between the same
+  settings for every room and per-room settings.
+- Do not disturb with start and end times, and whether cleaning resumes.
+- Schedules made in the app: turn them on or off and change the start time.
+- Carpet detection, suction boost, extra cleaning and crossing carpets.
+- Mop washing (after an interval or after each room), wash interval and drying
+  time; how often the station empties the dust bin.
+- Pet mode, smart dirt detection, enhanced obstacle recognition, debris boost,
+  deep edge cleaning, voice assistant, voice volume and off-peak charging.
+- Station child lock, automatic dust collection, cleaning-solution dosing and
+  rotating-brush self-cleaning.
+
+Cliff detection is deliberately not exposed.
+
+**Sensors**
+- Battery, Wi-Fi signal, current task, task duration, on base station and do
+  not disturb active.
+- Consumables in percent, with hours left and used: main brush, side brush,
+  HEPA filter, mop pads, dust bag, sensors, dirty water tank filter and
+  cleaning solution.
+- Lifetime totals: cleaned area, cleaning time, cleanings, dust collections,
+  mop washes and battery charge cycles.
+- Last error and last cleaning run (area, duration, mode, how it started and
+  why it stopped), from the robot's own history.
+- Base-station status: mop washing, mop drying, dust collection and tank
+  draining.
+
+**Other**
+- Several robots on one Home Assistant; every service takes an optional serial.
+- An on-demand robot camera snapshot (see below).
+- Admin-only raw request services for protocol discovery.
+- English, German, Spanish, French, Italian and Polish.
+
+Rooms and schedules are read when the integration starts. Reload it after
+editing the map or adding a schedule in the app.
 
 ## Requirements
 
 - Home Assistant 2026.7 or newer.
-- An EZVIZ RS20 Pro already added to the EZVIZ mobile app.
-- The official **EZVIZ** Home Assistant integration configured and loaded.
-- Internet access from Home Assistant to the EZVIZ cloud.
-
-The custom integration reuses the official integration's authenticated session.
-It does not ask for or store another copy of your EZVIZ username or password.
+- The robot added to the EZVIZ app.
+- The official **EZVIZ** integration configured and loaded. This integration
+  reuses its session and does not store your EZVIZ credentials.
 
 ## Install with HACS
 
-1. Open HACS in Home Assistant.
-2. Open **Integrations**, then the three-dot menu and **Custom repositories**.
-3. Add `https://github.com/Dmgerr/home-assistant-ezviz-rs20-pro` as an
-   **Integration** repository.
-4. Find **EZVIZ RS20 Pro**, select **Download**, then restart Home Assistant.
-5. Go to **Settings → Devices & services → Add integration** and choose
-   **EZVIZ RS20 Pro**.
-6. Select the official EZVIZ account entry. Leave the serial number empty for
-   automatic discovery, or enter it when the account has several robots.
+1. In HACS, open the three-dot menu and choose **Custom repositories**.
+2. Add `https://github.com/stefanelul2000/ha-ezviz-rs20` as an
+   **Integration**.
+3. Download **EZVIZ RS20** and restart Home Assistant.
+4. Go to **Settings → Devices & services → Add integration** and choose
+   **EZVIZ RS20**. If the account has several robots, pick one and repeat for
+   the others.
 
-## Manual installation
+To switch from the original repository, remove it from HACS, add this one and
+download it; existing entities are kept.
 
-1. Download the source archive from the latest GitHub release.
-2. Copy `custom_components/ezviz_rs20pro` into Home Assistant's
-   `/config/custom_components/` directory.
-3. Restart Home Assistant and add **EZVIZ RS20 Pro** from the integration UI.
+## Polling
+
+The live task is read every 30 seconds. The full device report, which
+includes settings, consumables and history, is read every 5 minutes and
+whenever the robot starts a different task. Changed settings show up
+immediately.
 
 ## Camera privacy
 
-The image entity contains only the latest in-memory snapshot. The camera stream
-opens for a few seconds only when `ezviz_rs20pro.refresh_camera_snapshot` is
-called and closes immediately afterwards. The integration does not continuously
-record, write snapshots to disk or automatically open the camera.
+The image entity holds only the latest snapshot in memory. The camera opens
+for a few seconds only when `ezviz_rs20pro.refresh_camera_snapshot` is called.
+Nothing is recorded or written to disk.
 
 ## Troubleshooting
 
-- If setup says that EZVIZ is missing, configure or reload the official EZVIZ
+- If setup says EZVIZ is missing, configure or reload the official EZVIZ
   integration first.
-- After upgrading, restart Home Assistant so new platforms and translations are
-  loaded.
-- If a cloud action stops working after an EZVIZ update, open an issue with the
-  Home Assistant version, robot firmware, model and sanitized diagnostics. Never
-  post credentials, session IDs, verification codes or unredacted logs.
+- Restart Home Assistant after updating so new platforms load.
+- When reporting a problem, include the Home Assistant version, robot model
+  and firmware, and the output of the **Inspect robot** service. It removes
+  credentials, but check it before posting.
 
 ## Development
 
-Run the request-adapter tests with:
-
 ```bash
-python -m unittest discover -s tests -v
+python -m unittest discover -s tests -t tests -v
 ```
 
-HACS validation, Hassfest and the unit tests run automatically on GitHub.
+HACS validation, Hassfest and the tests run on GitHub.
 
-## License and disclaimer
+## License
 
-Licensed under Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
-This project is unofficial and is not affiliated with or endorsed by EZVIZ.
-Use it at your own risk.
+Apache-2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE). This project is not
+affiliated with or endorsed by EZVIZ. Use it at your own risk.
