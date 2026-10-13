@@ -4,6 +4,8 @@
 [![Version](https://img.shields.io/github/v/release/stefanelul2000/ha-ezviz-rs20)](https://github.com/stefanelul2000/ha-ezviz-rs20/releases)
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2026.7%2B-18BCF2)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+[![Tests](https://github.com/stefanelul2000/ha-ezviz-rs20/actions/workflows/tests.yml/badge.svg)](https://github.com/stefanelul2000/ha-ezviz-rs20/actions/workflows/tests.yml)
+[![Validate](https://github.com/stefanelul2000/ha-ezviz-rs20/actions/workflows/validate.yml/badge.svg)](https://github.com/stefanelul2000/ha-ezviz-rs20/actions/workflows/validate.yml)
 
 Full control of an **EZVIZ RS20** robot vacuum and its base station from Home
 Assistant: a live map, room cleaning, every cleaning setting the app offers,
@@ -14,9 +16,8 @@ consumables and history.
   <br><sub>The live map, drawn by the integration (example floor plan).</sub>
 </p>
 
-Developed and tested with an **RS20 Max** (`CS-RS20-MAX-TGA`, firmware
-V2.0.2417). The RS20 Pro and other EZVIZ robots that use the same cloud
-protocol are detected too, but are untested; reports are welcome.
+Developed and tested with an **RS20 Max**. Other EZVIZ robots are detected
+and will often work, but are untested; see [Supported models](#supported-models).
 
 > [!NOTE]
 > EZVIZ does not publish an API for its robots. This integration talks to the
@@ -25,6 +26,7 @@ protocol are detected too, but are untested; reports are welcome.
 
 ## Contents
 
+- [Supported models](#supported-models)
 - [Features](#features)
 - [Requirements](#requirements)
 - [Installation](#installation)
@@ -35,6 +37,24 @@ protocol are detected too, but are untested; reports are welcome.
 - [Troubleshooting](#troubleshooting)
 - [Development](#development)
 - [Credits and license](#credits-and-license)
+
+## Supported models
+
+| Model | Status | Notes |
+|---|---|---|
+| RS20 Max | ✅ Tested | Firmware V2.0.2417. Everything in this README. |
+| RS20 Hair Free | 🟡 Likely | Uses the same app plugin as the RS20 Max. |
+| RS20 Pro | 🟡 Untested | Own app plugin, closely related to the RS20 Max. |
+| RE7 Edge | 🟡 Untested | Own app plugin. |
+| RS2 and other models | 🟡 Untested | Older app plugin; some features may be missing. |
+| RE3 Plus, RE4, RE5 | ❓ Unknown | Made by another manufacturer for EZVIZ; probably a different protocol. |
+
+Settings only appear when the robot reports them, so a model without, say,
+carpet settings simply won't get those switches.
+
+**Have a robot that isn't marked tested?** Please
+[report how it works](https://github.com/stefanelul2000/ha-ezviz-rs20/issues/new?template=model_report.yml).
+A few minutes with the form tells us what to fix for your model.
 
 ## Features
 
@@ -212,19 +232,24 @@ change robot settings, so use them with care.
 - **New entities don't appear after an update:** restart Home Assistant.
 - **A room is missing or wrongly named:** reload the integration after
   changing the map in the app.
-- **Reporting a problem:** include your Home Assistant version, robot model
-  and firmware, and the output of **Inspect robot**. It removes credentials,
-  but read it before posting.
+- **Reporting a problem:** use the
+  [bug report form](https://github.com/stefanelul2000/ha-ezviz-rs20/issues/new?template=bug_report.yml).
+  It asks for your versions and the output of **Inspect robot**, which removes
+  credentials; read it before posting anyway.
 
 ## Development
 
 ```bash
 python -m unittest discover -s tests -t tests -v
+ruff check custom_components tests
+ruff format --check custom_components tests
 ```
 
 The tests cover the API client, settings, robot state and map decoding, and
-use synthetic data only. HACS validation, Hassfest and the tests run on
-GitHub.
+use synthetic data only. Every push runs HACS validation, Hassfest, Ruff, the
+tests on Python 3.13 and 3.14, and a check that every translation has the same
+keys as English. Publishing a release checks that the tag matches the manifest
+version and attaches a zip of the integration.
 
 ## Credits and license
 
