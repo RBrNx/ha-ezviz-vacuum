@@ -85,7 +85,8 @@ download it; existing entities are kept.
 
 ## Polling
 
-The live task is read every 30 seconds. The full device report, which
+The live task is read every 30 seconds, and every 10 seconds while the
+robot cleans or returns so the map follows it. The full device report, which
 includes settings, consumables and history, is read every 5 minutes and
 whenever the robot starts a different task. Changed settings show up
 immediately.

@@ -9,6 +9,8 @@ CONF_SOURCE_ENTRY_ID = "source_entry_id"
 CONF_SERIAL = "serial"
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
+# Polling while the robot cleans or returns, so the map path follows it.
+ACTIVE_SCAN_INTERVAL = timedelta(seconds=10)
 # Seconds between full device reports (settings, consumables, history).
 DEVICE_REFRESH_INTERVAL = 300
 

@@ -29,6 +29,7 @@ from .cloud_camera import capture_cloud_snapshot, trace_cloud_stream
 from .const import (
     CONF_SERIAL,
     CONF_SOURCE_ENTRY_ID,
+    ACTIVE_SCAN_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
     DEVICE_REFRESH_INTERVAL,
     DOMAIN,
@@ -161,6 +162,15 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         if task:
             await self._async_refresh_map(task)
+            # Follow the robot closely while it moves; idle polling is enough
+            # otherwise.
+            moving = robot.activity(task, self._device) in (
+                robot.ACTIVITY_CLEANING,
+                robot.ACTIVITY_RETURNING,
+            )
+            self.update_interval = (
+                ACTIVE_SCAN_INTERVAL if moving else DEFAULT_SCAN_INTERVAL
+            )
 
         return {
             "serial": self.serial,
