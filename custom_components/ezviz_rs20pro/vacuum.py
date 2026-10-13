@@ -1,4 +1,4 @@
-"""Vacuum platform for EZVIZ RS20 Pro."""
+"""Vacuum platform for EZVIZ robot vacuums."""
 
 from __future__ import annotations
 
@@ -11,11 +11,17 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .coordinator import EzvizRs20ProCoordinator
 from .entity import Rs20Entity
 from . import robot
+from .settings import MapCleanSetting
+
+# Suction levels of the active map (SweeperMapMgr/StdCleanCfg.fanMode).
+FAN_SPEEDS = {"quiet": "Quiet", "normal": "Normal", "strong": "Strong", "super": "Max"}
+_FAN_SETTING = MapCleanSetting("fanMode")
 
 _ACTIVITIES = {
     robot.ACTIVITY_CLEANING: VacuumActivity.CLEANING,
@@ -25,12 +31,6 @@ _ACTIVITIES = {
     robot.ACTIVITY_IDLE: VacuumActivity.IDLE,
     robot.ACTIVITY_ERROR: VacuumActivity.ERROR,
 }
-
-
-
-
-
-
 
 async def async_setup_entry(
     hass: Any,
@@ -52,7 +52,9 @@ class EzvizRs20ProVacuum(Rs20Entity, StateVacuumEntity):
         | VacuumEntityFeature.STOP
         | VacuumEntityFeature.RETURN_HOME
         | VacuumEntityFeature.CLEAN_AREA
+        | VacuumEntityFeature.FAN_SPEED
     )
+    _attr_fan_speed_list = list(FAN_SPEEDS.values())
 
     def __init__(self, coordinator: EzvizRs20ProCoordinator) -> None:
         super().__init__(coordinator, "vacuum")
@@ -66,6 +68,23 @@ class EzvizRs20ProVacuum(Rs20Entity, StateVacuumEntity):
                 self.coordinator.data.get("device"),
             )
         ]
+
+    @property
+    def fan_speed(self) -> str | None:
+        """Return the suction level used for the active map."""
+        value = _FAN_SETTING.read(
+            self.coordinator.data.get("device"), self.coordinator.data.get("task")
+        )
+        return FAN_SPEEDS.get(value) if isinstance(value, str) else None
+
+    async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
+        """Set the suction level for whole-home cleaning of the active map."""
+        wanted = fan_speed.casefold()
+        for value, label in FAN_SPEEDS.items():
+            if wanted in (value, label.casefold()):
+                await self.coordinator.async_write_setting(_FAN_SETTING, value)
+                return
+        raise ServiceValidationError(f"Unknown fan speed: {fan_speed}")
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

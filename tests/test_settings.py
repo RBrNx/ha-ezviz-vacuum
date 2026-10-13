@@ -51,6 +51,31 @@ class ScalarSettingTests(unittest.TestCase):
         )
 
 
+class MapCleanSettingTests(unittest.TestCase):
+    """Whole-home settings belong to the active map."""
+
+    def test_reads_active_map_not_default_entry(self) -> None:
+        setting = settings.MapCleanSetting("fanMode")
+        self.assertEqual(setting.read(fixtures.device(), fixtures.task()), "super")
+
+    def test_write_changes_only_the_active_map(self) -> None:
+        setting = settings.MapCleanSetting("fanMode")
+        _, _, payload = setting.write(fixtures.device(), fixtures.task(), "quiet")
+        by_map = {entry["mapID"]: entry for entry in payload}
+        self.assertEqual(by_map[2]["fanMode"], "quiet")
+        self.assertEqual(by_map[0]["fanMode"], "normal")
+        self.assertEqual(by_map[2]["waterQuantity"], "middle")
+
+    def test_write_adds_missing_map(self) -> None:
+        setting = settings.MapCleanSetting("waterQuantity")
+        _, _, payload = setting.write(
+            fixtures.device(), fixtures.task(currentMapID=7), "high"
+        )
+        added = [entry for entry in payload if entry["mapID"] == 7]
+        self.assertEqual(added[0]["waterQuantity"], "high")
+        self.assertEqual(len(payload), 3)
+
+
 class ApplyWriteTests(unittest.TestCase):
     """Local updates mirror what was sent."""
 
