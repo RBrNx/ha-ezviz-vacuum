@@ -135,6 +135,27 @@
       },
       "carpet_cross_when_blocked": {
         "name": "Cross carpets when no other path"
+      },
+      "pet_mode": {
+        "name": "Pet mode"
+      },
+      "smart_dirt_detection": {
+        "name": "Smart dirt detection"
+      },
+      "ai_obstacle_detection_boost": {
+        "name": "Enhanced obstacle recognition"
+      },
+      "debris_boost": {
+        "name": "Debris boost"
+      },
+      "deep_edge_cleaning": {
+        "name": "Deep edge cleaning"
+      },
+      "off_peak_charging": {
+        "name": "Off-peak charging"
+      },
+      "voice_assistant": {
+        "name": "Voice assistant"
       }
     },
     "select": {
@@ -213,6 +234,12 @@
       },
       "schedule_start": {
         "name": "Schedule {schedule} start"
+      },
+      "off_peak_charging_start": {
+        "name": "Off-peak charging start"
+      },
+      "off_peak_charging_end": {
+        "name": "Off-peak charging end"
       }
     }
   },

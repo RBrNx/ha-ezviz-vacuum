@@ -96,6 +96,48 @@ SWITCHES: Final[tuple[Rs20SwitchDescription, ...]] = (
             "SweeperCleanTask", "CarpetCleanCfg", "allowPassageWhenObstructed"
         ),
     ),
+    Rs20SwitchDescription(
+        key="pet_mode",
+        translation_key="pet_mode",
+        icon="mdi:paw",
+        setting=_enabled("SweeperMgr", "PetModeSwitch"),
+    ),
+    Rs20SwitchDescription(
+        key="smart_dirt_detection",
+        translation_key="smart_dirt_detection",
+        icon="mdi:magnify-scan",
+        setting=_enabled("SweeperMgr", "SmartDirtDetectionCfg"),
+    ),
+    Rs20SwitchDescription(
+        key="ai_obstacle_detection_boost",
+        translation_key="ai_obstacle_detection_boost",
+        icon="mdi:eye-plus-outline",
+        setting=_enabled("SweeperMgr", "AIDetectionEnhanceCfg"),
+    ),
+    Rs20SwitchDescription(
+        key="debris_boost",
+        translation_key="debris_boost",
+        icon="mdi:grain",
+        setting=_enabled("SweeperCleanTask", "ParticulateCleanEnhanceCfg"),
+    ),
+    Rs20SwitchDescription(
+        key="deep_edge_cleaning",
+        translation_key="deep_edge_cleaning",
+        icon="mdi:border-outside",
+        setting=_enabled("SweeperCleanTask", "EdgeDeepCleanCfg"),
+    ),
+    Rs20SwitchDescription(
+        key="off_peak_charging",
+        translation_key="off_peak_charging",
+        icon="mdi:battery-clock-outline",
+        setting=_enabled("SweeperMgr", "ValleyCharge"),
+    ),
+    Rs20SwitchDescription(
+        key="voice_assistant",
+        translation_key="voice_assistant",
+        icon="mdi:microphone-message",
+        setting=_enabled("SweeperMgr", "VoiceAssistantCfg"),
+    ),
 )
 
 

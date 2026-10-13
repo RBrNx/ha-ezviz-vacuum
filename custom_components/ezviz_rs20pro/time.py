@@ -13,7 +13,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .coordinator import EzvizRs20ProCoordinator
 from .entity import Rs20SettingEntity
-from .settings import CleanPlanSetting, RestPlanSetting, Setting, clean_plans
+from .settings import (
+    CleanPlanSetting,
+    FieldSetting,
+    RestPlanSetting,
+    Setting,
+    clean_plans,
+)
 from .switch import schedule_label
 
 
@@ -37,6 +43,18 @@ TIMES: Final[tuple[Rs20TimeDescription, ...]] = (
         translation_key="do_not_disturb_end",
         icon="mdi:weather-sunset-up",
         setting=RestPlanSetting("endTime"),
+    ),
+    Rs20TimeDescription(
+        key="off_peak_charging_start",
+        translation_key="off_peak_charging_start",
+        icon="mdi:battery-clock-outline",
+        setting=FieldSetting("SweeperMgr", "ValleyCharge", "startTime"),
+    ),
+    Rs20TimeDescription(
+        key="off_peak_charging_end",
+        translation_key="off_peak_charging_end",
+        icon="mdi:battery-clock",
+        setting=FieldSetting("SweeperMgr", "ValleyCharge", "endTime"),
     ),
 )
 
