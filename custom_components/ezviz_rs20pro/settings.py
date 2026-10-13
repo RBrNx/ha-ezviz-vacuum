@@ -46,6 +46,14 @@ class Setting:
     def available(self, device: Any, task: Any = None) -> bool:
         return self.read(device, task) is not None
 
+    def action(self, device: Any, task: Any, value: Any) -> Write | None:
+        """Return ``(domain, action, payload)`` when the robot needs an action.
+
+        ``write`` still describes the new stored value, which is shown until
+        the next refresh.
+        """
+        return None
+
 
 @dataclass(frozen=True)
 class ScalarSetting(Setting):
@@ -81,11 +89,29 @@ class FieldSetting(Setting):
         return self.domain, self.identifier, payload
 
 
+_STD_ACTIONS = {
+    "fanMode": "SetFanModeOfStdClean",
+    "waterQuantity": "SetWaterQuantityOfStdClean",
+    "cleanTimes": "SetCleanTimesOfStdClean",
+    "cleanConfigType": "SetCleanCfg",
+}
+
+
 @dataclass(frozen=True)
 class MapCleanSetting(Setting):
     """A field of the active map's entry in ``SweeperMapMgr/StdCleanCfg``."""
 
     field: str
+
+    def action(self, device: Any, task: Any, value: Any) -> Write | None:
+        map_id = robot.active_map_id(device, task)
+        if map_id is None:
+            raise ValueError("The robot has not reported its map yet")
+        return (
+            "SweeperMapMgr",
+            _STD_ACTIONS[self.field],
+            {"mapID": map_id, self.field: value},
+        )
 
     def _entries(self, device: Any) -> list[Any]:
         value = feature(device, "SweeperMapMgr", "StdCleanCfg")
@@ -135,6 +161,21 @@ class RoomCleanSetting(Setting):
             if room.get("roomID") == self.room_id:
                 return room.get(self.field)
         return None
+
+    def action(self, device: Any, task: Any, value: Any) -> Write | None:
+        map_id = robot.active_map_id(device, task)
+        for room in robot.room_clean_configs(device, map_id):
+            if room.get("roomID") == self.room_id:
+                payload = {
+                    "mapID": map_id,
+                    "roomID": self.room_id,
+                    "fanMode": room.get("fanMode"),
+                    "waterQuantity": room.get("waterQuantity"),
+                    "cleanTimes": room.get("cleanTimes"),
+                }
+                payload[self.field] = value
+                return "SweeperMapMgr", "SetRoomCustomCleanCfg", payload
+        raise ValueError(f"Room {self.room_id} has no cleaning settings")
 
     def write(self, device: Any, task: Any, value: Any) -> Write:
         map_id = robot.active_map_id(device, task)

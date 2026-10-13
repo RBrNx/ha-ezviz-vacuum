@@ -40,13 +40,24 @@ WRITABLE_FEATURES: frozenset[tuple[str, str]] = frozenset(
         ("SweeperCleanTask", "ParticulateCleanEnhanceCfg"),
         ("SweeperCleanTask", "EdgeDeepCleanCfg"),
         ("SweeperCleanTask", "CleanPlan"),
-        ("SweeperMapMgr", "StdCleanCfg"),
-        ("SweeperMapMgr", "RoomCustomCleanCfg"),
         ("SweeperMgr", "RestPlan"),
         ("SweeperMgr", "PetModeSwitch"),
         ("SweeperMgr", "SmartDirtDetectionCfg"),
         ("SweeperMgr", "ValleyCharge"),
         ("SweeperMgr", "VoiceAssistantCfg"),
         ("SoundSetting", "PromptToneVolume"),
+    }
+)
+
+# Robot actions the entities may send. Map cleaning settings are changed this
+# way (as the EZVIZ app does); writing the stored feature does not reach the
+# robot.
+SETTING_ACTIONS: frozenset[tuple[str, str]] = frozenset(
+    {
+        ("SweeperMapMgr", "SetFanModeOfStdClean"),
+        ("SweeperMapMgr", "SetWaterQuantityOfStdClean"),
+        ("SweeperMapMgr", "SetCleanTimesOfStdClean"),
+        ("SweeperMapMgr", "SetCleanCfg"),
+        ("SweeperMapMgr", "SetRoomCustomCleanCfg"),
     }
 )

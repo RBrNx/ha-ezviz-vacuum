@@ -130,36 +130,31 @@ class ApiTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.api.fetch_map_layer("ab1234567", "everything", map_id=2)
 
-    def test_start_region_clean_uses_native_room_action(self) -> None:
-        room = {
-            "fanMode": "normal",
-            "cleanTimes": 1,
-            "regionType": "room",
-            "customRegionID": 0,
-            "waterQuantity": "middle",
-            "roomID": 8,
-            "order": 1,
-        }
-        self.api.start_region_clean("ab1234567", map_id=5, rooms=[room])
+    def test_start_region_clean_sends_room_ids_like_the_app(self) -> None:
+        self.api.start_region_clean("ab1234567", map_id=2, room_ids=[11, 8])
         call = self.client._session.calls[0]
         self.assertTrue(call["url"].endswith(
             "/AB1234567/SweepingRobot/0/SweeperCleanTask/StartRegionClean"
         ))
-        self.assertEqual(json.loads(call["data"])["region"], [room])
-        self.assertEqual(json.loads(call["data"])["cleanMode"], "sweep")
-
-    def test_start_region_clean_sends_requested_mode(self) -> None:
-        room = {"roomID": 8, "order": 1}
-        self.api.start_region_clean(
-            "ab1234567", map_id=2, rooms=[room], clean_mode="sweepThenMop"
-        )
         self.assertEqual(
-            json.loads(self.client._session.calls[0]["data"])["cleanMode"],
-            "sweepThenMop",
+            json.loads(call["data"]),
+            {"mapID": 2, "region": [{"regionType": "room", "roomID": 11},
+                                    {"regionType": "room", "roomID": 8}]},
         )
         with self.assertRaises(ValueError):
-            self.api.start_region_clean(
-                "ab1234567", map_id=2, rooms=[room], clean_mode="vacuum"
+            self.api.start_region_clean("ab1234567", map_id=2, room_ids=[])
+
+    def test_setting_action_is_allow_listed(self) -> None:
+        self.api.send_setting_action(
+            "ab1234567", domain="SweeperMapMgr", action="SetFanModeOfStdClean",
+            payload={"mapID": 2, "fanMode": "quiet"},
+        )
+        call = self.client._session.calls[0]
+        self.assertIn("/v3/iot-feature/action/", call["url"])
+        self.assertTrue(call["url"].endswith("/SweeperMapMgr/SetFanModeOfStdClean"))
+        with self.assertRaises(ValueError):
+            self.api.send_setting_action(
+                "ab1234567", domain="SweeperMapMgr", action="DeleteMap", payload={}
             )
 
     def test_clean_mode_accepts_robot_enum(self) -> None:

@@ -76,6 +76,41 @@ class MapCleanSettingTests(unittest.TestCase):
         self.assertEqual(len(payload), 3)
 
 
+class ActionTests(unittest.TestCase):
+    """Cleaning settings are changed through robot actions."""
+
+    def test_map_setting_action(self) -> None:
+        self.assertEqual(
+            settings.MapCleanSetting("fanMode").action(
+                fixtures.device(), fixtures.task(), "quiet"
+            ),
+            ("SweeperMapMgr", "SetFanModeOfStdClean", {"mapID": 2, "fanMode": "quiet"}),
+        )
+        self.assertEqual(
+            settings.MapCleanSetting("cleanConfigType").action(
+                fixtures.device(), fixtures.task(), "custom"
+            )[1],
+            "SetCleanCfg",
+        )
+
+    def test_room_setting_action_keeps_other_fields(self) -> None:
+        self.assertEqual(
+            settings.RoomCleanSetting(8, "waterQuantity").action(
+                fixtures.device(), fixtures.task(), "high"
+            ),
+            ("SweeperMapMgr", "SetRoomCustomCleanCfg",
+             {"mapID": 2, "roomID": 8, "fanMode": "normal",
+              "waterQuantity": "high", "cleanTimes": 1}),
+        )
+
+    def test_feature_settings_have_no_action(self) -> None:
+        self.assertIsNone(
+            settings.ScalarSetting("SoundSetting", "PromptToneVolume").action(
+                fixtures.device(), None, 50
+            )
+        )
+
+
 class RoomCleanSettingTests(unittest.TestCase):
     """Per-room settings change one room of the active map."""
 

@@ -9,7 +9,7 @@ import json
 from typing import Any
 import zlib
 
-from .const import CLEAN_MODES, WRITABLE_FEATURES
+from .const import CLEAN_MODES, SETTING_ACTIONS, WRITABLE_FEATURES
 
 
 class EzvizRs20ProApiError(Exception):
@@ -108,24 +108,44 @@ class EzvizRs20ProApi:
             payload=value,
         )
 
+    def send_setting_action(
+        self,
+        serial: str,
+        *,
+        domain: str,
+        action: str,
+        payload: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Send an allow-listed settings action to the robot."""
+        if (domain, action) not in SETTING_ACTIONS:
+            raise ValueError(f"Unsupported robot action: {domain}/{action}")
+        return self._iot_request(
+            serial,
+            endpoint="action",
+            domain=domain,
+            identifier=action,
+            payload=payload,
+        )
+
     def start_region_clean(
         self,
         serial: str,
         *,
         map_id: int,
-        rooms: list[dict[str, Any]],
-        clean_mode: str = "sweep",
+        room_ids: list[int],
     ) -> dict[str, Any]:
-        """Start cleaning selected map rooms using the robot's native action."""
-        if not rooms:
+        """Clean selected rooms with the settings stored on the robot.
+
+        This is the payload the EZVIZ app sends; the robot applies its own
+        whole-home or per-room settings and the cleaning mode.
+        """
+        if not room_ids:
             raise ValueError("No room selected")
-        if clean_mode not in CLEAN_MODES:
-            raise ValueError(f"Unsupported cleaning mode: {clean_mode}")
         payload = {
-            "cleanMode": clean_mode,
             "mapID": int(map_id),
-            "region": rooms,
-            "edgeDeepClean": False,
+            "region": [
+                {"regionType": "room", "roomID": int(room_id)} for room_id in room_ids
+            ],
         }
         return self._iot_request(
             serial,

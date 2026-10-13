@@ -266,45 +266,53 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             write = setting.write(device, self.data.get("task"), value)
         except ValueError as err:
             raise ServiceValidationError(str(err)) from err
-        domain, identifier, payload = write
-        await self._async_call(
-            self.rs20_api.set_feature,
-            self.serial,
-            domain=domain,
-            identifier=identifier,
-            value=payload,
-        )
+        try:
+            action = setting.action(device, self.data.get("task"), value)
+        except ValueError as err:
+            raise ServiceValidationError(str(err)) from err
+        if action is not None:
+            domain, name, payload = action
+            await self._async_call(
+                self.rs20_api.send_setting_action,
+                self.serial,
+                domain=domain,
+                action=name,
+                payload=payload,
+            )
+        else:
+            domain, identifier, payload = write
+            await self._async_call(
+                self.rs20_api.set_feature,
+                self.serial,
+                domain=domain,
+                identifier=identifier,
+                value=payload,
+            )
         # The cloud accepted the full value; keep showing it until the next
         # full device report confirms it.
         self._device = apply_write(device, write)
         self.async_set_updated_data({**self.data, "device": self._device})
 
     async def async_clean_segments(self, segment_ids: list[str]) -> None:
-        """Start a native room-cleaning task for selected segment IDs."""
+        """Clean the selected rooms with the robot's own settings."""
         if self.rs20_api is None:
             raise HomeAssistantError("The robot client is not ready yet")
         device = self.data.get("device", {})
         map_id = robot.active_map_id(device, self.data.get("task"))
-        configs = robot.room_clean_configs(device, map_id)
-        if map_id is None or not configs:
+        known = {room_id for room_id, _ in robot.rooms(device, map_id)}
+        if map_id is None or not known:
             raise HomeAssistantError("The robot has not reported its rooms yet")
-
-        requested = {str(item) for item in segment_ids}
-        rooms = [dict(item) for item in configs if str(item.get("roomID")) in requested]
-        found = {str(item.get("roomID")) for item in rooms}
-        missing = requested - found
+        requested = [str(item) for item in segment_ids]
+        missing = sorted(set(requested) - known)
         if missing:
             raise ServiceValidationError(
-                f"Unknown robot rooms: {', '.join(sorted(missing))}"
+                f"Unknown robot rooms: {', '.join(missing)}"
             )
-        for order, room in enumerate(rooms, start=1):
-            room["order"] = order
         await self._async_call(
             self.rs20_api.start_region_clean,
             self.serial,
             map_id=map_id,
-            rooms=rooms,
-            clean_mode=robot.clean_mode(device) or "sweep",
+            room_ids=[int(item) for item in requested],
         )
         await self.async_request_refresh()
 
