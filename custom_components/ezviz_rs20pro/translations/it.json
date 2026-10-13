@@ -189,9 +189,6 @@
       },
       "off_peak_charging": {
         "name": "Ricarica nelle ore non di punta"
-      },
-      "voice_assistant": {
-        "name": "Assistente vocale"
       }
     },
     "select": {

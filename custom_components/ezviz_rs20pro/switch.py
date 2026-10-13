@@ -126,12 +126,6 @@ SWITCHES: Final[tuple[Rs20SwitchDescription, ...]] = (
         icon="mdi:battery-clock-outline",
         setting=_enabled("SweeperMgr", "ValleyCharge"),
     ),
-    Rs20SwitchDescription(
-        key="voice_assistant",
-        translation_key="voice_assistant",
-        icon="mdi:microphone-message",
-        setting=_enabled("SweeperMgr", "VoiceAssistantCfg"),
-    ),
 )
 
 

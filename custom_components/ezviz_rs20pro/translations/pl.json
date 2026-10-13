@@ -189,9 +189,6 @@
       },
       "off_peak_charging": {
         "name": "Ładowanie poza szczytem"
-      },
-      "voice_assistant": {
-        "name": "Asystent głosowy"
       }
     },
     "select": {

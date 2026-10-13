@@ -189,9 +189,6 @@
       },
       "off_peak_charging": {
         "name": "Carga en horas valle"
-      },
-      "voice_assistant": {
-        "name": "Asistente de voz"
       }
     },
     "select": {

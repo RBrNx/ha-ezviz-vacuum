@@ -189,9 +189,6 @@
       },
       "off_peak_charging": {
         "name": "Laden zu Niedertarifzeiten"
-      },
-      "voice_assistant": {
-        "name": "Sprachassistent"
       }
     },
     "select": {

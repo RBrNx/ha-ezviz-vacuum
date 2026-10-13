@@ -189,9 +189,6 @@
       },
       "off_peak_charging": {
         "name": "Charge en heures creuses"
-      },
-      "voice_assistant": {
-        "name": "Assistant vocal"
       }
     },
     "select": {
