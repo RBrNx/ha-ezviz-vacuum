@@ -16,6 +16,29 @@ class EzvizRs20ProApiError(Exception):
     """Raised when the robot endpoint rejects a request."""
 
 
+# Details the cloud sends in Chinese when it refuses a request.
+_REJECTIONS = {
+    "设备不支持该功能": "the robot does not support this",
+    "设备功能未报备": "this model does not declare this function",
+    "设备不在线": "the robot is offline",
+    "设备响应超时": "the robot did not answer in time",
+}
+
+
+def rejection_reason(result: dict[str, Any], code: Any) -> str:
+    """Return a readable reason for a refused request."""
+    meta = result.get("meta") if isinstance(result.get("meta"), dict) else {}
+    message = meta.get("message") or result.get("msg") or "request refused"
+    more = meta.get("moreInfo")
+    detail = more.get("msgDetail") if isinstance(more, dict) else None
+    if isinstance(detail, str) and detail:
+        detail = _REJECTIONS.get(detail.strip(), detail.strip())
+        if len(detail) > 300:
+            detail = detail[:300] + "..."
+        return f"{message} ({detail}, code {code})"
+    return f"{message} (code {code})"
+
+
 class EzvizRs20ProApi:
     """Use the official integration's session without copying credentials."""
 
