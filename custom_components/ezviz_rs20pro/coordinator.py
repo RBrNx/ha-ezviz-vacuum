@@ -21,6 +21,8 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import robot
+from .mapdata import build_layers
+from .maprender import render_svg
 from .settings import Setting, apply_write
 from .api import EzvizRs20ProApi, EzvizRs20ProApiError
 from .cloud_camera import capture_cloud_snapshot, trace_cloud_stream
@@ -74,6 +76,11 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._device: dict[str, Any] | None = None
         self._device_fetched: float = 0.0
         self._device_task: str | None = None
+        self.map_image: bytes | None = None
+        self.map_image_updated: datetime | None = None
+        self.map_error: str | None = None
+        self._map_cache: dict[str, tuple[int | None, dict[str, Any]]] = {}
+        self._map_cache_id: int | None = None
         self.camera_snapshot: bytes | None = None
         self.camera_snapshot_updated: datetime | None = None
 
@@ -152,12 +159,66 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if task_name is not None:
             self._device_task = task_name
 
+        if task:
+            await self._async_refresh_map(task)
+
         return {
             "serial": self.serial,
             "device": self._device,
             "task": task,
             "task_error": task_error,
         }
+
+    async def _async_refresh_map(self, task: Mapping[str, Any]) -> None:
+        """Fetch map layers whose version changed and redraw the map.
+
+        Failures never fail the update; the last map stays visible.
+        """
+        from homeassistant.util import dt as dt_util
+
+        map_id = robot.active_map_id(self._device, task)
+        if map_id is None or self.rs20_api is None:
+            return
+        if map_id != self._map_cache_id:
+            self._map_cache = {}
+            self._map_cache_id = map_id
+        versions = robot.map_versions(task, map_id)
+        changed = False
+        try:
+            for layer in ("map", "region", "path"):
+                version = versions.get(layer)
+                cached = self._map_cache.get(layer)
+                if cached is not None and version is not None and cached[0] == version:
+                    continue
+                value = await self.hass.async_add_executor_job(
+                    partial(
+                        self.rs20_api.fetch_map_layer,
+                        self.serial,
+                        layer,
+                        map_id=map_id,
+                        version=version,
+                    )
+                )
+                self._map_cache[layer] = (version, value)
+                changed = True
+        except Exception as err:  # noqa: BLE001 - the map is optional
+            self.map_error = str(err)
+            self.logger.debug("Could not read the robot map: %s", err)
+        else:
+            self.map_error = None
+        if not changed and self.map_image is not None:
+            return
+
+        layers = build_layers(
+            *(self._map_cache.get(layer, (None, None))[1] for layer in ("map", "region", "path"))
+        )
+        names = {
+            int(room_id): name for room_id, name in robot.rooms(self._device, map_id)
+        }
+        image = await self.hass.async_add_executor_job(render_svg, layers, names)
+        if image is not None and image != self.map_image:
+            self.map_image = image
+            self.map_image_updated = dt_util.utcnow()
 
     async def async_refresh_device(self) -> None:
         """Fetch the full device report on the next update."""

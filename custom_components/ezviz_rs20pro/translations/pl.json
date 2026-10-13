@@ -28,6 +28,9 @@
     "image": {
       "camera_snapshot": {
         "name": "Kamera – ostatnie zdjęcie"
+      },
+      "map": {
+        "name": "Mapa"
       }
     },
     "sensor": {

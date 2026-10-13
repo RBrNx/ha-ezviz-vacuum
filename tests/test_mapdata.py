@@ -77,6 +77,30 @@ class OutlineTests(unittest.TestCase):
         self.assertEqual(layers.robot_degree, -174.0)
 
 
+class RenderTests(unittest.TestCase):
+    """The SVG contains every layer."""
+
+    def test_render(self) -> None:
+        maprender = load("maprender")
+        cells = chr(4) * 30 + chr(2) * 10
+        layers = mapdata.build_layers(
+            {"x": 0, "y": 0, "w": 10, "h": 4, "mapData": pack(cells),
+             "chargerX": 9, "chargerY": 1},
+            {"room": [{"roomID": 8, "coordinate": "0,0;9,0;9,2;0,2"}]},
+            {"pathdata": "1,1;5,1", "currentPosition": {"x": 5, "y": 1, "degree": 90}},
+        )
+        svg = maprender.render_svg(layers, {8: "Bed & Room"}).decode()
+        self.assertTrue(svg.startswith("<svg"))
+        self.assertIn("<polygon", svg)
+        self.assertIn("<polyline", svg)
+        self.assertIn("Bed &amp; Room", svg)
+        self.assertIn("<circle", svg)
+
+    def test_no_grid(self) -> None:
+        maprender = load("maprender")
+        self.assertIsNone(maprender.render_svg(mapdata.MapLayers()))
+
+
 class VersionTests(unittest.TestCase):
     def test_map_versions_from_task(self) -> None:
         self.assertEqual(
