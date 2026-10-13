@@ -124,6 +124,15 @@
           "middle": "Medium",
           "high": "High"
         }
+      },
+      "cleaning_mode": {
+        "name": "Cleaning mode",
+        "state": {
+          "sweep": "Vacuum only",
+          "mop": "Mop only",
+          "sweepAndMop": "Vacuum and mop",
+          "sweepThenMop": "Vacuum, then mop"
+        }
       }
     }
   },

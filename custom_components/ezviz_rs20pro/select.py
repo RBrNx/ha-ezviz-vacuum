@@ -12,7 +12,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .coordinator import EzvizRs20ProCoordinator
 from .entity import Rs20SettingEntity
-from .settings import WATER_LEVELS, MapCleanSetting, Setting
+from .const import CLEAN_MODES
+from .settings import WATER_LEVELS, MapCleanSetting, ScalarSetting, Setting
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -30,6 +31,14 @@ SELECTS: Final[tuple[Rs20SelectDescription, ...]] = (
         icon="mdi:water-outline",
         options=list(WATER_LEVELS),
         setting=MapCleanSetting("waterQuantity"),
+    ),
+    Rs20SelectDescription(
+        key="cleaning_mode",
+        translation_key="cleaning_mode",
+        icon="mdi:broom",
+        options=list(CLEAN_MODES),
+        setting=ScalarSetting("SweeperCleanTask", "SweepMopMode"),
+        entity_category=None,
     ),
 )
 

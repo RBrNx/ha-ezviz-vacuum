@@ -155,11 +155,6 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         await self._async_call(self.rs20_api.clean_control, self.serial, command)
         await self.async_request_refresh()
 
-    async def async_set_clean_mode(self, mode: str) -> None:
-        """Set cleaning mode and refresh state."""
-        await self._async_call(self.rs20_api.set_clean_mode, self.serial, mode)
-        await self.async_request_refresh()
-
     async def async_write_setting(self, setting: Setting, value: Any) -> None:
         """Change one robot setting and show the new value immediately."""
         if self.rs20_api is None:
