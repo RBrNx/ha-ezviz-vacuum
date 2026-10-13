@@ -127,6 +127,12 @@
       },
       "relocation_failures": {
         "name": "Relocation failures"
+      },
+      "last_error": {
+        "name": "Last error"
+      },
+      "last_clean_area": {
+        "name": "Last cleaning area"
       }
     },
     "switch": {

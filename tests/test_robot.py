@@ -140,5 +140,28 @@ class ErrorTests(unittest.TestCase):
         self.assertIsNone(robot.error_description("", ""))
 
 
+class HistoryTests(unittest.TestCase):
+    """Error and cleaning history from the diagnostic blobs."""
+
+    def test_last_error(self) -> None:
+        self.assertEqual(
+            robot.last_error(fixtures.device()),
+            {"code": "407", "description": "Base station communication error",
+             "time": "2026-10-05T18:14:38.062"},
+        )
+
+    def test_last_clean_combines_passes(self) -> None:
+        last = robot.last_clean(fixtures.device())
+        self.assertEqual(last["area"], 29.4)
+        self.assertEqual(last["duration_minutes"], 50)
+        self.assertEqual(last["start"], "10-06 17:56:09.480")
+
+    def test_no_history(self) -> None:
+        device = fixtures.device()
+        del device["FEATURE_INFO"]["0"]["SweepingRobot"]["OperationDiagnosis"]
+        self.assertIsNone(robot.last_error(device))
+        self.assertIsNone(robot.last_clean(device))
+
+
 if __name__ == "__main__":
     unittest.main()

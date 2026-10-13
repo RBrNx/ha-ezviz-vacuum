@@ -5,6 +5,14 @@ from __future__ import annotations
 import copy
 from typing import Any
 
+# gzip/base64 history blobs (two entries each).
+_CLEAN = (
+    "H4sIAK9mzmoC/72QQYsCIRiG/4p4dkUdtdFbMJc9BLF0iz1Y2e6AM8qMEUv031Nh2qK6dhKe98WX5ztB144RarA+wc8mvaJCAI7RDLEx0ca2swlCSj6IALTWjGkhMaEKlpoPT1pKV0oLhimvc2vrrOm/TP9TOvuDc1e68LsCx6O1YfVrEwhw2l/9hRJ2ftM6O18up8kp6P3Qmf/PmsNgYuv7HFUcVeKazAdrCqWYI6awzElnQhFmZwQmd/7KXQI6S+KaKMxr8spd5gsJqjnF6mb+ze5MIsYf3JM2ye783v37fAGvVzSNAgIAAA=="
+)
+_ABNORMAL = (
+    "H4sIAK9mzmoC/6tWysksLlGyUoiuVspLzE0FspSe7Oh9OmfF0/m7nq+e+bSz9+nseU9bW58u2fhiy1IlHQWlvHygIhNDQyAzJbEktSQTosvIwMhM19BA18AoxNDIysjMysRSz9zAUqlWRwFhNMTQlw2znuxf+GL/vGd9S5/uaXq6YwfCXANzXOaahhhaWBmaWBlb6BmYGSnVxgIVluSXJOYAVRnVAgDk8e/0yQAAAA=="
+)
+
 _ROBOT: dict[str, Any] = {
     "SweeperMapMgr": {
         "MapBasicProperty": [
@@ -71,6 +79,12 @@ _ROBOT: dict[str, Any] = {
                           "ts": "1970-01-01T00:00:53.288+02:00"},
     },
     "SoundSetting": {"PromptToneVolume": 100},
+    "OperationDiagnosis": {
+        "DeviceOperationParams": {
+            "cleanHistory": {"encodeType": "gzip/base64", "content": _CLEAN},
+            "abnormalHistory": {"encodeType": "gzip/base64", "content": _ABNORMAL},
+        }
+    },
 }
 
 _DEVICE: dict[str, Any] = {

@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from functools import lru_cache
 import re
 from typing import Any
 
+from .api import EzvizRs20ProApi
 from .const import CLEAN_MODES
 from .helpers import feature, robot_features
 
@@ -309,3 +311,66 @@ def error_description(code: Any, description: Any = None) -> str | None:
         words = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", code_text[3:]).lower()
         return words[:1].upper() + words[1:]
     return f"Robot error {code_text}" if code_text else "Robot error"
+
+
+@lru_cache(maxsize=8)
+def _decode_history(content: str) -> tuple[Mapping[str, Any], ...]:
+    decoded = EzvizRs20ProApi.decode_diagnostic_blob({"content": content})
+    items = decoded.get("list") if isinstance(decoded, Mapping) else None
+    return tuple(item for item in _as_list(items) if isinstance(item, Mapping))
+
+
+def history(device: Mapping[str, Any] | None, key: str) -> tuple[Mapping[str, Any], ...]:
+    """Return ``cleanHistory`` or ``abnormalHistory`` entries, oldest first."""
+    params = feature(device, "OperationDiagnosis", "DeviceOperationParams")
+    blob = params.get(key) if isinstance(params, Mapping) else None
+    content = blob.get("content") if isinstance(blob, Mapping) else None
+    return _decode_history(content) if isinstance(content, str) else ()
+
+
+def last_error(device: Mapping[str, Any] | None) -> dict[str, Any] | None:
+    """Return the most recent entry of the robot's error history."""
+    entries = history(device, "abnormalHistory")
+    if not entries:
+        return None
+    entry = max(entries, key=lambda item: str(item.get("datetime") or ""))
+    code = str(entry.get("no") or "")
+    return {
+        "code": code or None,
+        "description": error_description(code, entry.get("name")),
+        "time": entry.get("datetime"),
+    }
+
+
+def _numbers(value: Any) -> list[float]:
+    result = []
+    for part in str(value or "").split(","):
+        try:
+            result.append(float(part))
+        except ValueError:
+            continue
+    return result
+
+
+def last_clean(device: Mapping[str, Any] | None) -> dict[str, Any] | None:
+    """Return the most recent cleaning run.
+
+    Runs that sweep and then mop report one area and duration per pass.
+    """
+    entries = history(device, "cleanHistory")
+    if not entries:
+        return None
+    entry = max(entries, key=lambda item: _map_id(item.get("ID")) or 0)
+    areas = _numbers(entry.get("cleanArea"))
+    durations = _numbers(entry.get("cleanDuration"))
+    return {
+        "area": max(areas) if areas else None,
+        "duration_minutes": int(sum(durations)) if durations else None,
+        "start": entry.get("startDatetime"),
+        "end": entry.get("stopDatetime"),
+        "cleaning_mode": entry.get("cleanMode"),
+        "cleaning_range": entry.get("cleanRange"),
+        "started_by": entry.get("startType"),
+        "stop_reason": entry.get("stopType"),
+        "map_id": entry.get("mapID"),
+    }

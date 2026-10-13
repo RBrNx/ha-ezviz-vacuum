@@ -150,6 +150,23 @@ SENSORS: Final = (
         icon="mdi:map-marker-question-outline",
     ),
     Rs20SensorDescription(
+        key="last_error",
+        translation_key="last_error",
+        value_fn=lambda data: (robot.last_error(data.get("device")) or {}).get(
+            "description"
+        ),
+        attributes_fn=lambda data: robot.last_error(data.get("device")),
+        icon="mdi:alert-circle-outline",
+    ),
+    Rs20SensorDescription(
+        key="last_clean_area",
+        translation_key="last_clean_area",
+        value_fn=lambda data: (robot.last_clean(data.get("device")) or {}).get("area"),
+        attributes_fn=lambda data: robot.last_clean(data.get("device")),
+        native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
+        icon="mdi:history",
+    ),
+    Rs20SensorDescription(
         key="main_brush",
         translation_key="main_brush",
         source_key="RotatingBrushWorkingTime",
