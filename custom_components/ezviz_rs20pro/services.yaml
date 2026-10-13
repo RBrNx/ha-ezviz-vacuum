@@ -70,3 +70,9 @@ api_request:
     data:
       selector:
         object:
+    json:
+      selector:
+        object:
+    headers:
+      selector:
+        object:

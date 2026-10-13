@@ -389,6 +389,14 @@
         "serial": {
           "name": "Robot serial",
           "description": "Serial number of the robot. Leave empty to use the first configured robot."
+        },
+        "json": {
+          "name": "JSON body",
+          "description": "Optional JSON request body."
+        },
+        "headers": {
+          "name": "Headers",
+          "description": "Optional extra request headers."
         }
       }
     }

@@ -389,6 +389,14 @@
         "serial": {
           "name": "Numer seryjny robota",
           "description": "Numer seryjny robota. Pozostaw puste, aby użyć pierwszego skonfigurowanego robota."
+        },
+        "json": {
+          "name": "Treść JSON",
+          "description": "Opcjonalna treść żądania JSON."
+        },
+        "headers": {
+          "name": "Nagłówki",
+          "description": "Opcjonalne dodatkowe nagłówki."
         }
       }
     }

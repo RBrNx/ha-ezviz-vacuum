@@ -275,6 +275,8 @@ class EzvizRs20ProApi:
         path: str,
         params: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
+        json_body: Any = None,
+        headers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         """Send one request to the EZVIZ API host of the active session."""
         method = method.upper()
@@ -288,6 +290,8 @@ class EzvizRs20ProApi:
             f"https://{api_url}{path}",
             params=params,
             data=data,
+            json=json_body,
+            headers={str(k): str(v) for k, v in (headers or {}).items()} or None,
             timeout=getattr(self._client, "_timeout", 25),
         )
         try:

@@ -216,6 +216,8 @@ def _register_services(hass: HomeAssistant) -> None:  # noqa: C901
                 path=call.data["path"],
                 params=call.data.get("params"),
                 data=call.data.get("data"),
+                json_body=call.data.get("json"),
+                headers=call.data.get("headers"),
             )
         )
         return _sanitize(result)
@@ -262,6 +264,8 @@ def _register_services(hass: HomeAssistant) -> None:  # noqa: C901
                 vol.Required("path"): cv.string,
                 vol.Optional("params"): dict,
                 vol.Optional("data"): dict,
+                vol.Optional("json"): object,
+                vol.Optional("headers"): {cv.string: cv.string},
             }
         ),
         supports_response=SupportsResponse.ONLY,

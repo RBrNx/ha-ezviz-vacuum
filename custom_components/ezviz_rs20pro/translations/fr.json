@@ -389,6 +389,14 @@
         "serial": {
           "name": "Numéro de série du robot",
           "description": "Numéro de série du robot. Laisser vide pour utiliser le premier robot configuré."
+        },
+        "json": {
+          "name": "Corps JSON",
+          "description": "Corps JSON facultatif de la requête."
+        },
+        "headers": {
+          "name": "En-têtes",
+          "description": "En-têtes supplémentaires facultatifs."
         }
       }
     }

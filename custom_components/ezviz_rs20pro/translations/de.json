@@ -389,6 +389,14 @@
         "serial": {
           "name": "Seriennummer des Roboters",
           "description": "Seriennummer des Roboters. Leer lassen, um den ersten eingerichteten Roboter zu verwenden."
+        },
+        "json": {
+          "name": "JSON-Inhalt",
+          "description": "Optionaler JSON-Anfrageinhalt."
+        },
+        "headers": {
+          "name": "Header",
+          "description": "Optionale zusätzliche Anfrage-Header."
         }
       }
     }
