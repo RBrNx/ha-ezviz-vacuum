@@ -2,25 +2,14 @@
 
 from __future__ import annotations
 
-import importlib.util
 import base64
 import gzip
 import json
-from pathlib import Path
 import unittest
 
+from _loader import load
 
-API_PATH = (
-    Path(__file__).parents[1]
-    / "custom_components"
-    / "ezviz_rs20pro"
-    / "api.py"
-)
-SPEC = importlib.util.spec_from_file_location("ezviz_rs20pro_api", API_PATH)
-assert SPEC and SPEC.loader
-MODULE = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(MODULE)
-EzvizRs20ProApi = MODULE.EzvizRs20ProApi
+EzvizRs20ProApi = load("api").EzvizRs20ProApi
 
 
 class FakeResponse:
@@ -140,6 +129,14 @@ class ApiTests(unittest.TestCase):
             "/AB1234567/SweepingRobot/0/SweeperCleanTask/StartRegionClean"
         ))
         self.assertEqual(json.loads(call["data"])["region"], [room])
+
+    def test_clean_mode_accepts_robot_enum(self) -> None:
+        for mode in ("sweep", "mop", "sweepAndMop", "sweepThenMop"):
+            self.api.set_clean_mode("ab1234567", mode)
+        sent = [json.loads(call["data"]) for call in self.client._session.calls]
+        self.assertEqual(sent, ["sweep", "mop", "sweepAndMop", "sweepThenMop"])
+        with self.assertRaises(ValueError):
+            self.api.set_clean_mode("ab1234567", "sweepMop")
 
     def test_decode_diagnostic_blob(self) -> None:
         content = base64.b64encode(gzip.compress(b'{"path":[1,2,3]}')).decode()

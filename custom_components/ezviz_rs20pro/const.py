@@ -16,3 +16,7 @@ SERVICE_CAMERA_DIAGNOSTICS = "camera_diagnostics"
 SERVICE_REFRESH_CAMERA = "refresh_camera_snapshot"
 SERVICE_FEATURE_REQUEST = "feature_request"
 SERVICE_API_REQUEST = "api_request"
+
+# Cleaning modes accepted by SweeperCleanTask/SweepMopMode and by the
+# cleanMode field of cleaning actions (validated by the EZVIZ cloud schema).
+CLEAN_MODES = ("sweep", "mop", "sweepAndMop", "sweepThenMop")

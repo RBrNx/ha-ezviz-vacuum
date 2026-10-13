@@ -9,6 +9,8 @@ import json
 from typing import Any
 import zlib
 
+from .const import CLEAN_MODES
+
 
 class EzvizRs20ProApiError(Exception):
     """Raised when the RS20 Pro endpoint rejects a request."""
@@ -43,8 +45,8 @@ class EzvizRs20ProApi:
         )
 
     def set_clean_mode(self, serial: str, mode: str) -> dict[str, Any]:
-        """Set the documented sweep/mop mode."""
-        if mode not in {"dustAbsorption", "mop", "sweepMop"}:
+        """Set the sweep/mop mode used by future cleaning runs."""
+        if mode not in CLEAN_MODES:
             raise ValueError(f"Unsupported RS20 Pro mode: {mode}")
         return self._iot_request(
             serial,
