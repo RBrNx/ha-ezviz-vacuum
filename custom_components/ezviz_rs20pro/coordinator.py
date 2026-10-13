@@ -19,6 +19,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
+from . import robot
 from .api import EzvizRs20ProApi, EzvizRs20ProApiError
 from .cloud_camera import capture_cloud_snapshot, trace_cloud_stream
 from .const import (
@@ -185,12 +186,10 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self.rs20_api is None:
             raise HomeAssistantError("The robot client is not ready yet")
         device = self.data.get("device", {})
-        try:
-            map_mgr = device["FEATURE_INFO"]["0"]["SweepingRobot"]["SweeperMapMgr"]
-            map_id = int(map_mgr["MapBasicProperty"][0]["mapID"])
-            configs = map_mgr["RoomCustomCleanCfg"][0]["room"]
-        except (KeyError, IndexError, TypeError, ValueError) as err:
-            raise HomeAssistantError("The robot has not reported its rooms yet") from err
+        map_id = robot.active_map_id(device, self.data.get("task"))
+        configs = robot.room_clean_configs(device, map_id)
+        if map_id is None or not configs:
+            raise HomeAssistantError("The robot has not reported its rooms yet")
 
         requested = {str(item) for item in segment_ids}
         rooms = [dict(item) for item in configs if str(item.get("roomID")) in requested]

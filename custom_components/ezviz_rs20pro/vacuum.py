@@ -17,27 +17,13 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import EzvizRs20ProCoordinator
+from . import robot
 from .helpers import find_value as _find_value
 
 _ERROR_TRANSLATIONS = {
     "CR_CleanWaterBoxLow": "Clean water tank is low",
 }
 
-_ROOM_TRANSLATIONS = {
-    "#@ChuF#": "Kitchen",
-    "#@KeT#": "Living Room",
-    "#@WoS#": "Bedroom",
-    "#@XuanG#": "Entrance",
-    "#@WeiYJ#": "Bathroom",
-    "#@ZouL#": "Hallway",
-    "#@CanT#": "Dining Room",
-    "#@ShuF#": "Study",
-    "#@ZhuW#": "Master Bedroom",
-    "#@CiW#": "Guest Bedroom",
-    "#@ErTF#": "Kids Room",
-    "#@YangT#": "Balcony",
-    "#@YiMJ#": "Closet",
-}
 
 
 
@@ -149,24 +135,11 @@ class EzvizRs20ProVacuum(CoordinatorEntity[EzvizRs20ProCoordinator], StateVacuum
         """Return the rooms available on the active robot map."""
         await self.coordinator.async_request_refresh()
         device = self.coordinator.data.get("device", {})
-        try:
-            map_mgr = device["FEATURE_INFO"]["0"]["SweepingRobot"]["SweeperMapMgr"]
-            map_info = map_mgr["RegionBasicInfo"]["mapList"][0]
-            map_id = str(map_info["mapID"])
-            regions = map_info["regionList"]
-        except (KeyError, IndexError, TypeError):
-            return []
+        map_id = robot.active_map_id(device, self.coordinator.data.get("task"))
+        group = robot.map_name(device, map_id)
         return [
-            Segment(
-                id=str(region["ID"]),
-                name=_ROOM_TRANSLATIONS.get(
-                    str(region.get("name", "")),
-                    str(region.get("name") or f"Room {region['ID']}"),
-                ),
-                group=f"Map {map_id}",
-            )
-            for region in regions
-            if region.get("regionType") == "room" and region.get("ID") is not None
+            Segment(id=room_id, name=name, group=group)
+            for room_id, name in robot.rooms(device, map_id)
         ]
 
     async def async_clean_segments(

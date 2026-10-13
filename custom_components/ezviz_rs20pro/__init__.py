@@ -23,6 +23,7 @@ from .const import (
     SERVICE_MAP_DIAGNOSTICS,
     SERVICE_REFRESH_CAMERA,
 )
+from . import robot
 from .coordinator import EzvizRs20ProCoordinator, get_source_entry
 
 PLATFORMS = [Platform.IMAGE, Platform.SENSOR, Platform.SWITCH, Platform.VACUUM]
@@ -103,14 +104,9 @@ async def async_setup_entry(
                 await runtime.async_request_refresh()
             if runtime.rs20_api is None:
                 return {"error": "RS20 Pro client is not ready"}
-            map_id = 5
-            device = runtime.data.get("device", {})
-            try:
-                maps = device["FEATURE_INFO"]["0"]["SweepingRobot"]["SweeperMapMgr"]["MapBasicProperty"]
-                if maps:
-                    map_id = int(maps[0]["mapID"])
-            except (KeyError, IndexError, TypeError, ValueError):
-                pass
+            map_id = robot.active_map_id(
+                runtime.data.get("device", {}), runtime.data.get("task")
+            ) or 0
             result = await hass.async_add_executor_job(
                 runtime.rs20_api.query_map_path_candidates,
                 runtime.serial,
