@@ -73,6 +73,9 @@ class DeviceTests(unittest.TestCase):
         self.assertEqual(details["model"], "RS20 Max")
         self.assertEqual(details["model_id"], "CS-RS20-MAX-TGA")
         self.assertEqual(details["name"], "EZVIZ RS20 Max")
+        device = fixtures.device()
+        device["deviceInfos"]["name"] = "Upstairs"
+        self.assertEqual(robot.device_details(device)["name"], "Upstairs")
 
     def test_model_from_device_type(self) -> None:
         device = fixtures.device()

@@ -16,16 +16,16 @@ jobs:
       - name: Tag matches the manifest version
         run: |
           tag="${GITHUB_REF_NAME#v}"
-          version="$(jq -r .version custom_components/ezviz_rs20pro/manifest.json)"
+          version="$(jq -r .version custom_components/ezviz_vacuum/manifest.json)"
           if [ "$tag" != "$version" ]; then
             echo "::error::Release tag $GITHUB_REF_NAME does not match manifest version $version"
             exit 1
           fi
       - name: Build zip
         run: |
-          cd custom_components/ezviz_rs20pro
-          zip -r "$GITHUB_WORKSPACE/ezviz_rs20pro.zip" . -x "__pycache__/*"
+          cd custom_components/ezviz_vacuum
+          zip -r "$GITHUB_WORKSPACE/ezviz_vacuum.zip" . -x "__pycache__/*"
       - name: Attach zip to the release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "$GITHUB_REF_NAME" ezviz_rs20pro.zip --clobber
+        run: gh release upload "$GITHUB_REF_NAME" ezviz_vacuum.zip --clobber

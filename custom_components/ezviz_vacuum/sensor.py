@@ -18,8 +18,8 @@ from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfArea, UnitOfTi
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import robot
-from .coordinator import EzvizRs20ProCoordinator
-from .entity import Rs20Entity
+from .coordinator import EzvizVacuumCoordinator
+from .entity import RobotEntity
 from .helpers import (
     feature,
     find_mapping as _find_mapping,
@@ -30,8 +30,8 @@ Data = Mapping[str, Any]
 
 
 @dataclass(frozen=True, kw_only=True)
-class Rs20SensorDescription(SensorEntityDescription):
-    """Describe a value in the RS20 response."""
+class RobotSensorDescription(SensorEntityDescription):
+    """Describe a value in the robot report."""
 
     source_key: str = ""
     remaining_percent: bool = False
@@ -72,7 +72,7 @@ def _battery_cycles(data: Data) -> Any:
 
 
 SENSORS: Final = (
-    Rs20SensorDescription(
+    RobotSensorDescription(
         key="battery",
         translation_key="battery",
         source_key="SurplusPower",
@@ -80,7 +80,7 @@ SENSORS: Final = (
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    Rs20SensorDescription(
+    RobotSensorDescription(
         key="total_clean_area",
         translation_key="total_clean_area",
         source_key="totalCleanArea",
@@ -88,7 +88,7 @@ SENSORS: Final = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:texture-box",
     ),
-    Rs20SensorDescription(
+    RobotSensorDescription(
         key="total_clean_time",
         translation_key="total_clean_time",
         value_fn=_permanent("totalCleanTimeMin"),
@@ -98,14 +98,14 @@ SENSORS: Final = (
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:timer-outline",
     ),
-    Rs20SensorDescription(
+    RobotSensorDescription(
         key="total_clean_count",
         translation_key="total_clean_count",
         value_fn=_permanent("totalCleanCount"),
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:counter",
     ),
-    Rs20SensorDescription(
+    RobotSensorDescription(
         key="total_dust_collections",
         translation_key="total_dust_collections",
         value_fn=_permanent("totalCollectDustCount"),
@@ -113,7 +113,7 @@ SENSORS: Final = (
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:delete-sweep-outline",
     ),
-    Rs20SensorDescription(
+    RobotSensorDescription(
         key="total_mop_washes",
         translation_key="total_mop_washes",
         value_fn=_permanent("totalWashMopCount"),
@@ -121,7 +121,7 @@ SENSORS: Final = (
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:washing-machine",
     ),
-    Rs20SensorDescription(
+    RobotSensorDescription(
         key="battery_cycles",
         translation_key="battery_cycles",
         value_fn=_battery_cycles,
@@ -129,7 +129,7 @@ SENSORS: Final = (
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:battery-sync-outline",
     ),
-    Rs20SensorDescription(
+    RobotSensorDescription(
         key="current_task",
         translation_key="current_task",
         value_fn=lambda data: robot.current_task(data.get("task")) or None,
@@ -138,7 +138,7 @@ SENSORS: Final = (
         },
         icon="mdi:robot-vacuum-variant",
     ),
-    Rs20SensorDescription(
+    RobotSensorDescription(
         key="task_duration",
         translation_key="task_duration",
         value_fn=_task("taskDuration"),
@@ -147,7 +147,7 @@ SENSORS: Final = (
         suggested_unit_of_measurement=UnitOfTime.MINUTES,
         icon="mdi:timer-sand",
     ),
-    Rs20SensorDescription(
+    RobotSensorDescription(
         key="relocation_failures",
         translation_key="relocation_failures",
         value_fn=_task("relocationFailCount"),
@@ -155,7 +155,7 @@ SENSORS: Final = (
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:map-marker-question-outline",
     ),
-    Rs20SensorDescription(
+    RobotSensorDescription(
         key="last_error",
         translation_key="last_error",
         value_fn=lambda data: (robot.last_error(data.get("device")) or {}).get(
@@ -164,7 +164,7 @@ SENSORS: Final = (
         attributes_fn=lambda data: robot.last_error(data.get("device")),
         icon="mdi:alert-circle-outline",
     ),
-    Rs20SensorDescription(
+    RobotSensorDescription(
         key="last_clean_area",
         translation_key="last_clean_area",
         value_fn=lambda data: (robot.last_clean(data.get("device")) or {}).get("area"),
@@ -172,7 +172,7 @@ SENSORS: Final = (
         native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
         icon="mdi:history",
     ),
-    Rs20SensorDescription(
+    RobotSensorDescription(
         key="wifi_signal",
         translation_key="wifi_signal",
         value_fn=lambda data: _wifi(data).get("signal"),
@@ -185,7 +185,7 @@ SENSORS: Final = (
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:wifi",
     ),
-    Rs20SensorDescription(
+    RobotSensorDescription(
         key="main_brush",
         translation_key="main_brush",
         source_key="RotatingBrushWorkingTime",
@@ -194,7 +194,7 @@ SENSORS: Final = (
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:brush",
     ),
-    Rs20SensorDescription(
+    RobotSensorDescription(
         key="side_brush",
         translation_key="side_brush",
         source_key="EdgeBrushWorkingTime",
@@ -203,7 +203,7 @@ SENSORS: Final = (
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:brush-outline",
     ),
-    Rs20SensorDescription(
+    RobotSensorDescription(
         key="hepa_filter",
         translation_key="hepa_filter",
         source_key="HepaWorkingTime",
@@ -212,7 +212,7 @@ SENSORS: Final = (
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:air-filter",
     ),
-    Rs20SensorDescription(
+    RobotSensorDescription(
         key="mop",
         translation_key="mop",
         source_key="MopWorkingTime",
@@ -221,7 +221,7 @@ SENSORS: Final = (
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:water",
     ),
-    Rs20SensorDescription(
+    RobotSensorDescription(
         key="dust_bag",
         translation_key="dust_bag",
         source_key="DustBagWorkingTime",
@@ -230,7 +230,7 @@ SENSORS: Final = (
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:delete-variant",
     ),
-    Rs20SensorDescription(
+    RobotSensorDescription(
         key="sensors",
         translation_key="sensors",
         source_key="SensorWorkingTime",
@@ -239,7 +239,7 @@ SENSORS: Final = (
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:radar",
     ),
-    Rs20SensorDescription(
+    RobotSensorDescription(
         key="dirty_water_filter",
         translation_key="dirty_water_filter",
         source_key="SewageTankFilterWorkingTime",
@@ -248,7 +248,7 @@ SENSORS: Final = (
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:filter-outline",
     ),
-    Rs20SensorDescription(
+    RobotSensorDescription(
         key="cleaning_solution",
         translation_key="cleaning_solution",
         source_key="CleaningSolutionStatus",
@@ -257,35 +257,35 @@ SENSORS: Final = (
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:bottle-tonic-outline",
     ),
-    Rs20SensorDescription(
+    RobotSensorDescription(
         key="station_mop_washing",
         translation_key="station_mop_washing",
         source_key="CleanMopStatus",
         value_field="status",
         icon="mdi:washing-machine",
     ),
-    Rs20SensorDescription(
+    RobotSensorDescription(
         key="station_mop_drying",
         translation_key="station_mop_drying",
         source_key="DryMopStatus",
         value_field="status",
         icon="mdi:hair-dryer-outline",
     ),
-    Rs20SensorDescription(
+    RobotSensorDescription(
         key="station_dust_collection",
         translation_key="station_dust_collection",
         source_key="DustCollectionStatus",
         value_field="status",
         icon="mdi:delete-sweep-outline",
     ),
-    Rs20SensorDescription(
+    RobotSensorDescription(
         key="station_water_tank_drain",
         translation_key="station_water_tank_drain",
         source_key="EmptyBaseStationWaterTankStatus",
         value_field="status",
         icon="mdi:water-sync",
     ),
-    Rs20SensorDescription(
+    RobotSensorDescription(
         key="station_plumbing_module",
         translation_key="station_plumbing_module",
         source_key="WaterInletAndOutletModule",
@@ -338,24 +338,24 @@ def _consumable_attributes(
 
 async def async_setup_entry(
     hass: Any,
-    entry: ConfigEntry[EzvizRs20ProCoordinator],
+    entry: ConfigEntry[EzvizVacuumCoordinator],
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the robot sensors."""
     async_add_entities(
-        Rs20Sensor(entry.runtime_data, description) for description in SENSORS
+        RobotSensor(entry.runtime_data, description) for description in SENSORS
     )
 
 
-class Rs20Sensor(Rs20Entity, SensorEntity):
-    """A sensor sourced from the RS20 feature report."""
+class RobotSensor(RobotEntity, SensorEntity):
+    """A sensor sourced from the robot feature report."""
 
-    entity_description: Rs20SensorDescription
+    entity_description: RobotSensorDescription
 
     def __init__(
         self,
-        coordinator: EzvizRs20ProCoordinator,
-        description: Rs20SensorDescription,
+        coordinator: EzvizVacuumCoordinator,
+        description: RobotSensorDescription,
     ) -> None:
         super().__init__(coordinator, description.key)
         self.entity_description = description

@@ -1,4 +1,4 @@
-"""Unit tests for the RS20 Pro request adapter."""
+"""Unit tests for the EZVIZ robot request adapter."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ import unittest
 
 from _loader import load
 
-EzvizRs20ProApi = load("api").EzvizRs20ProApi
+EzvizVacuumApi = load("api").EzvizVacuumApi
 
 
 class FakeResponse:
@@ -57,7 +57,7 @@ class ApiTests(unittest.TestCase):
 
     def setUp(self) -> None:
         self.client = FakeClient()
-        self.api = EzvizRs20ProApi(self.client)
+        self.api = EzvizVacuumApi(self.client)
 
     def test_query_current_task(self) -> None:
         self.api.query_current_task("ab1234567")
@@ -260,7 +260,7 @@ class ModelVariantTests(unittest.TestCase):
     def setUp(self) -> None:
         self.client = FakeClient()
         self.client._session = UnknownActionSession({"CleanControl", "RechargeControl"})
-        self.api = EzvizRs20ProApi(self.client)
+        self.api = EzvizVacuumApi(self.client)
 
     def names(self) -> list[str]:
         return [call["url"].rsplit("/", 1)[-1] for call in self.client._session.calls]
@@ -301,6 +301,6 @@ class ModelVariantTests(unittest.TestCase):
             session.calls.append({"url": url, **kw})
             or FakeResponse({"meta": {"code": 500, "message": "busy"}})
         )
-        with self.assertRaises(load("api").EzvizRs20ProApiError):
+        with self.assertRaises(load("api").EzvizVacuumApiError):
             self.api.clean_control("AB1234567", "start")
         self.assertEqual(self.names(), ["CleanControl"])

@@ -9,16 +9,16 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import robot
 from .const import DOMAIN
-from .coordinator import EzvizRs20ProCoordinator
+from .coordinator import EzvizVacuumCoordinator
 from .settings import Setting
 
 
-class Rs20Entity(CoordinatorEntity[EzvizRs20ProCoordinator]):
+class RobotEntity(CoordinatorEntity[EzvizVacuumCoordinator]):
     """Entity attached to one robot device."""
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: EzvizRs20ProCoordinator, key: str) -> None:
+    def __init__(self, coordinator: EzvizVacuumCoordinator, key: str) -> None:
         super().__init__(coordinator)
         serial = coordinator.data["serial"]
         self._attr_unique_id = f"{serial}_{key}"
@@ -34,11 +34,11 @@ class Rs20Entity(CoordinatorEntity[EzvizRs20ProCoordinator]):
         )
 
 
-class Rs20SettingEntity(Rs20Entity):
+class RobotSettingEntity(RobotEntity):
     """Entity that shows and changes one robot setting."""
 
     def __init__(
-        self, coordinator: EzvizRs20ProCoordinator, key: str, setting: Setting
+        self, coordinator: EzvizVacuumCoordinator, key: str, setting: Setting
     ) -> None:
         super().__init__(coordinator, key)
         self.setting = setting

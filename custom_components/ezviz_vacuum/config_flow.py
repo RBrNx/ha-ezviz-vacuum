@@ -16,7 +16,7 @@ from .const import CONF_SERIAL, CONF_SOURCE_ENTRY_ID, DOMAIN, SOURCE_DOMAIN
 from .coordinator import find_api
 
 
-class EzvizRs20ProConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class EzvizVacuumConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Add one EZVIZ robot by reusing the official EZVIZ session."""
 
     VERSION = 1

@@ -10,8 +10,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import EzvizRs20ProCoordinator
-from .entity import Rs20SettingEntity
+from .coordinator import EzvizVacuumCoordinator
+from .entity import RobotSettingEntity
 from .settings import (
     CleanPlanSetting,
     FieldSetting,
@@ -22,7 +22,7 @@ from .settings import (
 
 
 @dataclass(frozen=True, kw_only=True)
-class Rs20SwitchDescription(SwitchEntityDescription):
+class RobotSwitchDescription(SwitchEntityDescription):
     """Describe a boolean robot setting."""
 
     setting: Setting
@@ -33,62 +33,62 @@ def _enabled(domain: str, identifier: str) -> FieldSetting:
     return FieldSetting(domain, identifier, "enabled")
 
 
-SWITCHES: Final[tuple[Rs20SwitchDescription, ...]] = (
-    Rs20SwitchDescription(
+SWITCHES: Final[tuple[RobotSwitchDescription, ...]] = (
+    RobotSwitchDescription(
         key="station_child_lock",
         translation_key="station_child_lock",
         icon="mdi:lock-outline",
         setting=_enabled("SweeperBaseStationMgr", "ChildLockSwitch"),
     ),
-    Rs20SwitchDescription(
+    RobotSwitchDescription(
         key="station_automatic_dust_collection",
         translation_key="station_automatic_dust_collection",
         icon="mdi:delete-sweep-outline",
         setting=_enabled("SweeperCleanTask", "DustCollectionCfg"),
     ),
-    Rs20SwitchDescription(
+    RobotSwitchDescription(
         key="station_automatic_cleaning_solution",
         translation_key="station_automatic_cleaning_solution",
         icon="mdi:bottle-tonic-outline",
         setting=_enabled("SweeperCleanTask", "CleaningSolutionCfg"),
     ),
-    Rs20SwitchDescription(
+    RobotSwitchDescription(
         key="station_rotating_brush_self_clean",
         translation_key="station_rotating_brush_self_clean",
         icon="mdi:brush-outline",
         setting=_enabled("SweeperCleanTask", "RotatingBrushSelfCleanSwitch"),
     ),
-    Rs20SwitchDescription(
+    RobotSwitchDescription(
         key="do_not_disturb",
         translation_key="do_not_disturb",
         icon="mdi:sleep",
         setting=RestPlanSetting("enabled"),
     ),
-    Rs20SwitchDescription(
+    RobotSwitchDescription(
         key="do_not_disturb_resume",
         translation_key="do_not_disturb_resume",
         icon="mdi:play-pause",
         setting=RestPlanSetting("cleanContinue"),
     ),
-    Rs20SwitchDescription(
+    RobotSwitchDescription(
         key="carpet_detection",
         translation_key="carpet_detection",
         icon="mdi:rug",
         setting=FieldSetting("SweeperCleanTask", "CarpetCleanCfg", "detection"),
     ),
-    Rs20SwitchDescription(
+    RobotSwitchDescription(
         key="carpet_boost",
         translation_key="carpet_boost",
         icon="mdi:fan-plus",
         setting=FieldSetting("SweeperCleanTask", "CarpetCleanCfg", "turboClean"),
     ),
-    Rs20SwitchDescription(
+    RobotSwitchDescription(
         key="carpet_extra_clean",
         translation_key="carpet_extra_clean",
         icon="mdi:repeat-once",
         setting=FieldSetting("SweeperCleanTask", "CarpetCleanCfg", "additionalClean"),
     ),
-    Rs20SwitchDescription(
+    RobotSwitchDescription(
         key="carpet_cross_when_blocked",
         translation_key="carpet_cross_when_blocked",
         icon="mdi:debug-step-over",
@@ -96,31 +96,31 @@ SWITCHES: Final[tuple[Rs20SwitchDescription, ...]] = (
             "SweeperCleanTask", "CarpetCleanCfg", "allowPassageWhenObstructed"
         ),
     ),
-    Rs20SwitchDescription(
+    RobotSwitchDescription(
         key="pet_mode",
         translation_key="pet_mode",
         icon="mdi:paw",
         setting=_enabled("SweeperMgr", "PetModeSwitch"),
     ),
-    Rs20SwitchDescription(
+    RobotSwitchDescription(
         key="smart_dirt_detection",
         translation_key="smart_dirt_detection",
         icon="mdi:magnify-scan",
         setting=_enabled("SweeperMgr", "SmartDirtDetectionCfg"),
     ),
-    Rs20SwitchDescription(
+    RobotSwitchDescription(
         key="debris_boost",
         translation_key="debris_boost",
         icon="mdi:grain",
         setting=_enabled("SweeperCleanTask", "ParticulateCleanEnhanceCfg"),
     ),
-    Rs20SwitchDescription(
+    RobotSwitchDescription(
         key="deep_edge_cleaning",
         translation_key="deep_edge_cleaning",
         icon="mdi:border-outside",
         setting=_enabled("SweeperCleanTask", "EdgeDeepCleanCfg"),
     ),
-    Rs20SwitchDescription(
+    RobotSwitchDescription(
         key="off_peak_charging",
         translation_key="off_peak_charging",
         icon="mdi:battery-clock-outline",
@@ -148,21 +148,21 @@ def schedule_label(plan: Any) -> str:
 
 async def async_setup_entry(
     hass: Any,
-    entry: ConfigEntry[EzvizRs20ProCoordinator],
+    entry: ConfigEntry[EzvizVacuumCoordinator],
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the robot setting switches."""
     coordinator = entry.runtime_data
     entities: list[SwitchEntity] = [
-        Rs20SettingSwitch(coordinator, description) for description in SWITCHES
+        RobotSettingSwitch(coordinator, description) for description in SWITCHES
     ]
     # Schedules are read once; reload the integration after adding one.
     for plan in clean_plans(coordinator.data.get("device")):
         plan_id = int(plan["planID"])
         entities.append(
-            Rs20ScheduleSwitch(
+            RobotScheduleSwitch(
                 coordinator,
-                Rs20SwitchDescription(
+                RobotSwitchDescription(
                     key=f"schedule_{plan_id}",
                     translation_key="schedule",
                     icon="mdi:calendar-clock",
@@ -176,15 +176,15 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class Rs20SettingSwitch(Rs20SettingEntity, SwitchEntity):
+class RobotSettingSwitch(RobotSettingEntity, SwitchEntity):
     """A boolean robot setting."""
 
-    entity_description: Rs20SwitchDescription
+    entity_description: RobotSwitchDescription
 
     def __init__(
         self,
-        coordinator: EzvizRs20ProCoordinator,
-        description: Rs20SwitchDescription,
+        coordinator: EzvizVacuumCoordinator,
+        description: RobotSwitchDescription,
     ) -> None:
         super().__init__(coordinator, description.key, description.setting)
         self.entity_description = description
@@ -204,13 +204,13 @@ class Rs20SettingSwitch(Rs20SettingEntity, SwitchEntity):
         await self.async_write_setting(False)
 
 
-class Rs20ScheduleSwitch(Rs20SettingSwitch):
+class RobotScheduleSwitch(RobotSettingSwitch):
     """Turns a cleaning schedule from the app on or off."""
 
     def __init__(
         self,
-        coordinator: EzvizRs20ProCoordinator,
-        description: Rs20SwitchDescription,
+        coordinator: EzvizVacuumCoordinator,
+        description: RobotSwitchDescription,
         plan_id: int,
         label: str,
     ) -> None:

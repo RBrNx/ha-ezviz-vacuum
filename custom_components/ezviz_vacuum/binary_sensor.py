@@ -14,25 +14,25 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import robot
-from .coordinator import EzvizRs20ProCoordinator
-from .entity import Rs20Entity
+from .coordinator import EzvizVacuumCoordinator
+from .entity import RobotEntity
 
 
 @dataclass(frozen=True, kw_only=True)
-class Rs20BinarySensorDescription(BinarySensorEntityDescription):
+class RobotBinarySensorDescription(BinarySensorEntityDescription):
     """Describe a yes/no value of the live task."""
 
     value_fn: Callable[[Mapping[str, Any]], Any]
 
 
-BINARY_SENSORS: Final[tuple[Rs20BinarySensorDescription, ...]] = (
-    Rs20BinarySensorDescription(
+BINARY_SENSORS: Final[tuple[RobotBinarySensorDescription, ...]] = (
+    RobotBinarySensorDescription(
         key="on_base_station",
         translation_key="on_base_station",
         icon="mdi:home-import-outline",
         value_fn=lambda data: robot.task_data(data.get("task")).get("isOnBasestation"),
     ),
-    Rs20BinarySensorDescription(
+    RobotBinarySensorDescription(
         key="do_not_disturb_active",
         translation_key="do_not_disturb_active",
         icon="mdi:sleep",
@@ -43,25 +43,25 @@ BINARY_SENSORS: Final[tuple[Rs20BinarySensorDescription, ...]] = (
 
 async def async_setup_entry(
     hass: Any,
-    entry: ConfigEntry[EzvizRs20ProCoordinator],
+    entry: ConfigEntry[EzvizVacuumCoordinator],
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the robot binary sensors."""
     async_add_entities(
-        Rs20BinarySensor(entry.runtime_data, description)
+        RobotBinarySensor(entry.runtime_data, description)
         for description in BINARY_SENSORS
     )
 
 
-class Rs20BinarySensor(Rs20Entity, BinarySensorEntity):
+class RobotBinarySensor(RobotEntity, BinarySensorEntity):
     """A yes/no value reported by the robot."""
 
-    entity_description: Rs20BinarySensorDescription
+    entity_description: RobotBinarySensorDescription
 
     def __init__(
         self,
-        coordinator: EzvizRs20ProCoordinator,
-        description: Rs20BinarySensorDescription,
+        coordinator: EzvizVacuumCoordinator,
+        description: RobotBinarySensorDescription,
     ) -> None:
         super().__init__(coordinator, description.key)
         self.entity_description = description

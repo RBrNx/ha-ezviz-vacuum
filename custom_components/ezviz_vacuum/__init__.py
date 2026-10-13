@@ -1,4 +1,4 @@
-"""EZVIZ robot vacuum integration (RS20 family)."""
+"""EZVIZ robot vacuum integration."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ from .const import (
     SERVICE_MAP_DIAGNOSTICS,
     SERVICE_REFRESH_CAMERA,
 )
-from .coordinator import EzvizRs20ProCoordinator, get_source_entry
+from .coordinator import EzvizVacuumCoordinator, get_source_entry
 from .helpers import feature
 from .mapdata import decode_path
 
@@ -40,7 +40,7 @@ PLATFORMS = [
     Platform.VACUUM,
 ]
 
-type EzvizRs20ProConfigEntry = ConfigEntry[EzvizRs20ProCoordinator]
+type EzvizVacuumConfigEntry = ConfigEntry[EzvizVacuumCoordinator]
 
 ATTR_SERIAL = "serial"
 _SERIAL_SCHEMA = {vol.Optional(ATTR_SERIAL): cv.string}
@@ -74,11 +74,9 @@ def _sanitize(value: Any) -> Any:
     return value
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: EzvizRs20ProConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EzvizVacuumConfigEntry) -> bool:
     """Set up one robot from a config entry."""
-    coordinator = EzvizRs20ProCoordinator(hass, entry, get_source_entry(hass, entry))
+    coordinator = EzvizVacuumCoordinator(hass, entry, get_source_entry(hass, entry))
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     _migrate_to_serial(hass, entry, coordinator.serial)
@@ -105,13 +103,13 @@ def _migrate_to_serial(hass: HomeAssistant, entry: ConfigEntry, serial: str) -> 
     )
 
 
-def _coordinator(hass: HomeAssistant, call: ServiceCall) -> EzvizRs20ProCoordinator:
+def _coordinator(hass: HomeAssistant, call: ServiceCall) -> EzvizVacuumCoordinator:
     """Return the robot addressed by a service call (default: the first)."""
     wanted = str(call.data.get(ATTR_SERIAL) or "").strip().upper()
     loaded = [
         entry.runtime_data
         for entry in hass.config_entries.async_entries(DOMAIN)
-        if isinstance(getattr(entry, "runtime_data", None), EzvizRs20ProCoordinator)
+        if isinstance(getattr(entry, "runtime_data", None), EzvizVacuumCoordinator)
     ]
     if not loaded:
         raise HomeAssistantError("No EZVIZ robot is loaded")
@@ -123,10 +121,10 @@ def _coordinator(hass: HomeAssistant, call: ServiceCall) -> EzvizRs20ProCoordina
     raise ServiceValidationError(f"No EZVIZ robot with serial {wanted} is loaded")
 
 
-async def _ready(coordinator: EzvizRs20ProCoordinator) -> EzvizRs20ProCoordinator:
-    if coordinator.rs20_api is None:
+async def _ready(coordinator: EzvizVacuumCoordinator) -> EzvizVacuumCoordinator:
+    if coordinator.robot_api is None:
         await coordinator.async_request_refresh()
-    if coordinator.rs20_api is None:
+    if coordinator.robot_api is None:
         raise HomeAssistantError("The robot client is not ready yet")
     return coordinator
 
@@ -154,7 +152,7 @@ def _register_services(hass: HomeAssistant) -> None:  # noqa: C901
             try:
                 value = await hass.async_add_executor_job(
                     partial(
-                        coordinator.rs20_api.fetch_map_layer,
+                        coordinator.robot_api.fetch_map_layer,
                         coordinator.serial,
                         layer,
                         map_id=map_id,
@@ -178,7 +176,7 @@ def _register_services(hass: HomeAssistant) -> None:  # noqa: C901
                     room.get("roomID") for room in value.get("room") or []
                 ]
         client = await hass.async_add_executor_job(
-            coordinator.rs20_api.client_diagnostics
+            coordinator.robot_api.client_diagnostics
         )
         operation = feature(device, "OperationDiagnosis", "DeviceOperationParams")
         operation = operation if isinstance(operation, Mapping) else {}
@@ -188,10 +186,10 @@ def _register_services(hass: HomeAssistant) -> None:  # noqa: C901
                 "versions": versions,
                 "layers": layers,
                 "client": client,
-                "clean_history": coordinator.rs20_api.decode_diagnostic_blob(
+                "clean_history": coordinator.robot_api.decode_diagnostic_blob(
                     operation.get("cleanHistory")
                 ),
-                "abnormal_history": coordinator.rs20_api.decode_diagnostic_blob(
+                "abnormal_history": coordinator.robot_api.decode_diagnostic_blob(
                     operation.get("abnormalHistory")
                 ),
             }
@@ -217,7 +215,7 @@ def _register_services(hass: HomeAssistant) -> None:  # noqa: C901
         coordinator = await _ready(_coordinator(hass, call))
         result = await hass.async_add_executor_job(
             partial(
-                coordinator.rs20_api.raw_feature_request,
+                coordinator.robot_api.raw_feature_request,
                 coordinator.serial,
                 method=call.data["method"],
                 endpoint=call.data["endpoint"],
@@ -235,7 +233,7 @@ def _register_services(hass: HomeAssistant) -> None:  # noqa: C901
         coordinator = await _ready(_coordinator(hass, call))
         result = await hass.async_add_executor_job(
             partial(
-                coordinator.rs20_api.raw_api_request,
+                coordinator.robot_api.raw_api_request,
                 method=call.data["method"],
                 path=call.data["path"],
                 params=call.data.get("params"),
@@ -297,7 +295,7 @@ def _register_services(hass: HomeAssistant) -> None:  # noqa: C901
 
 
 async def async_unload_entry(
-    hass: HomeAssistant, entry: EzvizRs20ProConfigEntry
+    hass: HomeAssistant, entry: EzvizVacuumConfigEntry
 ) -> bool:
     """Unload a robot."""
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

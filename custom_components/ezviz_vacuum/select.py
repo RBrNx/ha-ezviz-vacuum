@@ -12,8 +12,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import robot
 from .const import CLEAN_MODES
-from .coordinator import EzvizRs20ProCoordinator
-from .entity import Rs20SettingEntity
+from .coordinator import EzvizVacuumCoordinator
+from .entity import RobotSettingEntity
 from .settings import (
     FAN_SPEEDS,
     ROOM_SETTING_MODES,
@@ -27,7 +27,7 @@ from .settings import (
 
 
 @dataclass(frozen=True, kw_only=True)
-class Rs20SelectDescription(SelectEntityDescription):
+class RobotSelectDescription(SelectEntityDescription):
     """Describe a robot setting with a fixed set of values."""
 
     setting: Setting
@@ -45,15 +45,15 @@ CLEAN_MODE_OPTIONS: Final = {
 }
 
 
-SELECTS: Final[tuple[Rs20SelectDescription, ...]] = (
-    Rs20SelectDescription(
+SELECTS: Final[tuple[RobotSelectDescription, ...]] = (
+    RobotSelectDescription(
         key="water_level",
         translation_key="water_level",
         icon="mdi:water-outline",
         options=list(WATER_LEVELS),
         setting=MapCleanSetting("waterQuantity"),
     ),
-    Rs20SelectDescription(
+    RobotSelectDescription(
         key="cleaning_mode",
         translation_key="cleaning_mode",
         icon="mdi:broom",
@@ -62,14 +62,14 @@ SELECTS: Final[tuple[Rs20SelectDescription, ...]] = (
         setting=ScalarSetting("SweeperCleanTask", "SweepMopMode"),
         entity_category=None,
     ),
-    Rs20SelectDescription(
+    RobotSelectDescription(
         key="room_settings",
         translation_key="room_settings",
         icon="mdi:floor-plan",
         options=list(ROOM_SETTING_MODES),
         setting=MapCleanSetting("cleanConfigType"),
     ),
-    Rs20SelectDescription(
+    RobotSelectDescription(
         key="mop_wash_trigger",
         translation_key="mop_wash_trigger",
         icon="mdi:washing-machine",
@@ -81,7 +81,7 @@ SELECTS: Final[tuple[Rs20SelectDescription, ...]] = (
 
 def room_selects(
     device: Any, task: Any
-) -> list[tuple[str, Rs20SelectDescription, str]]:
+) -> list[tuple[str, RobotSelectDescription, str]]:
     """Return ``(key, description, room name)`` for every room of the active map."""
     map_id = robot.active_map_id(device, task)
     configured = {
@@ -95,7 +95,7 @@ def room_selects(
             ("fanMode", "suction", FAN_SPEEDS, "mdi:fan"),
             ("waterQuantity", "water_level", WATER_LEVELS, "mdi:water-outline"),
         ):
-            description = Rs20SelectDescription(
+            description = RobotSelectDescription(
                 key=f"room_{room_id}_{suffix}",
                 translation_key=f"room_{suffix}",
                 icon=icon,
@@ -108,18 +108,18 @@ def room_selects(
 
 async def async_setup_entry(
     hass: Any,
-    entry: ConfigEntry[EzvizRs20ProCoordinator],
+    entry: ConfigEntry[EzvizVacuumCoordinator],
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the robot setting selects."""
     coordinator = entry.runtime_data
     entities = [
-        Rs20SettingSelect(coordinator, description.key, description)
+        RobotSettingSelect(coordinator, description.key, description)
         for description in SELECTS
     ]
     # Rooms are read once; reload the integration after editing the map.
     entities.extend(
-        Rs20SettingSelect(coordinator, key, description, {"room": name})
+        RobotSettingSelect(coordinator, key, description, {"room": name})
         for key, description, name in room_selects(
             coordinator.data.get("device"), coordinator.data.get("task")
         )
@@ -127,16 +127,16 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class Rs20SettingSelect(Rs20SettingEntity, SelectEntity):
+class RobotSettingSelect(RobotSettingEntity, SelectEntity):
     """A robot setting with a fixed set of values."""
 
-    entity_description: Rs20SelectDescription
+    entity_description: RobotSelectDescription
 
     def __init__(
         self,
-        coordinator: EzvizRs20ProCoordinator,
+        coordinator: EzvizVacuumCoordinator,
         key: str,
-        description: Rs20SelectDescription,
+        description: RobotSelectDescription,
         placeholders: dict[str, str] | None = None,
     ) -> None:
         super().__init__(coordinator, key, description.setting)

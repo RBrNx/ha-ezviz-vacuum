@@ -1,6 +1,6 @@
 {
-  "domain": "ezviz_rs20pro",
-  "name": "EZVIZ RS20",
+  "domain": "ezviz_vacuum",
+  "name": "EZVIZ Robot Vacuum",
   "after_dependencies": [
     "ezviz"
   ],
@@ -11,12 +11,12 @@
   "dependencies": [
     "ffmpeg"
   ],
-  "documentation": "https://github.com/stefanelul2000/ha-ezviz-rs20",
+  "documentation": "https://github.com/stefanelul2000/ha-ezviz-vacuum",
   "integration_type": "device",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/stefanelul2000/ha-ezviz-rs20/issues",
+  "issue_tracker": "https://github.com/stefanelul2000/ha-ezviz-vacuum/issues",
   "requirements": [
     "pycryptodome==3.23.0"
   ],
-  "version": "0.7.0"
+  "version": "1.0.0"
 }

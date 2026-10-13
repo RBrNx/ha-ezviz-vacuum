@@ -34,7 +34,7 @@ body:
     id: error
     attributes:
       label: Error message or logs
-      description: The error shown in Home Assistant, and lines from Settings → System → Logs that mention ezviz_rs20pro.
+      description: The error shown in Home Assistant, and lines from Settings → System → Logs that mention ezviz_vacuum.
       render: text
   - type: textarea
     id: inspect

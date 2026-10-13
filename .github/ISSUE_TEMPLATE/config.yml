@@ -1,5 +1,5 @@
 blank_issues_enabled: false
 contact_links:
   - name: Questions and ideas
-    url: https://github.com/stefanelul2000/ha-ezviz-rs20/discussions
+    url: https://github.com/stefanelul2000/ha-ezviz-vacuum/discussions
     about: Ask a question or share how you use the integration.

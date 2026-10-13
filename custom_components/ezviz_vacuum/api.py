@@ -13,11 +13,11 @@ import zlib
 from .const import CLEAN_MODES, SETTING_ACTIONS, WRITABLE_FEATURES
 
 
-class EzvizRs20ProApiError(Exception):
+class EzvizVacuumApiError(Exception):
     """Raised when the robot endpoint rejects a request."""
 
 
-class UnknownActionError(EzvizRs20ProApiError):
+class UnknownActionError(EzvizVacuumApiError):
     """Raised when the robot model does not have the requested function."""
 
 
@@ -56,7 +56,7 @@ MAP_LAYERS = {
 }
 
 
-class EzvizRs20ProApi:
+class EzvizVacuumApi:
     """Use the official integration's session without copying credentials."""
 
     def __init__(self, client: Any) -> None:
@@ -299,11 +299,11 @@ class EzvizRs20ProApi:
         response.raise_for_status()
         result = response.json()
         if not isinstance(result, dict):
-            raise EzvizRs20ProApiError("EZVIZ returned an invalid map response")
+            raise EzvizVacuumApiError("EZVIZ returned an invalid map response")
         meta = result.get("meta")
         code = meta.get("code") if isinstance(meta, dict) else None
         if code not in (None, 0, 200, "0", "200"):
-            raise EzvizRs20ProApiError(f"map/{layer}: {rejection_reason(result, code)}")
+            raise EzvizVacuumApiError(f"map/{layer}: {rejection_reason(result, code)}")
         value = result.get(MAP_LAYERS[layer])
         return value if isinstance(value, dict) else {}
 
@@ -420,10 +420,10 @@ class EzvizRs20ProApi:
         session = getattr(self._client, "_session", None)
         token = getattr(self._client, "_token", None)
         if session is None or not isinstance(token, dict):
-            raise EzvizRs20ProApiError("Active EZVIZ session is unavailable")
+            raise EzvizVacuumApiError("Active EZVIZ session is unavailable")
         api_url = token.get("api_url")
         if not api_url:
-            raise EzvizRs20ProApiError("No API address in the active EZVIZ session")
+            raise EzvizVacuumApiError("No API address in the active EZVIZ session")
         return session, str(api_url)
 
     def _iot_request(
@@ -452,7 +452,7 @@ class EzvizRs20ProApi:
         response.raise_for_status()
         result = response.json()
         if not isinstance(result, dict):
-            raise EzvizRs20ProApiError("EZVIZ returned an invalid response")
+            raise EzvizVacuumApiError("EZVIZ returned an invalid response")
 
         meta = result.get("meta")
         code = meta.get("code") if isinstance(meta, dict) else result.get("code")
@@ -463,7 +463,7 @@ class EzvizRs20ProApi:
             error = (
                 UnknownActionError
                 if isinstance(detail, str) and detail.strip() == _UNKNOWN_ACTION
-                else EzvizRs20ProApiError
+                else EzvizVacuumApiError
             )
             raise error(f"{domain}/{identifier}: {rejection_reason(result, code)}")
         return result

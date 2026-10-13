@@ -10,7 +10,7 @@ body:
         report about another model tells us what works and what needs fixing.
 
         Before you start: set up the integration, let the robot run one clean, then
-        call **Developer tools → Actions → EZVIZ RS20: Inspect robot** and copy the
+        call **Developer tools → Actions → EZVIZ Robot Vacuum: Inspect robot** and copy the
         response. It removes credentials, but please read it before posting.
   - type: input
     id: model
@@ -72,5 +72,5 @@ body:
     id: logs
     attributes:
       label: Logs
-      description: Any lines from Settings → System → Logs that mention ezviz_rs20pro.
+      description: Any lines from Settings → System → Logs that mention ezviz_vacuum.
       render: text

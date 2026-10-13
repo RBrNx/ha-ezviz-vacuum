@@ -15,8 +15,8 @@ from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import robot
-from .coordinator import EzvizRs20ProCoordinator
-from .entity import Rs20SettingEntity
+from .coordinator import EzvizVacuumCoordinator
+from .entity import RobotSettingEntity
 from .settings import (
     FieldSetting,
     MapCleanSetting,
@@ -29,7 +29,7 @@ MAX_PASSES = 3
 
 
 @dataclass(frozen=True, kw_only=True)
-class Rs20NumberDescription(NumberEntityDescription):
+class RobotNumberDescription(NumberEntityDescription):
     """Describe a numeric robot setting."""
 
     setting: Setting
@@ -38,8 +38,8 @@ class Rs20NumberDescription(NumberEntityDescription):
     native_step: float | None = 1
 
 
-NUMBERS: Final[tuple[Rs20NumberDescription, ...]] = (
-    Rs20NumberDescription(
+NUMBERS: Final[tuple[RobotNumberDescription, ...]] = (
+    RobotNumberDescription(
         key="cleaning_passes",
         translation_key="cleaning_passes",
         icon="mdi:repeat",
@@ -47,7 +47,7 @@ NUMBERS: Final[tuple[Rs20NumberDescription, ...]] = (
         native_max_value=MAX_PASSES,
         setting=MapCleanSetting("cleanTimes"),
     ),
-    Rs20NumberDescription(
+    RobotNumberDescription(
         key="mop_wash_interval",
         translation_key="mop_wash_interval",
         icon="mdi:washing-machine",
@@ -56,7 +56,7 @@ NUMBERS: Final[tuple[Rs20NumberDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         setting=FieldSetting("SweeperCleanTask", "WashMopCfg", "interval"),
     ),
-    Rs20NumberDescription(
+    RobotNumberDescription(
         key="mop_drying_time",
         translation_key="mop_drying_time",
         icon="mdi:sun-thermometer-outline",
@@ -66,7 +66,7 @@ NUMBERS: Final[tuple[Rs20NumberDescription, ...]] = (
         native_unit_of_measurement=UnitOfTime.MINUTES,
         setting=FieldSetting("SweeperCleanTask", "DryMopDuration", "duration"),
     ),
-    Rs20NumberDescription(
+    RobotNumberDescription(
         key="dust_collection_frequency",
         translation_key="dust_collection_frequency",
         icon="mdi:delete-clock-outline",
@@ -76,7 +76,7 @@ NUMBERS: Final[tuple[Rs20NumberDescription, ...]] = (
             "SweeperCleanTask", "DustCollectionCfg", "frequencyAfterClean"
         ),
     ),
-    Rs20NumberDescription(
+    RobotNumberDescription(
         key="voice_volume",
         translation_key="voice_volume",
         icon="mdi:volume-high",
@@ -92,7 +92,7 @@ NUMBERS: Final[tuple[Rs20NumberDescription, ...]] = (
 
 def room_numbers(
     device: Any, task: Any
-) -> list[tuple[str, Rs20NumberDescription, str]]:
+) -> list[tuple[str, RobotNumberDescription, str]]:
     """Return ``(key, description, room name)`` for per-room passes."""
     map_id = robot.active_map_id(device, task)
     configured = {
@@ -101,7 +101,7 @@ def room_numbers(
     return [
         (
             f"room_{room_id}_cleaning_passes",
-            Rs20NumberDescription(
+            RobotNumberDescription(
                 key=f"room_{room_id}_cleaning_passes",
                 translation_key="room_cleaning_passes",
                 icon="mdi:repeat",
@@ -118,17 +118,17 @@ def room_numbers(
 
 async def async_setup_entry(
     hass: Any,
-    entry: ConfigEntry[EzvizRs20ProCoordinator],
+    entry: ConfigEntry[EzvizVacuumCoordinator],
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the robot setting numbers."""
     coordinator = entry.runtime_data
     entities = [
-        Rs20SettingNumber(coordinator, description.key, description)
+        RobotSettingNumber(coordinator, description.key, description)
         for description in NUMBERS
     ]
     entities.extend(
-        Rs20SettingNumber(coordinator, key, description, {"room": name})
+        RobotSettingNumber(coordinator, key, description, {"room": name})
         for key, description, name in room_numbers(
             coordinator.data.get("device"), coordinator.data.get("task")
         )
@@ -136,16 +136,16 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class Rs20SettingNumber(Rs20SettingEntity, NumberEntity):
+class RobotSettingNumber(RobotSettingEntity, NumberEntity):
     """A numeric robot setting."""
 
-    entity_description: Rs20NumberDescription
+    entity_description: RobotNumberDescription
 
     def __init__(
         self,
-        coordinator: EzvizRs20ProCoordinator,
+        coordinator: EzvizVacuumCoordinator,
         key: str,
-        description: Rs20NumberDescription,
+        description: RobotNumberDescription,
         placeholders: dict[str, str] | None = None,
     ) -> None:
         super().__init__(coordinator, key, description.setting)

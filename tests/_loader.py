@@ -13,8 +13,8 @@ from pathlib import Path
 import sys
 import types
 
-PACKAGE = "rs20_under_test"
-PACKAGE_DIR = Path(__file__).parents[1] / "custom_components" / "ezviz_rs20pro"
+PACKAGE = "ezviz_vacuum_under_test"
+PACKAGE_DIR = Path(__file__).parents[1] / "custom_components" / "ezviz_vacuum"
 
 
 def load(module: str) -> types.ModuleType:

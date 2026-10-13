@@ -7,7 +7,7 @@ from functools import lru_cache
 import re
 from typing import Any
 
-from .api import EzvizRs20ProApi
+from .api import EzvizVacuumApi
 from .const import CLEAN_MODES
 from .helpers import feature, robot_features
 
@@ -204,10 +204,14 @@ def device_details(device: Mapping[str, Any] | None) -> dict[str, str | None]:
     version = info.get("version")
     model = model_name(device)
     name = str(info.get("name") or "").strip() or model
+    # A name the owner chose ("Upstairs") is kept as is; the app's default,
+    # the bare model name, gets the brand so it reads "EZVIZ RS20 Max".
+    if name.casefold() == model.casefold() and not name.upper().startswith("EZVIZ"):
+        name = f"EZVIZ {name}"
     return {
         "model": model,
         "model_id": str(info.get("deviceType") or "") or None,
-        "name": name if name.upper().startswith("EZVIZ") else f"EZVIZ {name}",
+        "name": name,
         "sw_version": str(version) if version else None,
     }
 
@@ -370,7 +374,7 @@ def error_description(code: Any, description: Any = None) -> str | None:
 
 @lru_cache(maxsize=8)
 def _decode_history(content: str) -> tuple[Mapping[str, Any], ...]:
-    decoded = EzvizRs20ProApi.decode_diagnostic_blob({"content": content})
+    decoded = EzvizVacuumApi.decode_diagnostic_blob({"content": content})
     items = decoded.get("list") if isinstance(decoded, Mapping) else None
     return tuple(item for item in _as_list(items) if isinstance(item, Mapping))
 

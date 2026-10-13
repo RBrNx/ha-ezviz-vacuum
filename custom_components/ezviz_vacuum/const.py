@@ -1,8 +1,8 @@
-"""Constants for the EZVIZ RS20 integration."""
+"""Constants for the EZVIZ Robot Vacuum integration."""
 
 from datetime import timedelta
 
-DOMAIN = "ezviz_rs20pro"
+DOMAIN = "ezviz_vacuum"
 SOURCE_DOMAIN = "ezviz"
 
 CONF_SOURCE_ENTRY_ID = "source_entry_id"

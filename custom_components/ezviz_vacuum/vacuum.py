@@ -15,8 +15,8 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import robot
-from .coordinator import EzvizRs20ProCoordinator
-from .entity import Rs20Entity
+from .coordinator import EzvizVacuumCoordinator
+from .entity import RobotEntity
 from .settings import MapCleanSetting
 
 # Suction levels of the active map (SweeperMapMgr/StdCleanCfg.fanMode).
@@ -35,14 +35,14 @@ _ACTIVITIES = {
 
 async def async_setup_entry(
     hass: Any,
-    entry: ConfigEntry[EzvizRs20ProCoordinator],
+    entry: ConfigEntry[EzvizVacuumCoordinator],
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the robot vacuum entity."""
-    async_add_entities([EzvizRs20ProVacuum(entry.runtime_data)])
+    async_add_entities([EzvizVacuumVacuum(entry.runtime_data)])
 
 
-class EzvizRs20ProVacuum(Rs20Entity, StateVacuumEntity):
+class EzvizVacuumVacuum(RobotEntity, StateVacuumEntity):
     """EZVIZ robot vacuum entity."""
 
     _attr_name = None
@@ -57,7 +57,7 @@ class EzvizRs20ProVacuum(Rs20Entity, StateVacuumEntity):
     )
     _attr_fan_speed_list = list(FAN_SPEEDS.values())
 
-    def __init__(self, coordinator: EzvizRs20ProCoordinator) -> None:
+    def __init__(self, coordinator: EzvizVacuumCoordinator) -> None:
         super().__init__(coordinator, "vacuum")
 
     @property

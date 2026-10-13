@@ -21,7 +21,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import robot
-from .api import EzvizRs20ProApi, EzvizRs20ProApiError
+from .api import EzvizVacuumApi, EzvizVacuumApiError
 from .cloud_camera import capture_cloud_snapshot, trace_cloud_stream
 from .const import (
     ACTIVE_SCAN_INTERVAL,
@@ -55,7 +55,7 @@ def find_api(runtime_data: Any) -> Any | None:
     return None
 
 
-class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class EzvizVacuumCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Fetch robot data through the already authenticated EZVIZ client."""
 
     def __init__(
@@ -73,7 +73,7 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.entry = entry
         self.source_entry = source_entry
         self.serial: str = entry.data.get(CONF_SERIAL, "")
-        self.rs20_api: EzvizRs20ProApi | None = None
+        self.robot_api: EzvizVacuumApi | None = None
         self._device: dict[str, Any] | None = None
         self._device_fetched: float = 0.0
         self._device_task: str | None = None
@@ -143,12 +143,12 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.serial, self._device = await self._async_fetch_device(source_api)
             self._device_fetched = monotonic()
 
-        self.rs20_api = EzvizRs20ProApi(source_api)
+        self.robot_api = EzvizVacuumApi(source_api)
         task: dict[str, Any] = {}
         task_error: str | None = None
         try:
             task = await self.hass.async_add_executor_job(
-                self.rs20_api.query_current_task,
+                self.robot_api.query_current_task,
                 self.serial,
             )
         except Exception as err:
@@ -188,7 +188,7 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         from homeassistant.util import dt as dt_util
 
         map_id = robot.active_map_id(self._device, task)
-        if map_id is None or self.rs20_api is None:
+        if map_id is None or self.robot_api is None:
             return
         if map_id != self._map_cache_id:
             self._map_cache = {}
@@ -205,7 +205,7 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 # with one, the path layer comes back empty while cleaning.
                 value = await self.hass.async_add_executor_job(
                     partial(
-                        self.rs20_api.fetch_map_layer,
+                        self.robot_api.fetch_map_layer,
                         self.serial,
                         layer,
                         map_id=map_id,
@@ -252,7 +252,7 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_call(self, func: Any, *args: Any, **kwargs: Any) -> Any:
         """Run a blocking API call and turn failures into HA errors."""
-        if self.rs20_api is None:
+        if self.robot_api is None:
             raise HomeAssistantError("The robot client is not ready yet")
         try:
             return await self.hass.async_add_executor_job(
@@ -260,24 +260,24 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
         except ValueError as err:
             raise ServiceValidationError(str(err)) from err
-        except EzvizRs20ProApiError as err:
+        except EzvizVacuumApiError as err:
             raise HomeAssistantError(f"EZVIZ rejected the command: {err}") from err
         except Exception as err:
             raise HomeAssistantError(f"Could not reach the EZVIZ cloud: {err}") from err
 
     async def async_clean_control(self, command: str) -> None:
         """Send a documented robot control and refresh state."""
-        await self._async_call(self.rs20_api.clean_control, self.serial, command)
+        await self._async_call(self.robot_api.clean_control, self.serial, command)
         await self.async_request_refresh()
 
     async def async_return_to_base(self) -> None:
         """Send the robot back to its base station."""
-        await self._async_call(self.rs20_api.recharge_control, self.serial, "start")
+        await self._async_call(self.robot_api.recharge_control, self.serial, "start")
         await self.async_request_refresh()
 
     async def async_write_setting(self, setting: Setting, value: Any) -> None:
         """Change one robot setting and show the new value immediately."""
-        if self.rs20_api is None:
+        if self.robot_api is None:
             raise HomeAssistantError("The robot client is not ready yet")
         device = self.data.get("device", {})
         try:
@@ -292,7 +292,7 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if action is not None:
             domain, name, payload = action
             await self._async_call(
-                self.rs20_api.send_setting_action,
+                self.robot_api.send_setting_action,
                 self.serial,
                 domain=domain,
                 action=name,
@@ -302,7 +302,7 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         else:
             domain, identifier, payload = write
             await self._async_call(
-                self.rs20_api.set_feature,
+                self.robot_api.set_feature,
                 self.serial,
                 domain=domain,
                 identifier=identifier,
@@ -315,7 +315,7 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def async_clean_segments(self, segment_ids: list[str]) -> None:
         """Clean the selected rooms with the robot's own settings."""
-        if self.rs20_api is None:
+        if self.robot_api is None:
             raise HomeAssistantError("The robot client is not ready yet")
         device = self.data.get("device", {})
         map_id = robot.active_map_id(device, self.data.get("task"))
@@ -327,7 +327,7 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if missing:
             raise ServiceValidationError(f"Unknown robot rooms: {', '.join(missing)}")
         await self._async_call(
-            self.rs20_api.start_region_clean,
+            self.robot_api.start_region_clean,
             self.serial,
             map_id=map_id,
             room_ids=[int(item) for item in requested],

@@ -64,7 +64,7 @@ jobs:
               else:
                   yield prefix.rstrip(".")
 
-          folder = pathlib.Path("custom_components/ezviz_rs20pro/translations")
+          folder = pathlib.Path("custom_components/ezviz_vacuum/translations")
           english = set(keys(json.loads((folder / "en.json").read_text())))
           failed = False
           for path in sorted(folder.glob("*.json")):

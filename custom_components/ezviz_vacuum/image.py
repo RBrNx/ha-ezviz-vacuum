@@ -9,33 +9,33 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import robot
-from .coordinator import EzvizRs20ProCoordinator
-from .entity import Rs20Entity
+from .coordinator import EzvizVacuumCoordinator
+from .entity import RobotEntity
 
 
 async def async_setup_entry(
     hass: Any,
-    entry: ConfigEntry[EzvizRs20ProCoordinator],
+    entry: ConfigEntry[EzvizVacuumCoordinator],
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the cached snapshot image."""
     async_add_entities(
         [
-            EzvizRs20ProMapImage(hass, entry.runtime_data),
-            EzvizRs20ProCameraImage(hass, entry.runtime_data),
+            EzvizVacuumMapImage(hass, entry.runtime_data),
+            EzvizVacuumCameraImage(hass, entry.runtime_data),
         ]
     )
 
 
-class EzvizRs20ProCameraImage(Rs20Entity, ImageEntity):
+class EzvizVacuumCameraImage(RobotEntity, ImageEntity):
     """Last image captured after an explicit service call."""
 
     _attr_translation_key = "camera_snapshot"
     _attr_content_type = "image/jpeg"
 
-    def __init__(self, hass: Any, coordinator: EzvizRs20ProCoordinator) -> None:
+    def __init__(self, hass: Any, coordinator: EzvizVacuumCoordinator) -> None:
         ImageEntity.__init__(self, hass)
-        Rs20Entity.__init__(self, coordinator, "camera_snapshot")
+        RobotEntity.__init__(self, coordinator, "camera_snapshot")
 
     @property
     def image_last_updated(self):
@@ -47,15 +47,15 @@ class EzvizRs20ProCameraImage(Rs20Entity, ImageEntity):
         return self.coordinator.camera_snapshot
 
 
-class EzvizRs20ProMapImage(Rs20Entity, ImageEntity):
+class EzvizVacuumMapImage(RobotEntity, ImageEntity):
     """The robot's map with rooms, path, charger and robot position."""
 
     _attr_translation_key = "map"
     _attr_content_type = "image/svg+xml"
 
-    def __init__(self, hass: Any, coordinator: EzvizRs20ProCoordinator) -> None:
+    def __init__(self, hass: Any, coordinator: EzvizVacuumCoordinator) -> None:
         ImageEntity.__init__(self, hass)
-        Rs20Entity.__init__(self, coordinator, "map")
+        RobotEntity.__init__(self, coordinator, "map")
 
     @property
     def image_last_updated(self):
