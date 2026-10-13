@@ -18,50 +18,169 @@
   },
   "entity": {
     "image": {
-      "camera_snapshot": { "name": "Camera — latest snapshot" }
+      "camera_snapshot": {
+        "name": "Camera — latest snapshot"
+      }
     },
     "sensor": {
-      "battery": { "name": "Battery" },
-      "total_clean_area": { "name": "Total cleaned area" },
-      "main_brush": { "name": "Main brush" },
-      "side_brush": { "name": "Side brush" },
-      "hepa_filter": { "name": "HEPA filter" },
-      "mop": { "name": "Mop pads" },
-      "dust_bag": { "name": "Dust bag" },
-      "sensors": { "name": "Sensors" },
-      "cleaning_solution": { "name": "Cleaning solution" },
+      "battery": {
+        "name": "Battery"
+      },
+      "total_clean_area": {
+        "name": "Total cleaned area"
+      },
+      "main_brush": {
+        "name": "Main brush"
+      },
+      "side_brush": {
+        "name": "Side brush"
+      },
+      "hepa_filter": {
+        "name": "HEPA filter"
+      },
+      "mop": {
+        "name": "Mop pads"
+      },
+      "dust_bag": {
+        "name": "Dust bag"
+      },
+      "sensors": {
+        "name": "Sensors"
+      },
+      "cleaning_solution": {
+        "name": "Cleaning solution"
+      },
       "station_mop_washing": {
         "name": "Station mop washing",
-        "state": { "success": "Completed", "running": "Washing", "idle": "Idle", "error": "Error" }
+        "state": {
+          "success": "Completed",
+          "running": "Washing",
+          "idle": "Idle",
+          "error": "Error"
+        }
       },
       "station_mop_drying": {
         "name": "Station mop drying",
-        "state": { "success": "Completed", "running": "Drying", "idle": "Idle", "error": "Error" }
+        "state": {
+          "success": "Completed",
+          "running": "Drying",
+          "idle": "Idle",
+          "error": "Error"
+        }
       },
       "station_dust_collection": {
         "name": "Station dust collection",
-        "state": { "success": "Completed", "running": "Emptying", "idle": "Idle", "error": "Error" }
+        "state": {
+          "success": "Completed",
+          "running": "Emptying",
+          "idle": "Idle",
+          "error": "Error"
+        }
       },
       "station_water_tank_drain": {
         "name": "Station water tank drain",
-        "state": { "success": "Completed", "running": "Draining", "idle": "Idle", "error": "Error" }
+        "state": {
+          "success": "Completed",
+          "running": "Draining",
+          "idle": "Idle",
+          "error": "Error"
+        }
       },
       "station_plumbing_module": {
         "name": "Water inlet/outlet module",
-        "state": { "installed": "Installed", "not_installed": "Not installed" }
+        "state": {
+          "installed": "Installed",
+          "not_installed": "Not installed"
+        }
       }
     },
     "switch": {
-      "station_child_lock": { "name": "Station child lock" },
-      "station_automatic_dust_collection": { "name": "Automatic dust collection" },
-      "station_automatic_cleaning_solution": { "name": "Automatic cleaning solution dosing" },
-      "station_rotating_brush_self_clean": { "name": "Rotating brush self-cleaning" }
+      "station_child_lock": {
+        "name": "Station child lock"
+      },
+      "station_automatic_dust_collection": {
+        "name": "Automatic dust collection"
+      },
+      "station_automatic_cleaning_solution": {
+        "name": "Automatic cleaning solution dosing"
+      },
+      "station_rotating_brush_self_clean": {
+        "name": "Rotating brush self-cleaning"
+      }
     }
   },
   "services": {
-    "inspect": { "name": "Inspect RS20 Pro", "description": "Returns sanitized device data for protocol diagnostics." },
-    "map_diagnostics": { "name": "Inspect RS20 Pro map", "description": "Tests read-only map and route access without controlling the robot." },
-    "camera_diagnostics": { "name": "Inspect RS20 Pro camera", "description": "Opens a short transport diagnostic without saving an image." },
-    "refresh_camera_snapshot": { "name": "Capture RS20 Pro snapshot", "description": "Opens the camera briefly, stores one frame in memory and closes the stream." }
+    "inspect": {
+      "name": "Inspect RS20 Pro",
+      "description": "Returns sanitized device data for protocol diagnostics."
+    },
+    "map_diagnostics": {
+      "name": "Inspect RS20 Pro map",
+      "description": "Tests read-only map and route access without controlling the robot."
+    },
+    "camera_diagnostics": {
+      "name": "Inspect RS20 Pro camera",
+      "description": "Opens a short transport diagnostic without saving an image."
+    },
+    "refresh_camera_snapshot": {
+      "name": "Capture RS20 Pro snapshot",
+      "description": "Opens the camera briefly, stores one frame in memory and closes the stream."
+    },
+    "feature_request": {
+      "name": "Send raw feature request",
+      "description": "Admin only. Sends one GET or PUT to the robot's cloud feature/action endpoint and returns the raw response. For protocol discovery; a wrong PUT can change robot settings.",
+      "fields": {
+        "method": {
+          "name": "Method",
+          "description": "GET reads a value, PUT writes it."
+        },
+        "endpoint": {
+          "name": "Endpoint",
+          "description": "'feature' for settings, 'action' for commands."
+        },
+        "domain": {
+          "name": "Domain",
+          "description": "Feature domain, for example SweeperCleanTask."
+        },
+        "identifier": {
+          "name": "Identifier",
+          "description": "Feature or action name, for example CarpetCleanCfg."
+        },
+        "payload": {
+          "name": "Payload",
+          "description": "JSON body for PUT requests."
+        },
+        "resource": {
+          "name": "Resource",
+          "description": "Resource identifier, default SweepingRobot."
+        },
+        "local_index": {
+          "name": "Local index",
+          "description": "Resource channel, default 0."
+        }
+      }
+    },
+    "api_request": {
+      "name": "Send raw API request",
+      "description": "Admin only. Sends one request to the EZVIZ API host used by the account session and returns the response. For protocol discovery.",
+      "fields": {
+        "method": {
+          "name": "Method",
+          "description": "HTTP method."
+        },
+        "path": {
+          "name": "Path",
+          "description": "Path on the EZVIZ API host, starting with '/'."
+        },
+        "params": {
+          "name": "Query parameters",
+          "description": "Optional query string parameters."
+        },
+        "data": {
+          "name": "Form data",
+          "description": "Optional form body."
+        }
+      }
+    }
   }
 }

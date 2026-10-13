@@ -207,6 +207,89 @@ class EzvizRs20ProApi:
         except json.JSONDecodeError:
             return {"text": text[:4000], "truncated": len(text) > 4000}
 
+    def raw_feature_request(
+        self,
+        serial: str,
+        *,
+        method: str,
+        endpoint: str,
+        domain: str,
+        identifier: str,
+        payload: Any = None,
+        resource: str = "SweepingRobot",
+        local_index: str = "0",
+    ) -> dict[str, Any]:
+        """Send one iot-feature request and return the raw response.
+
+        Used by the admin-only protocol diagnostics service. Errors reported
+        by the cloud are returned instead of raised so they can be inspected.
+        """
+        method = method.upper()
+        if method not in {"GET", "PUT"}:
+            raise ValueError("Only GET and PUT are supported")
+        if endpoint not in {"feature", "action"}:
+            raise ValueError("Endpoint must be 'feature' or 'action'")
+        session, api_url = self._session_and_host()
+        url = (
+            f"https://{api_url}/v3/iot-feature/{endpoint}/"
+            f"{serial.upper()}/{resource}/{local_index}/{domain}/{identifier}"
+        )
+        headers = dict(session.headers)
+        kwargs: dict[str, Any] = {
+            "headers": headers,
+            "timeout": getattr(self._client, "_timeout", 25),
+        }
+        if method == "PUT":
+            headers["Content-Type"] = "application/json"
+            kwargs["data"] = json.dumps(payload, separators=(",", ":"))
+        response = session.request(method, url, **kwargs)
+        try:
+            body: Any = response.json()
+        except ValueError:
+            body = {"text": response.text[:2000]}
+        return {"http_status": response.status_code, "response": body}
+
+    def raw_api_request(
+        self,
+        *,
+        method: str,
+        path: str,
+        params: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Send one request to the EZVIZ API host of the active session."""
+        method = method.upper()
+        if method not in {"GET", "POST", "PUT"}:
+            raise ValueError("Only GET, POST and PUT are supported")
+        if not path.startswith("/") or "://" in path:
+            raise ValueError("Path must be relative to the EZVIZ API host")
+        session, api_url = self._session_and_host()
+        response = session.request(
+            method,
+            f"https://{api_url}{path}",
+            params=params,
+            data=data,
+            timeout=getattr(self._client, "_timeout", 25),
+        )
+        try:
+            body: Any = response.json()
+        except ValueError:
+            body = {
+                "content_type": response.headers.get("Content-Type", ""),
+                "bytes": len(response.content or b""),
+            }
+        return {"http_status": response.status_code, "response": body}
+
+    def _session_and_host(self) -> tuple[Any, str]:
+        session = getattr(self._client, "_session", None)
+        token = getattr(self._client, "_token", None)
+        if session is None or not isinstance(token, dict):
+            raise EzvizRs20ProApiError("Aktywna sesja EZVIZ jest niedostępna")
+        api_url = token.get("api_url")
+        if not api_url:
+            raise EzvizRs20ProApiError("Brak adresu API w aktywnej sesji EZVIZ")
+        return session, str(api_url)
+
     def _iot_request(
         self,
         serial: str,
@@ -216,13 +299,7 @@ class EzvizRs20ProApi:
         identifier: str,
         payload: Any,
     ) -> dict[str, Any]:
-        session = getattr(self._client, "_session", None)
-        token = getattr(self._client, "_token", None)
-        if session is None or not isinstance(token, dict):
-            raise EzvizRs20ProApiError("Aktywna sesja EZVIZ jest niedostępna")
-        api_url = token.get("api_url")
-        if not api_url:
-            raise EzvizRs20ProApiError("Brak adresu API w aktywnej sesji EZVIZ")
+        session, api_url = self._session_and_host()
 
         url = (
             f"https://{api_url}/v3/iot-feature/{endpoint}/"

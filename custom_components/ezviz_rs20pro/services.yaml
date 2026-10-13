@@ -2,3 +2,49 @@ inspect: {}
 map_diagnostics: {}
 camera_diagnostics: {}
 refresh_camera_snapshot: {}
+feature_request:
+  fields:
+    method:
+      required: true
+      selector:
+        select:
+          options: ["GET", "PUT"]
+    endpoint:
+      required: true
+      selector:
+        select:
+          options: ["feature", "action"]
+    domain:
+      required: true
+      selector:
+        text:
+    identifier:
+      required: true
+      selector:
+        text:
+    payload:
+      selector:
+        object:
+    resource:
+      selector:
+        text:
+    local_index:
+      selector:
+        text:
+api_request:
+  fields:
+    method:
+      required: true
+      selector:
+        select:
+          options: ["GET", "POST", "PUT"]
+    path:
+      required: true
+      selector:
+        text:
+    params:
+      selector:
+        object:
+    data:
+      selector:
+        object:
