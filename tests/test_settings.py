@@ -130,6 +130,32 @@ class RestPlanSettingTests(unittest.TestCase):
         self.assertEqual(payload["plan"][0]["ID"], 0)
 
 
+class CleanPlanSettingTests(unittest.TestCase):
+    """Schedules are changed one at a time."""
+
+    def test_list_and_read(self) -> None:
+        device = fixtures.device()
+        self.assertEqual([p["planID"] for p in settings.clean_plans(device)], [0])
+        self.assertEqual(
+            settings.CleanPlanSetting(0, "startTime").read(device), "10:00:00"
+        )
+
+    def test_write_keeps_the_action(self) -> None:
+        _, identifier, payload = settings.CleanPlanSetting(0, "enabled").write(
+            fixtures.device(), None, True
+        )
+        self.assertEqual(identifier, "CleanPlan")
+        plan = payload["Plan"][0]
+        self.assertTrue(plan["enabled"])
+        self.assertEqual(plan["Action"]["cleanMode"], "sweepThenMop")
+        self.assertEqual(plan["RepeatPeriod"], [1, 2, 3, 4, 5, 6, 7])
+        self.assertNotIn("ts", payload)
+
+    def test_unknown_schedule(self) -> None:
+        with self.assertRaises(ValueError):
+            settings.CleanPlanSetting(5, "enabled").write(fixtures.device(), None, True)
+
+
 class ApplyWriteTests(unittest.TestCase):
     """Local updates mirror what was sent."""
 

@@ -120,6 +120,9 @@
       },
       "do_not_disturb_resume": {
         "name": "Resume cleaning after do not disturb"
+      },
+      "schedule": {
+        "name": "Schedule {schedule}"
       }
     },
     "select": {
@@ -179,6 +182,9 @@
       },
       "do_not_disturb_end": {
         "name": "Do not disturb end"
+      },
+      "schedule_start": {
+        "name": "Schedule {schedule} start"
       }
     }
   },

@@ -12,7 +12,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .coordinator import EzvizRs20ProCoordinator
 from .entity import Rs20SettingEntity
-from .settings import FieldSetting, RestPlanSetting, Setting
+from .settings import (
+    CleanPlanSetting,
+    FieldSetting,
+    RestPlanSetting,
+    Setting,
+    clean_plans,
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -67,16 +73,51 @@ SWITCHES: Final[tuple[Rs20SwitchDescription, ...]] = (
 )
 
 
+_WEEKDAYS = {
+    1: "monday",
+    2: "tuesday",
+    3: "wednesday",
+    4: "thursday",
+    5: "friday",
+    6: "saturday",
+    7: "sunday",
+}
+
+
+def schedule_label(plan: Any) -> str:
+    """Return the schedule name from the app, or its number."""
+    name = str(plan.get("name") or "").strip()
+    return name or str(int(plan["planID"]) + 1)
+
+
 async def async_setup_entry(
     hass: Any,
     entry: ConfigEntry[EzvizRs20ProCoordinator],
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the robot setting switches."""
-    async_add_entities(
-        Rs20SettingSwitch(entry.runtime_data, description)
-        for description in SWITCHES
-    )
+    coordinator = entry.runtime_data
+    entities: list[SwitchEntity] = [
+        Rs20SettingSwitch(coordinator, description) for description in SWITCHES
+    ]
+    # Schedules are read once; reload the integration after adding one.
+    for plan in clean_plans(coordinator.data.get("device")):
+        plan_id = int(plan["planID"])
+        entities.append(
+            Rs20ScheduleSwitch(
+                coordinator,
+                Rs20SwitchDescription(
+                    key=f"schedule_{plan_id}",
+                    translation_key="schedule",
+                    icon="mdi:calendar-clock",
+                    setting=CleanPlanSetting(plan_id, "enabled"),
+                    entity_category=None,
+                ),
+                plan_id,
+                schedule_label(plan),
+            )
+        )
+    async_add_entities(entities)
 
 
 class Rs20SettingSwitch(Rs20SettingEntity, SwitchEntity):
@@ -105,3 +146,42 @@ class Rs20SettingSwitch(Rs20SettingEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable the setting."""
         await self.async_write_setting(False)
+
+
+class Rs20ScheduleSwitch(Rs20SettingSwitch):
+    """Turns a cleaning schedule from the app on or off."""
+
+    def __init__(
+        self,
+        coordinator: EzvizRs20ProCoordinator,
+        description: Rs20SwitchDescription,
+        plan_id: int,
+        label: str,
+    ) -> None:
+        super().__init__(coordinator, description)
+        self._plan_id = plan_id
+        self._attr_translation_placeholders = {"schedule": label}
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Describe when and how the schedule cleans."""
+        for plan in clean_plans(self.coordinator.data.get("device")):
+            if plan.get("planID") != self._plan_id:
+                continue
+            action = plan.get("Action") if isinstance(plan.get("Action"), dict) else {}
+            return {
+                "start_time": plan.get("startTime"),
+                "days": [
+                    _WEEKDAYS[day]
+                    for day in plan.get("RepeatPeriod") or []
+                    if day in _WEEKDAYS
+                ],
+                "cleaning_mode": action.get("cleanMode"),
+                "cleaning_range": action.get("cleanRange"),
+                "rooms": [
+                    region.get("roomID", region.get("ID"))
+                    for region in action.get("region") or []
+                    if isinstance(region, dict)
+                ],
+            }
+        return {}

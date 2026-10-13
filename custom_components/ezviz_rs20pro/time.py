@@ -13,7 +13,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .coordinator import EzvizRs20ProCoordinator
 from .entity import Rs20SettingEntity
-from .settings import RestPlanSetting, Setting
+from .settings import CleanPlanSetting, RestPlanSetting, Setting, clean_plans
+from .switch import schedule_label
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -58,10 +59,28 @@ async def async_setup_entry(
 ) -> None:
     """Set up the robot time settings."""
     coordinator = entry.runtime_data
-    async_add_entities(
+    entities = [
         Rs20SettingTime(coordinator, description.key, description)
         for description in TIMES
-    )
+    ]
+    for plan in clean_plans(coordinator.data.get("device")):
+        plan_id = int(plan["planID"])
+        description = Rs20TimeDescription(
+            key=f"schedule_{plan_id}_start",
+            translation_key="schedule_start",
+            icon="mdi:clock-start",
+            setting=CleanPlanSetting(plan_id, "startTime"),
+            entity_category=None,
+        )
+        entities.append(
+            Rs20SettingTime(
+                coordinator,
+                description.key,
+                description,
+                {"schedule": schedule_label(plan)},
+            )
+        )
+    async_add_entities(entities)
 
 
 class Rs20SettingTime(Rs20SettingEntity, TimeEntity):
