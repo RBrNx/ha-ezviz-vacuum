@@ -11,13 +11,13 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import robot
 from .coordinator import EzvizRs20ProCoordinator
 from .entity import Rs20SettingEntity
-from .settings import MapCleanSetting, RoomCleanSetting, Setting
+from .settings import FieldSetting, MapCleanSetting, RoomCleanSetting, Setting
 
 MAX_PASSES = 3
 
@@ -40,6 +40,25 @@ NUMBERS: Final[tuple[Rs20NumberDescription, ...]] = (
         native_min_value=1,
         native_max_value=MAX_PASSES,
         setting=MapCleanSetting("cleanTimes"),
+    ),
+    Rs20NumberDescription(
+        key="mop_wash_interval",
+        translation_key="mop_wash_interval",
+        icon="mdi:washing-machine",
+        native_min_value=5,
+        native_max_value=60,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        setting=FieldSetting("SweeperCleanTask", "WashMopCfg", "interval"),
+    ),
+    Rs20NumberDescription(
+        key="mop_drying_time",
+        translation_key="mop_drying_time",
+        icon="mdi:sun-thermometer-outline",
+        native_min_value=30,
+        native_max_value=720,
+        native_step=30,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        setting=FieldSetting("SweeperCleanTask", "DryMopDuration", "duration"),
     ),
 )
 

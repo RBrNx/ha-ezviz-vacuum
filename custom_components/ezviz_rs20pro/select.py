@@ -20,6 +20,7 @@ from .settings import (
     WATER_LEVELS,
     MapCleanSetting,
     RoomCleanSetting,
+    FieldSetting,
     ScalarSetting,
     Setting,
 )
@@ -55,6 +56,13 @@ SELECTS: Final[tuple[Rs20SelectDescription, ...]] = (
         icon="mdi:floor-plan",
         options=list(ROOM_SETTING_MODES),
         setting=MapCleanSetting("cleanConfigType"),
+    ),
+    Rs20SelectDescription(
+        key="mop_wash_trigger",
+        translation_key="mop_wash_trigger",
+        icon="mdi:washing-machine",
+        options=["time", "region"],
+        setting=FieldSetting("SweeperCleanTask", "WashMopCfg", "type"),
     ),
 )
 

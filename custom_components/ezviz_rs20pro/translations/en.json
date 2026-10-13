@@ -178,6 +178,13 @@
           "middle": "Medium",
           "high": "High"
         }
+      },
+      "mop_wash_trigger": {
+        "name": "Wash mop",
+        "state": {
+          "time": "After the interval",
+          "region": "After each room"
+        }
       }
     },
     "number": {
@@ -186,6 +193,12 @@
       },
       "room_cleaning_passes": {
         "name": "{room} cleaning passes"
+      },
+      "mop_wash_interval": {
+        "name": "Mop wash interval"
+      },
+      "mop_drying_time": {
+        "name": "Mop drying time"
       }
     },
     "time": {
