@@ -5,12 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable, Iterator
 from dataclasses import asdict, dataclass
 from enum import IntEnum
-import hashlib
 from ipaddress import IPv6Address, ip_address
-import re
 import socket
-import ssl
-import struct
 import time
 from typing import Any
 from urllib.parse import parse_qsl, urlencode, urlparse
@@ -30,25 +26,12 @@ MPEG_TS_SYNC_BYTE = b"\x47"
 MPEG_START_CODE_PREFIX = b"\x00\x00\x01"
 ANNEX_B_LONG_START_CODE = b"\x00\x00\x00\x01"
 HIKVISION_NAL_ENCRYPTED_PREFIX_LENGTH = 4096
-VIDEO_PES_STREAM_ID = 0xE0
 _PACK_HEADER_STREAM_ID = 0xBA
 _SYSTEM_HEADER_STREAM_ID = 0xBB
 _PROGRAM_STREAM_MAP_ID = 0xBC
 _PRIVATE_STREAM_1_ID = 0xBD
 _PADDING_STREAM_ID = 0xBE
 _PRIVATE_STREAM_2_ID = 0xBF
-CLOUD_REPLAY_MAGIC = 0x9EBAACE9
-CLOUD_REPLAY_OPEN_CMD = 0x5003
-CLOUD_REPLAY_HEARTBEAT_CMD = 0x5010
-CLOUD_REPLAY_HEADER_SIZE = 32
-XML_PREFIX = b"<?xml"
-_XML_END_RE = re.compile(br"</(Request|Response)>")
-
-
-def _ezviz_md5_hex(data: bytes) -> str:
-    """Return the EZVIZ protocol MD5 checksum for non-security integrity fields."""
-
-    return hashlib.md5(data, usedforsecurity=False).hexdigest()
 
 
 def _hikvision_aes_ecb_cipher(key: bytes) -> Any:
@@ -148,36 +131,6 @@ class StreamInfoResponse:
     peerpbkey: str | None = None
     pdslist: tuple[bytes, ...] = ()
     srvipv6_addr: str | None = None
-
-
-@dataclass(frozen=True)
-class VtduInfoResponse:
-    """Decoded fields from a GetVtduInfoRsp protobuf body."""
-
-    result: int | None = None
-    host: str | None = None
-    port: int | None = None
-    streamkey: str | None = None
-    peerhost: str | None = None
-    peerport: int | None = None
-    srvinfo: str | None = None
-
-
-@dataclass(frozen=True)
-class VtduStreamResponse:
-    """Decoded fields shared by StartStreamRsp and PeerStreamRsp."""
-
-    result: int | None = None
-    streamhead: str | None = None
-    streamssn: str | None = None
-    datakey: int | None = None
-
-
-@dataclass(frozen=True)
-class StopStreamResponse:
-    """Decoded fields from a StopStreamRsp protobuf body."""
-
-    result: int | None = None
 
 
 SocketFactory = Callable[[tuple[str, int], float | None], Any]
@@ -515,24 +468,6 @@ def decode_vtm_header(header: bytes) -> VtmPacket:
     )
 
 
-def decode_vtm_packet(packet: bytes) -> VtmPacket:
-    """Decode a complete VTM/VTDU packet."""
-
-    header = decode_vtm_header(packet[:VTM_HEADER_SIZE])
-    body = packet[VTM_HEADER_SIZE:]
-    if len(body) != header.length:
-        raise PyEzvizError(
-            f"VTM packet length mismatch: header={header.length} body={len(body)}"
-        )
-    return VtmPacket(
-        channel=header.channel,
-        length=header.length,
-        sequence=header.sequence,
-        message_code=header.message_code,
-        body=body,
-    )
-
-
 def summarize_vtm_packet(packet: VtmPacket, *, index: int = 0) -> VtmTraceEvent:
     """Build a body-free packet summary for debugging live VTM streams."""
 
@@ -634,91 +569,6 @@ def build_stream_keepalive_request(stream_ssn: str) -> bytes:
     return _proto_bytes(1, stream_ssn.encode())
 
 
-def build_get_vtdu_info_request(
-    serial: str,
-    vtdu_token: str,
-    *,
-    channel: int = 1,
-    stream_type: int = 1,
-    business_type: int = 0,
-    client_isp_type: int = 0,
-    is_proxy: bool = False,
-) -> bytes:
-    """Encode the native GetVtduInfoReq protobuf."""
-
-    return b"".join(
-        (
-            _proto_string(1, serial),
-            _proto_varint(2, channel),
-            _proto_varint(3, stream_type),
-            _proto_varint(4, client_isp_type),
-            _proto_varint(5, business_type),
-            _proto_string(6, vtdu_token),
-            _proto_varint(7, int(is_proxy)),
-        )
-    )
-
-
-def build_start_stream_request(
-    serial: str,
-    vtdu_token: str,
-    stream_key: str,
-    *,
-    channel: int = 1,
-    stream_type: int = 1,
-    business_type: int = 0,
-    client_type: int = 9,
-    peer_host: str | None = None,
-    peer_port: int | None = None,
-) -> bytes:
-    """Encode the native StartStreamReq protobuf."""
-
-    parts = [
-        _proto_string(1, serial),
-        _proto_varint(2, channel),
-        _proto_varint(3, stream_type),
-        _proto_varint(4, business_type),
-        _proto_string(5, vtdu_token),
-        _proto_varint(6, client_type),
-        _proto_string(7, stream_key),
-    ]
-    if peer_host:
-        parts.append(_proto_string(8, peer_host))
-    if peer_port is not None:
-        parts.append(_proto_varint(9, peer_port))
-    return b"".join(parts)
-
-
-def build_peer_stream_request(
-    serial: str,
-    vtdu_token: str,
-    *,
-    channel: int = 1,
-    stream_type: int = 1,
-    business_type: int = 0,
-) -> bytes:
-    """Encode the native PeerStreamReq protobuf."""
-
-    return b"".join(
-        (
-            _proto_string(1, serial),
-            _proto_varint(2, channel),
-            _proto_varint(3, stream_type),
-            _proto_varint(4, business_type),
-            _proto_string(5, vtdu_token),
-        )
-    )
-
-
-def build_stop_stream_request(stream_ssn: str, *, ssn_info: str | None = None) -> bytes:
-    """Encode the native StopStreamReq protobuf."""
-
-    parts = [_proto_string(1, stream_ssn)]
-    if ssn_info:
-        parts.append(_proto_string(2, ssn_info))
-    return b"".join(parts)
-
-
 def parse_stream_info_response(data: bytes) -> StreamInfoResponse:
     """Decode known scalar fields from a StreamInfoRsp protobuf body."""
 
@@ -739,40 +589,6 @@ def parse_stream_info_response(data: bytes) -> StreamInfoResponse:
         pdslist=tuple(_proto_bytes_values(fields, 12)),
         srvipv6_addr=_proto_last_str(fields, 13),
     )
-
-
-def parse_get_vtdu_info_response(data: bytes) -> VtduInfoResponse:
-    """Decode known scalar fields from a GetVtduInfoRsp protobuf body."""
-
-    fields = _read_proto_fields(data, "GetVtduInfoRsp")
-    return VtduInfoResponse(
-        result=_proto_last_int(fields, 1),
-        host=_proto_last_str(fields, 2),
-        port=_proto_last_int(fields, 3),
-        streamkey=_proto_last_str(fields, 4),
-        peerhost=_proto_last_str(fields, 5),
-        peerport=_proto_last_int(fields, 6),
-        srvinfo=_proto_last_str(fields, 7),
-    )
-
-
-def parse_start_stream_response(data: bytes) -> VtduStreamResponse:
-    """Decode known scalar fields from a StartStreamRsp protobuf body."""
-
-    return _parse_vtdu_stream_response(data, "StartStreamRsp")
-
-
-def parse_peer_stream_response(data: bytes) -> VtduStreamResponse:
-    """Decode known scalar fields from a PeerStreamRsp protobuf body."""
-
-    return _parse_vtdu_stream_response(data, "PeerStreamRsp")
-
-
-def parse_stop_stream_response(data: bytes) -> StopStreamResponse:
-    """Decode known scalar fields from a StopStreamRsp protobuf body."""
-
-    fields = _read_proto_fields(data, "StopStreamRsp")
-    return StopStreamResponse(result=_proto_last_int(fields, 1))
 
 
 def detect_transport(data: bytes) -> StreamTransport:
@@ -849,36 +665,6 @@ class _MpegPsPacketRange:
     start: int
     end: int
     stream_id: int
-
-
-def mpeg_ps_complete_prefix_length(data: bytes | bytearray) -> int:
-    """Return the length of the fully parsed MPEG-PS packet prefix."""
-
-    ranges = _mpeg_ps_complete_packet_ranges(data)
-    return ranges[-1].end if ranges else 0
-
-
-def mpeg_ps_decryptable_prefix_length(data: bytes | bytearray) -> int:
-    """Return complete MPEG-PS bytes that are safe to decrypt independently.
-
-    A video NAL can continue across adjacent video PES packets. Keep any trailing
-    video PES run buffered until a following non-video packet or stream end lets
-    the decryptor see the full run in one call.
-    """
-
-    ranges = _mpeg_ps_complete_packet_ranges(data)
-    if not ranges:
-        return 0
-
-    decryptable_end = ranges[-1].end
-    trailing_video_start = decryptable_end
-    for packet_range in reversed(ranges):
-        if _is_mpeg_ps_metadata_stream_id(packet_range.stream_id):
-            continue
-        if not _is_video_pes_stream_id(packet_range.stream_id):
-            break
-        trailing_video_start = packet_range.start
-    return trailing_video_start if trailing_video_start != decryptable_end else decryptable_end
 
 
 def _mpeg_ps_complete_packet_ranges(
@@ -984,17 +770,6 @@ def _pes_payload_start(data: bytes, packet_start: int) -> int | None:
     return packet_start + 6
 
 
-def _next_complete_mpeg_ps_packet_start(data: bytes, start: int) -> int | None:
-    """Return the next start code that parses as a complete MPEG-PS packet."""
-
-    i = start
-    while i < len(data) - 3:
-        if _mpeg_ps_packet_end(data, i) is not None:
-            return i
-        i += 1
-    return None
-
-
 def _next_unbounded_video_pes_boundary(data: bytes, start: int) -> int | None:
     """Return the next packet boundary after a zero-length video PES payload."""
 
@@ -1053,19 +828,6 @@ def _is_mpeg_ps_packet_start_id(stream_id: int) -> bool:
         }
         or 0xC0 <= stream_id <= 0xEF
     )
-
-
-def _next_mpeg_ps_packet_start(data: bytes, start: int) -> int | None:
-    """Return the next plausible MPEG-PS packet start code at or after ``start``."""
-
-    i = start
-    while i < len(data) - 3:
-        if data[i : i + 3] == MPEG_START_CODE_PREFIX and _is_mpeg_ps_packet_start_id(
-            data[i + 3]
-        ):
-            return i
-        i += 1
-    return None
 
 
 def _find_nal_start_codes(
@@ -1585,276 +1347,6 @@ def decrypt_hikvision_ps_video(  # noqa: PLR0912, PLR0915
     return bytes(output)
 
 
-def download_ezviz_cloud_replay(  # noqa: PLR0913
-    *,
-    stream_url: str,
-    ticket: str,
-    serial: str,
-    channel: int,
-    seq_id: str | int,
-    begin_cas: str,
-    end_cas: str,
-    storage_version: int = 2,
-    video_type: int = 2,
-    file_size: int | None = None,
-    timeout: float = 30.0,
-) -> bytes:
-    """Download encrypted cloud replay bytes from the EZVIZ cloud replay server.
-
-    This reproduces the native ``EZStreamClient.startDownloadFromCloud`` wire
-    path for regular cloud-storage clips. The returned bytes are still the
-    encrypted MPEG-PS ``.tmp`` payload and should be passed through
-    :func:`decrypt_hikvision_ps_video` with the camera verification key.
-    """
-
-    host, port = _parse_cloud_replay_stream_url(stream_url)
-    request_xml = _build_cloud_replay_open_xml(
-        ticket=ticket,
-        serial=serial,
-        channel=channel,
-        seq_id=seq_id,
-        begin_cas=begin_cas,
-        end_cas=end_cas,
-        storage_version=storage_version,
-        video_type=video_type,
-    )
-
-    context = ssl.create_default_context()
-    context.minimum_version = ssl.TLSVersion.TLSv1_2
-    output = bytearray()
-    buffer = b""
-    sequence = 1
-    last_heartbeat = time.monotonic()
-
-    with (
-        socket.create_connection((host, port), timeout=timeout) as raw_socket,
-        context.wrap_socket(raw_socket, server_hostname=host) as tls_socket,
-    ):
-            tls_socket.settimeout(timeout)
-            tls_socket.sendall(
-                _cloud_replay_frame(
-                    request_xml,
-                    sequence=sequence,
-                    command=CLOUD_REPLAY_OPEN_CMD,
-                )
-            )
-            sequence += 1
-
-            while True:
-                message, buffer = _read_cloud_replay_message(tls_socket, buffer)
-                if not message.md5_ok:
-                    raise PyEzvizError("Cloud replay packet failed MD5 validation")
-                if message.result not in (None, 0):
-                    raise PyEzvizError(f"Cloud replay returned error result {message.result}")
-                if message.err_code not in (None, 0):
-                    raise PyEzvizError(f"Cloud replay returned packet error {message.err_code}")
-
-                if message.data_type in (0, 1, 2) and message.data:
-                    output.extend(message.data)
-                    if file_size is not None and len(output) >= file_size:
-                        return bytes(output[:file_size])
-                elif message.data_type == 100:
-                    if file_size is not None and len(output) < file_size:
-                        raise PyEzvizError(
-                            "Cloud replay ended before expected file size: "
-                            f"{len(output)}/{file_size} bytes"
-                        )
-                    return bytes(output)
-
-                if time.monotonic() - last_heartbeat >= 5:
-                    tls_socket.sendall(
-                        _cloud_replay_frame(
-                            _cloud_replay_heartbeat_xml(),
-                            sequence=sequence,
-                            command=CLOUD_REPLAY_HEARTBEAT_CMD,
-                        )
-                    )
-                    sequence += 1
-                    last_heartbeat = time.monotonic()
-
-
-@dataclass(frozen=True)
-class _CloudReplayMessage:
-    xml: bytes
-    data: bytes
-    md5_ok: bool
-    result: int | None = None
-    err_code: int | None = None
-    data_type: int | None = None
-
-
-def _parse_cloud_replay_stream_url(stream_url: str) -> tuple[str, int]:
-    host, sep, port_text = stream_url.partition(":")
-    if not host or sep != ":":
-        raise PyEzvizError(f"Invalid cloud replay streamUrl: {stream_url!r}")
-    try:
-        port = int(port_text)
-    except ValueError as exc:
-        raise PyEzvizError(f"Invalid cloud replay streamUrl port: {stream_url!r}") from exc
-    return host, port
-
-
-def _build_cloud_replay_open_xml(
-    *,
-    ticket: str,
-    serial: str,
-    channel: int,
-    seq_id: str | int,
-    begin_cas: str,
-    end_cas: str,
-    storage_version: int,
-    video_type: int,
-) -> bytes:
-    return (
-        '<?xml version="1.0" encoding="utf-8"?>\n'
-        "<Request>\n"
-        "\t<Authorization></Authorization>\n"
-        "\t<Session></Session>\n"
-        f"\t<Token>{ticket}</Token>\n"
-        "\t<FrontType>2</FrontType>\n"
-        "\t<PlayType>2</PlayType>\n"
-        "\t<BusType>2</BusType>\n"
-        "\t<FileInfo>\n"
-        "\t\t<FileType>1</FileType>\n"
-        f'\t\t<File StorageVersion="{storage_version}" Id="{seq_id}" />\n'
-        f"\t\t<VideoType>{video_type}</VideoType>\n"
-        f'\t\t<Time Begin="{begin_cas}" End="{end_cas}" />\n'
-        f'\t\t<CameraInfo SubSerial="{serial}_{channel}" ChannelNo="{channel}" />\n'
-        "\t\t<InterlaceFlag>0</InterlaceFlag>\n"
-        "\t</FileInfo>\n"
-        "\t<ClientType>3</ClientType>\n"
-        "\t<PlaySpeed>0</PlaySpeed>\n"
-        "</Request>\n"
-    ).encode()
-
-
-def _cloud_replay_heartbeat_xml() -> bytes:
-    return (
-        b'<?xml version="1.0" encoding="utf-8"?>\n'
-        b"<Response>\n"
-        b"\t<Result>0</Result>\n"
-        b"\t<Command>HB</Command>\n"
-        b"</Response>\n"
-    )
-
-
-def _cloud_replay_frame(payload: bytes, *, sequence: int, command: int) -> bytes:
-    header = struct.pack(
-        ">IIIIIIII",
-        CLOUD_REPLAY_MAGIC,
-        1,
-        sequence,
-        0,
-        command,
-        0,
-        len(payload),
-        0,
-    )
-    return header + payload + _ezviz_md5_hex(payload).encode()
-
-
-def _read_cloud_replay_message(
-    tls_socket: ssl.SSLSocket,
-    buffer: bytes,
-) -> tuple[_CloudReplayMessage, bytes]:
-    while XML_PREFIX not in buffer:
-        buffer += _cloud_replay_recv(tls_socket)
-
-    prefix = buffer.index(XML_PREFIX)
-    if prefix:
-        # Server packets carry the same 32-byte frame prefix used by the client.
-        buffer = buffer[prefix:]
-
-    while (match := _XML_END_RE.search(buffer)) is None:
-        buffer += _cloud_replay_recv(tls_socket)
-
-    xml_end = match.end()
-    while len(buffer) < xml_end + 2:
-        buffer += _cloud_replay_recv(tls_socket)
-
-    body_end = xml_end + 2
-    xml = buffer[:xml_end]
-    length = _cloud_xml_int(xml, b"Length")
-    if length is not None:
-        while len(buffer) < body_end + length + 32:
-            buffer += _cloud_replay_recv(tls_socket)
-        data = buffer[body_end : body_end + length]
-        body = buffer[: body_end + length]
-        digest = buffer[body_end + length : body_end + length + 32]
-        rest = buffer[body_end + length + 32 :]
-    else:
-        while len(buffer) < body_end + 32:
-            buffer += _cloud_replay_recv(tls_socket)
-        data = b""
-        body = buffer[:body_end]
-        digest = buffer[body_end : body_end + 32]
-        rest = buffer[body_end + 32 :]
-
-    return (
-        _CloudReplayMessage(
-            xml=xml,
-            data=data,
-            md5_ok=_ezviz_md5_hex(body).encode() == digest,
-            result=_cloud_xml_int(xml, b"Result"),
-            err_code=_cloud_xml_attr_int(xml, b"Type", b"ErrCode"),
-            data_type=_cloud_xml_int(xml, b"Type"),
-        ),
-        rest,
-    )
-
-
-def _cloud_xml_int(xml: bytes, tag: bytes) -> int | None:
-    match = re.search(rb"<" + tag + rb"(?: [^>]*)?>(-?\d+)</" + tag + rb">", xml)
-    return int(match.group(1)) if match else None
-
-
-def _cloud_replay_recv(tls_socket: ssl.SSLSocket) -> bytes:
-    chunk = tls_socket.recv(8192)
-    if not chunk:
-        raise PyEzvizError("Cloud replay socket closed unexpectedly")
-    return chunk
-
-
-def _cloud_xml_attr_int(xml: bytes, tag: bytes, attr: bytes) -> int | None:
-    match = re.search(rb"<" + tag + rb" [^>]*" + attr + rb'="(-?\d+)"', xml)
-    return int(match.group(1)) if match else None
-
-
-def rtp_payload(data: bytes) -> bytes:
-    """Return the RTP payload after fixed, CSRC, extension, and padding headers."""
-
-    if len(data) < 12:
-        raise PyEzvizError("RTP packet is too short")
-    if data[0] >> 6 != 2:
-        raise PyEzvizError("Unsupported RTP version")
-
-    has_padding = bool(data[0] & 0x20)
-    has_extension = bool(data[0] & 0x10)
-    csrc_count = data[0] & 0x0F
-    offset = 12 + (csrc_count * 4)
-    if len(data) < offset:
-        raise PyEzvizError("RTP CSRC header exceeds packet length")
-
-    if has_extension:
-        if len(data) < offset + 4:
-            raise PyEzvizError("RTP extension header exceeds packet length")
-        extension_words = int.from_bytes(data[offset + 2 : offset + 4], "big")
-        offset += 4 + (extension_words * 4)
-        if len(data) < offset:
-            raise PyEzvizError("RTP extension payload exceeds packet length")
-
-    payload = data[offset:]
-    if has_padding:
-        if not payload:
-            raise PyEzvizError("RTP padding set without payload")
-        padding_len = payload[-1]
-        if padding_len == 0 or padding_len > len(payload):
-            raise PyEzvizError("Invalid RTP padding length")
-        payload = payload[:-padding_len]
-
-    return payload
-
-
 def _proto_key(field: int, wire_type: int) -> bytes:
     return _encode_varint((field << 3) | wire_type)
 
@@ -1946,16 +1438,6 @@ def _proto_bytes_values(fields: dict[int, list[ProtoValue]], field: int) -> list
     return [value for value in fields.get(field, []) if isinstance(value, bytes)]
 
 
-def _parse_vtdu_stream_response(data: bytes, message_name: str) -> VtduStreamResponse:
-    fields = _read_proto_fields(data, message_name)
-    return VtduStreamResponse(
-        result=_proto_last_int(fields, 1),
-        streamhead=_proto_last_str(fields, 2),
-        streamssn=_proto_last_str(fields, 3),
-        datakey=_proto_last_int(fields, 4),
-    )
-
-
 def _encode_varint(value: int) -> bytes:
     if value < 0:
         raise PyEzvizError("Negative protobuf varints are not supported")
@@ -1985,9 +1467,3 @@ def _read_varint(data: bytes, pos: int) -> tuple[int, int]:
     raise PyEzvizError("Malformed protobuf varint")
 
 
-def _maybe_int(value: int | str | None) -> int | None:
-    return value if isinstance(value, int) else None
-
-
-def _maybe_str(value: int | str | None) -> str | None:
-    return value if isinstance(value, str) else None
