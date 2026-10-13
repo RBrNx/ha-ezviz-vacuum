@@ -58,5 +58,7 @@ SETTING_ACTIONS: frozenset[tuple[str, str]] = frozenset(
         ("SweeperMapMgr", "SetCleanTimesOfStdClean"),
         ("SweeperMapMgr", "SetCleanCfg"),
         ("SweeperMapMgr", "SetRoomCustomCleanCfg"),
+        # RE7 Edge: suction and water for the whole map.
+        ("SweeperMapMgr", "SetGlobalCleanCfg"),
     }
 )

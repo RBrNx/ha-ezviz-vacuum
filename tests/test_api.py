@@ -230,3 +230,77 @@ class RejectionTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class UnknownActionSession(FakeSession):
+    """Refuse the given actions the way a model without them does."""
+
+    def __init__(self, unknown: set[str]) -> None:
+        super().__init__()
+        self.unknown = unknown
+
+    def put(self, url: str, **kwargs):
+        self.calls.append({"url": url, **kwargs})
+        if url.rsplit("/", 1)[-1] in self.unknown:
+            return FakeResponse(
+                {
+                    "meta": {
+                        "code": 400,
+                        "message": "Incorrect request parameter.",
+                        "moreInfo": {"msgDetail": "设备功能未报备"},
+                    }
+                }
+            )
+        return FakeResponse({"meta": {"code": 200}})
+
+
+class ModelVariantTests(unittest.TestCase):
+    """Models that name commands differently fall back once, then remember."""
+
+    def setUp(self) -> None:
+        self.client = FakeClient()
+        self.client._session = UnknownActionSession({"CleanControl", "RechargeControl"})
+        self.api = EzvizRs20ProApi(self.client)
+
+    def names(self) -> list[str]:
+        return [call["url"].rsplit("/", 1)[-1] for call in self.client._session.calls]
+
+    def test_clean_control_falls_back_to_clean_ctrl(self) -> None:
+        self.api.clean_control("AB1234567", "start")
+        self.api.clean_control("AB1234567", "pause")
+        self.assertEqual(self.names(), ["CleanControl", "CleanCtrl", "CleanCtrl"])
+        self.assertEqual(json.loads(self.client._session.calls[-1]["data"]), "pause")
+
+    def test_recharge_falls_back_to_recharge_ctrl(self) -> None:
+        self.api.recharge_control("AB1234567", "start")
+        self.assertEqual(self.names(), ["RechargeControl", "RechargeCtrl"])
+        self.assertEqual(
+            json.loads(self.client._session.calls[-1]["data"]),
+            {"action": "start", "source": "mobile"},
+        )
+
+    def test_setting_falls_back(self) -> None:
+        self.client._session.unknown = {"SetFanModeOfStdClean"}
+        self.api.send_setting_action(
+            "AB1234567",
+            domain="SweeperMapMgr",
+            action="SetFanModeOfStdClean",
+            payload={"mapID": 2, "fanMode": "strong"},
+            fallback=(
+                "SweeperMapMgr",
+                "SetGlobalCleanCfg",
+                {"mapID": 2, "fanMode": "strong", "dataSource": "global"},
+            ),
+        )
+        self.assertEqual(self.names(), ["SetFanModeOfStdClean", "SetGlobalCleanCfg"])
+
+    def test_other_errors_do_not_fall_back(self) -> None:
+        self.client._session.unknown = set()
+        session = self.client._session
+        session.put = lambda url, **kw: (
+            session.calls.append({"url": url, **kw})
+            or FakeResponse({"meta": {"code": 500, "message": "busy"}})
+        )
+        with self.assertRaises(load("api").EzvizRs20ProApiError):
+            self.api.clean_control("AB1234567", "start")
+        self.assertEqual(self.names(), ["CleanControl"])

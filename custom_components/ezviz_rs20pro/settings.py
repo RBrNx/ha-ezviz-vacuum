@@ -54,6 +54,10 @@ class Setting:
         """
         return None
 
+    def fallback_action(self, device: Any, task: Any, value: Any) -> Write | None:
+        """Return the action for models that do not have ``action``."""
+        return None
+
 
 @dataclass(frozen=True)
 class ScalarSetting(Setting):
@@ -89,6 +93,21 @@ class FieldSetting(Setting):
         return self.domain, self.identifier, payload
 
 
+def _global_clean_cfg(device: Any, map_id: Any) -> Mapping[str, Any] | None:
+    """Return the RE7 Edge's ``SweeperMapMgr/GlobalCleanCfg`` for a map."""
+    value = feature(device, "SweeperMapMgr", "GlobalCleanCfg")
+    if isinstance(value, Mapping):
+        entries = value.get("cfg") if isinstance(value.get("cfg"), list) else [value]
+    elif isinstance(value, list):
+        entries = value
+    else:
+        return None
+    for entry in entries:
+        if isinstance(entry, Mapping) and entry.get("mapID") in (None, map_id):
+            return entry
+    return None
+
+
 _STD_ACTIONS = {
     "fanMode": "SetFanModeOfStdClean",
     "waterQuantity": "SetWaterQuantityOfStdClean",
@@ -122,7 +141,26 @@ class MapCleanSetting(Setting):
         for entry in self._entries(device):
             if isinstance(entry, Mapping) and entry.get("mapID") == map_id:
                 return entry.get(self.field)
-        return None
+        global_cfg = _global_clean_cfg(device, map_id)
+        return global_cfg.get(self.field) if global_cfg is not None else None
+
+    def fallback_action(self, device: Any, task: Any, value: Any) -> Write | None:
+        """RE7 Edge: suction and water go through ``SetGlobalCleanCfg``."""
+        if self.field not in ("fanMode", "waterQuantity"):
+            return None
+        map_id = robot.active_map_id(device, task)
+        if map_id is None:
+            return None
+        payload: dict[str, Any] = dict(_strip(_global_clean_cfg(device, map_id) or {}))
+        payload.update(
+            {
+                "mapID": map_id,
+                "cleanMode": robot.clean_mode(device) or "sweepThenMop",
+                self.field: value,
+                "dataSource": "global",
+            }
+        )
+        return "SweeperMapMgr", "SetGlobalCleanCfg", payload
 
     def write(self, device: Any, task: Any, value: Any) -> Write:
         map_id = robot.active_map_id(device, task)

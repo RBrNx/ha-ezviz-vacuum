@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+from collections.abc import Callable
 import gzip
 from importlib import metadata
 import json
@@ -14,6 +15,13 @@ from .const import CLEAN_MODES, SETTING_ACTIONS, WRITABLE_FEATURES
 
 class EzvizRs20ProApiError(Exception):
     """Raised when the robot endpoint rejects a request."""
+
+
+class UnknownActionError(EzvizRs20ProApiError):
+    """Raised when the robot model does not have the requested function."""
+
+
+_UNKNOWN_ACTION = "设备功能未报备"
 
 
 # Details the cloud sends in Chinese when it refuses a request.
@@ -53,6 +61,30 @@ class EzvizRs20ProApi:
 
     def __init__(self, client: Any) -> None:
         self._client = client
+        # (serial, command group) pairs that need a model's alternative command.
+        self._alternatives: set[tuple[str, str]] = set()
+
+    def _with_alternative(
+        self,
+        serial: str,
+        group: str,
+        primary: Callable[[], dict[str, Any]],
+        alternative: Callable[[], dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Run ``primary``; fall back for models that name the command differently.
+
+        The answer is remembered per robot, so the fallback costs one extra
+        request only the first time.
+        """
+        key = (serial.upper(), group)
+        if key in self._alternatives:
+            return alternative()
+        try:
+            return primary()
+        except UnknownActionError:
+            result = alternative()
+            self._alternatives.add(key)
+            return result
 
     def query_current_task(self, serial: str) -> dict[str, Any]:
         """Query current task; this action does not move or configure the robot."""
@@ -65,27 +97,52 @@ class EzvizRs20ProApi:
         )
 
     def clean_control(self, serial: str, command: str) -> dict[str, Any]:
-        """Run one of the documented cleaning controls."""
+        """Start, resume, pause or stop cleaning.
+
+        Most models use ``CleanControl``; the RS2 made by EZVIZ's manufacturer
+        calls it ``CleanCtrl`` with the same values.
+        """
         if command not in {"start", "resume", "pause", "stop"}:
             raise ValueError(f"Unsupported robot command: {command}")
-        return self._iot_request(
-            serial,
-            endpoint="action",
-            domain="SweeperCleanTask",
-            identifier="CleanControl",
-            payload=command,
+
+        def send(identifier: str) -> dict[str, Any]:
+            return self._iot_request(
+                serial,
+                endpoint="action",
+                domain="SweeperCleanTask",
+                identifier=identifier,
+                payload=command,
+            )
+
+        return self._with_alternative(
+            serial, "clean", lambda: send("CleanControl"), lambda: send("CleanCtrl")
         )
 
     def recharge_control(self, serial: str, command: str) -> dict[str, Any]:
-        """Send the robot to its base (``start``) or cancel that (``stop``)."""
+        """Send the robot to its base (``start``) or cancel that (``stop``).
+
+        The RS2 made by EZVIZ's manufacturer uses ``RechargeCtrl`` with an
+        object payload instead.
+        """
         if command not in {"start", "stop"}:
             raise ValueError(f"Unsupported recharge command: {command}")
-        return self._iot_request(
+        return self._with_alternative(
             serial,
-            endpoint="action",
-            domain="SweeperTaskMgr",
-            identifier="RechargeControl",
-            payload=command,
+            "recharge",
+            lambda: self._iot_request(
+                serial,
+                endpoint="action",
+                domain="SweeperTaskMgr",
+                identifier="RechargeControl",
+                payload=command,
+            ),
+            lambda: self._iot_request(
+                serial,
+                endpoint="action",
+                domain="SweeperTaskMgr",
+                identifier="RechargeCtrl",
+                payload={"action": command, "source": "mobile"},
+            ),
         )
 
     def set_clean_mode(self, serial: str, mode: str) -> dict[str, Any]:
@@ -128,16 +185,36 @@ class EzvizRs20ProApi:
         domain: str,
         action: str,
         payload: dict[str, Any],
+        fallback: tuple[str, str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Send an allow-listed settings action to the robot."""
-        if (domain, action) not in SETTING_ACTIONS:
-            raise ValueError(f"Unsupported robot action: {domain}/{action}")
-        return self._iot_request(
+        """Send an allow-listed settings action to the robot.
+
+        ``fallback`` is ``(domain, action, payload)`` for models that do not
+        have ``action``.
+        """
+        targets = [(domain, action)] + ([fallback[:2]] if fallback else [])
+        for target_domain, target_action in targets:
+            if (target_domain, target_action) not in SETTING_ACTIONS:
+                raise ValueError(
+                    f"Unsupported robot action: {target_domain}/{target_action}"
+                )
+
+        def send(target: tuple[str, str, Any]) -> dict[str, Any]:
+            return self._iot_request(
+                serial,
+                endpoint="action",
+                domain=target[0],
+                identifier=target[1],
+                payload=target[2],
+            )
+
+        if fallback is None:
+            return send((domain, action, payload))
+        return self._with_alternative(
             serial,
-            endpoint="action",
-            domain=domain,
-            identifier=action,
-            payload=payload,
+            f"setting:{domain}/{action}",
+            lambda: send((domain, action, payload)),
+            lambda: send(fallback),
         )
 
     def start_region_clean(
@@ -380,7 +457,13 @@ class EzvizRs20ProApi:
         meta = result.get("meta")
         code = meta.get("code") if isinstance(meta, dict) else result.get("code")
         if code not in (None, 0, 200, "0", "200"):
-            raise EzvizRs20ProApiError(
-                f"{domain}/{identifier}: {rejection_reason(result, code)}"
+            meta = meta if isinstance(meta, dict) else {}
+            more = meta.get("moreInfo")
+            detail = more.get("msgDetail") if isinstance(more, dict) else None
+            error = (
+                UnknownActionError
+                if isinstance(detail, str) and detail.strip() == _UNKNOWN_ACTION
+                else EzvizRs20ProApiError
             )
+            raise error(f"{domain}/{identifier}: {rejection_reason(result, code)}")
         return result

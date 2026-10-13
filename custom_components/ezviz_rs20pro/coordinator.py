@@ -286,6 +286,7 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise ServiceValidationError(str(err)) from err
         try:
             action = setting.action(device, self.data.get("task"), value)
+            fallback = setting.fallback_action(device, self.data.get("task"), value)
         except ValueError as err:
             raise ServiceValidationError(str(err)) from err
         if action is not None:
@@ -296,6 +297,7 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 domain=domain,
                 action=name,
                 payload=payload,
+                fallback=fallback,
             )
         else:
             domain, identifier, payload = write

@@ -115,6 +115,35 @@ class ActionTests(unittest.TestCase):
             ),
         )
 
+    def test_global_clean_cfg_fallback_for_re7(self) -> None:
+        device = fixtures.device()
+        tree = load("robot").robot_features(device)
+        tree["SweeperMapMgr"]["GlobalCleanCfg"] = [
+            {"mapID": 2, "fanMode": "normal", "waterQuantity": "low", "ts": 1}
+        ]
+        setting = settings.MapCleanSetting("fanMode")
+        self.assertEqual(
+            setting.fallback_action(device, fixtures.task(), "super"),
+            (
+                "SweeperMapMgr",
+                "SetGlobalCleanCfg",
+                {
+                    "mapID": 2,
+                    "fanMode": "super",
+                    "waterQuantity": "low",
+                    "cleanMode": "sweepThenMop",
+                    "dataSource": "global",
+                },
+            ),
+        )
+        del tree["SweeperMapMgr"]["StdCleanCfg"]
+        self.assertEqual(setting.read(device, fixtures.task()), "normal")
+        self.assertIsNone(
+            settings.MapCleanSetting("cleanTimes").fallback_action(
+                device, fixtures.task(), 2
+            )
+        )
+
     def test_feature_settings_have_no_action(self) -> None:
         self.assertIsNone(
             settings.ScalarSetting("SoundSetting", "PromptToneVolume").action(
