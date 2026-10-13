@@ -24,6 +24,7 @@ class Rs20Entity(CoordinatorEntity[EzvizRs20ProCoordinator]):
             identifiers={(DOMAIN, serial)},
             manufacturer="EZVIZ",
             model=details["model"],
+            model_id=details["model_id"],
             name=details["name"],
             sw_version=details["sw_version"],
             serial_number=serial,

@@ -49,18 +49,6 @@ def _find_api(runtime_data: Any) -> Any | None:
     return None
 
 
-def _contains_rs20(value: Any) -> bool:
-    """Return whether a nested response identifies an RS20-class device."""
-    if isinstance(value, str):
-        normalized = value.casefold().replace("-", "").replace(" ", "")
-        return "rs20" in normalized
-    if isinstance(value, Mapping):
-        return any(_contains_rs20(item) for item in value.values())
-    if isinstance(value, (list, tuple)):
-        return any(_contains_rs20(item) for item in value)
-    return False
-
-
 class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Fetch RS20 Pro data through the already authenticated EZVIZ client."""
 
@@ -112,10 +100,10 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             matches = [
                 (str(serial), payload)
                 for serial, payload in raw.items()
-                if isinstance(payload, Mapping) and _contains_rs20(payload)
+                if isinstance(payload, Mapping) and robot.is_robot(payload)
             ]
             if not matches:
-                raise UpdateFailed("No EZVIZ RS20 Pro found on the account")
+                raise UpdateFailed("No EZVIZ robot vacuum found on the account")
             selected_serial, selected = matches[0]
             self.serial = selected_serial
 

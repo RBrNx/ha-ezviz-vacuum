@@ -63,6 +63,24 @@ class DeviceTests(unittest.TestCase):
         details = robot.device_details(fixtures.device())
         self.assertEqual(details["sw_version"], "V2.0.2417 build 250331")
 
+    def test_model_from_sub_category(self) -> None:
+        details = robot.device_details(fixtures.device())
+        self.assertEqual(details["model"], "RS20 Max")
+        self.assertEqual(details["model_id"], "CS-RS20-MAX-TGA")
+        self.assertEqual(details["name"], "EZVIZ RS20 Max")
+
+    def test_model_from_device_type(self) -> None:
+        device = fixtures.device()
+        del device["deviceInfos"]["deviceSubCategory"]
+        self.assertEqual(robot.model_name(device), "RS20 Max")
+        device["deviceInfos"]["deviceType"] = "CS-RS20-PRO-PGA2"
+        self.assertEqual(robot.model_name(device), "RS20 Pro")
+
+    def test_robot_detection(self) -> None:
+        self.assertTrue(robot.is_robot(fixtures.device()))
+        camera = {"deviceInfos": {"deviceCategory": "IPC"}, "FEATURE_INFO": {}}
+        self.assertFalse(robot.is_robot(camera))
+
     def test_missing_firmware(self) -> None:
         self.assertIsNone(robot.device_details({})["sw_version"])
 

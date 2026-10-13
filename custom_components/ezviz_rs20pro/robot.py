@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from .const import CLEAN_MODES
-from .helpers import feature
+from .helpers import feature, robot_features
 
 # Preset room names are stored by the robot as pinyin codes.
 ROOM_NAMES = {
@@ -137,13 +137,54 @@ def clean_mode(device: Mapping[str, Any] | None) -> str | None:
     return mode if mode in CLEAN_MODES else None
 
 
+def model_name(device: Mapping[str, Any] | None) -> str:
+    """Return a readable model such as ``RS20 Max``."""
+    info = _device_infos(device)
+    sub = str(info.get("deviceSubCategory") or "").strip()
+    if sub:
+        return sub
+    device_type = str(info.get("deviceType") or "").strip().upper()
+    parts = [part for part in device_type.split("-") if part]
+    if parts and parts[0] == "CS":
+        parts = parts[1:]
+    if len(parts) > 2:
+        parts = parts[:-1]  # drop the regional/hardware suffix
+    if parts:
+        return " ".join([parts[0], *(part.capitalize() for part in parts[1:])])
+    return "Robot vacuum"
+
+
+def is_robot(device: Mapping[str, Any] | None) -> bool:
+    """Return whether a device payload belongs to an EZVIZ robot vacuum."""
+    info = _device_infos(device)
+    if str(info.get("deviceCategory", "")).casefold() == "sweepingrobot":
+        return True
+    if not isinstance(device, Mapping):
+        return False
+    for resource in _as_list(device.get("resourceInfos")):
+        if (
+            isinstance(resource, Mapping)
+            and str(resource.get("resourceCategory", "")).casefold()
+            == "sweepingrobot"
+        ):
+            return True
+    return bool(robot_features(device))
+
+
 def device_details(device: Mapping[str, Any] | None) -> dict[str, str | None]:
     """Return model, name and firmware for the device registry."""
-    info = device.get("deviceInfos") if isinstance(device, Mapping) else None
-    info = info if isinstance(info, Mapping) else {}
+    info = _device_infos(device)
     version = info.get("version")
+    model = model_name(device)
+    name = str(info.get("name") or "").strip() or model
     return {
-        "model": "RS20 Pro",
-        "name": "EZVIZ RS20 Pro",
+        "model": model,
+        "model_id": str(info.get("deviceType") or "") or None,
+        "name": name if name.upper().startswith("EZVIZ") else f"EZVIZ {name}",
         "sw_version": str(version) if version else None,
     }
+
+
+def _device_infos(device: Mapping[str, Any] | None) -> Mapping[str, Any]:
+    info = device.get("deviceInfos") if isinstance(device, Mapping) else None
+    return info if isinstance(info, Mapping) else {}
