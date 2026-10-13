@@ -12,8 +12,12 @@ Assistant: a live map, room cleaning, every cleaning setting the app offers,
 consumables and history.
 
 <p align="center">
-  <img src="docs/map-example.png" alt="Map drawn by the integration: rooms in colour, the cleaning path, the robot and the dock" width="640">
-  <br><sub>The live map, drawn by the integration (example floor plan).</sub>
+  <img src="docs/dashboard.png" alt="A Home Assistant dashboard built on the integration: the robot with its live map, cleaning settings and consumables">
+</p>
+
+<p align="center">
+  <img src="docs/settings.png" alt="Base-station, schedule, smart-feature and statistics entities on a dashboard">
+  <br><sub>The dashboard is the author's own (button-card, Mushroom and card-mod); the integration provides the entities and the map image.</sub>
 </p>
 
 Questions and ideas: [community forum thread](https://community.home-assistant.io/t/ezviz-robot-vacuum-full-control-with-live-map-rooms-and-base-station-settings/1028745).
@@ -210,6 +214,10 @@ any size. It shows:
 Each map layer (floor plan, rooms, path) is downloaded only when the robot
 reports that it changed. The map follows the robot every 10 seconds while it
 cleans. Area outside the rooms, often laser reflections, is drawn faintly.
+
+<p align="center">
+  <img src="docs/robot-card.png" alt="The map image entity with rooms, the dock and room buttons" width="420">
+</p>
 
 Show it with a picture entity card:
 
