@@ -37,12 +37,12 @@ async def async_setup_entry(
     entry: ConfigEntry[EzvizRs20ProCoordinator],
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the RS20 Pro vacuum entity."""
+    """Set up the robot vacuum entity."""
     async_add_entities([EzvizRs20ProVacuum(entry.runtime_data)])
 
 
 class EzvizRs20ProVacuum(Rs20Entity, StateVacuumEntity):
-    """EZVIZ RS20 Pro vacuum entity."""
+    """EZVIZ robot vacuum entity."""
 
     _attr_name = None
     _attr_supported_features = (

@@ -1,4 +1,4 @@
-"""RS20 Pro requests layered on the authenticated pyezviz client."""
+"""EZVIZ robot requests layered on the authenticated pyezviz client."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from .const import CLEAN_MODES, WRITABLE_FEATURES
 
 
 class EzvizRs20ProApiError(Exception):
-    """Raised when the RS20 Pro endpoint rejects a request."""
+    """Raised when the robot endpoint rejects a request."""
 
 
 class EzvizRs20ProApi:
@@ -35,7 +35,7 @@ class EzvizRs20ProApi:
     def clean_control(self, serial: str, command: str) -> dict[str, Any]:
         """Run one of the documented cleaning controls."""
         if command not in {"start", "pause", "stop", "return_charge"}:
-            raise ValueError(f"Unsupported RS20 Pro command: {command}")
+            raise ValueError(f"Unsupported robot command: {command}")
         return self._iot_request(
             serial,
             endpoint="action",
@@ -47,7 +47,7 @@ class EzvizRs20ProApi:
     def set_clean_mode(self, serial: str, mode: str) -> dict[str, Any]:
         """Set the sweep/mop mode used by future cleaning runs."""
         if mode not in CLEAN_MODES:
-            raise ValueError(f"Unsupported RS20 Pro mode: {mode}")
+            raise ValueError(f"Unsupported cleaning mode: {mode}")
         return self._iot_request(
             serial,
             endpoint="feature",

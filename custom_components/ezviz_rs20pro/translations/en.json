@@ -1,5 +1,5 @@
 {
-  "title": "EZVIZ RS20 Pro",
+  "title": "EZVIZ RS20",
   "config": {
     "step": {
       "user": {
@@ -292,7 +292,7 @@
   },
   "services": {
     "inspect": {
-      "name": "Inspect RS20 Pro",
+      "name": "Inspect robot",
       "description": "Returns sanitized device data for protocol diagnostics.",
       "fields": {
         "serial": {
@@ -302,7 +302,7 @@
       }
     },
     "map_diagnostics": {
-      "name": "Inspect RS20 Pro map",
+      "name": "Inspect robot map",
       "description": "Tests read-only map and route access without controlling the robot.",
       "fields": {
         "serial": {
@@ -312,7 +312,7 @@
       }
     },
     "camera_diagnostics": {
-      "name": "Inspect RS20 Pro camera",
+      "name": "Inspect robot camera",
       "description": "Opens a short transport diagnostic without saving an image.",
       "fields": {
         "serial": {
@@ -322,7 +322,7 @@
       }
     },
     "refresh_camera_snapshot": {
-      "name": "Capture RS20 Pro snapshot",
+      "name": "Capture robot camera snapshot",
       "description": "Opens the camera briefly, stores one frame in memory and closes the stream.",
       "fields": {
         "serial": {

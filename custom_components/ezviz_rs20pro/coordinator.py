@@ -53,7 +53,7 @@ def find_api(runtime_data: Any) -> Any | None:
 
 
 class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Fetch RS20 Pro data through the already authenticated EZVIZ client."""
+    """Fetch robot data through the already authenticated EZVIZ client."""
 
     def __init__(
         self,

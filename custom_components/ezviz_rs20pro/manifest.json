@@ -1,14 +1,22 @@
 {
   "domain": "ezviz_rs20pro",
-  "name": "EZVIZ RS20 Pro",
-  "after_dependencies": ["ezviz"],
-  "codeowners": ["@Dmgerr"],
+  "name": "EZVIZ RS20",
+  "after_dependencies": [
+    "ezviz"
+  ],
+  "codeowners": [
+    "@stefanelul2000"
+  ],
   "config_flow": true,
-  "dependencies": ["ffmpeg"],
-  "documentation": "https://github.com/Dmgerr/home-assistant-ezviz-rs20-pro",
+  "dependencies": [
+    "ffmpeg"
+  ],
+  "documentation": "https://github.com/stefanelul2000/ha-ezviz-rs20",
   "integration_type": "device",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/Dmgerr/home-assistant-ezviz-rs20-pro/issues",
-  "requirements": ["pycryptodome==3.23.0"],
+  "issue_tracker": "https://github.com/stefanelul2000/ha-ezviz-rs20/issues",
+  "requirements": [
+    "pycryptodome==3.23.0"
+  ],
   "version": "0.5.1"
 }

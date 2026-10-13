@@ -340,7 +340,7 @@ async def async_setup_entry(
     entry: ConfigEntry[EzvizRs20ProCoordinator],
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up RS20 Pro sensors."""
+    """Set up the robot sensors."""
     async_add_entities(
         Rs20Sensor(entry.runtime_data, description) for description in SENSORS
     )
