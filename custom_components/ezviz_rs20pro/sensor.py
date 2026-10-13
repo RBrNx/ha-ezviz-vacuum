@@ -57,6 +57,12 @@ def _task(field: str) -> Callable[[Data], Any]:
     return lambda data: robot.task_data(data.get("task")).get(field)
 
 
+def _wifi(data: Data) -> Mapping[str, Any]:
+    device = data.get("device")
+    wifi = device.get("WIFI") if isinstance(device, Mapping) else None
+    return wifi if isinstance(wifi, Mapping) else {}
+
+
 def _battery_cycles(data: Data) -> Any:
     block = feature(data.get("device"), "InfoMgr", "DeviceDescription")
     basic = block.get("basic") if isinstance(block, Mapping) else {}
@@ -165,6 +171,19 @@ SENSORS: Final = (
         attributes_fn=lambda data: robot.last_clean(data.get("device")),
         native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
         icon="mdi:history",
+    ),
+    Rs20SensorDescription(
+        key="wifi_signal",
+        translation_key="wifi_signal",
+        value_fn=lambda data: _wifi(data).get("signal"),
+        attributes_fn=lambda data: {
+            "ssid": _wifi(data).get("ssid"),
+            "ip_address": _wifi(data).get("address"),
+        },
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:wifi",
     ),
     Rs20SensorDescription(
         key="main_brush",
