@@ -188,3 +188,69 @@ def device_details(device: Mapping[str, Any] | None) -> dict[str, str | None]:
 def _device_infos(device: Mapping[str, Any] | None) -> Mapping[str, Any]:
     info = device.get("deviceInfos") if isinstance(device, Mapping) else None
     return info if isinstance(info, Mapping) else {}
+
+
+ACTIVITY_CLEANING = "cleaning"
+ACTIVITY_PAUSED = "paused"
+ACTIVITY_RETURNING = "returning"
+ACTIVITY_DOCKED = "docked"
+ACTIVITY_IDLE = "idle"
+ACTIVITY_ERROR = "error"
+
+# Tasks the base station runs while the robot sits on it. Matched before the
+# generic "clean" check so that e.g. mop washing or self cleaning is not
+# reported as the robot cleaning the floor.
+_STATION_WORDS = (
+    "wash", "dry", "collect", "dust", "selfclean", "drain", "addwater",
+    "station", "upgrade",
+)
+_RETURN_WORDS = ("return", "recharge", "backcharge", "gohome", "goback")
+_CLEAN_WORDS = (
+    "clean", "sweep", "mop", "work", "run", "explor", "buildmap", "relocat",
+    "spot", "zone", "region", "edge",
+)
+_REST_WORDS = ("standby", "idle", "sleep", "rest", "none", "")
+
+
+def current_task(task: Mapping[str, Any] | None) -> str:
+    """Return the raw current task name reported by the robot."""
+    return str(task_data(task).get("currentTask") or "")
+
+
+def task_exception(task: Mapping[str, Any] | None) -> str | None:
+    """Return the active exception code, if the robot reports one."""
+    data = task_data(task)
+    for key in ("exception", "exceptionCode"):
+        value = str(data.get(key) or "").strip()
+        if value and value.casefold() not in ("none", "normal", "0"):
+            return value
+    return None
+
+
+def activity(
+    task: Mapping[str, Any] | None, device: Mapping[str, Any] | None = None
+) -> str:
+    """Map the live task to a vacuum activity (see ``ACTIVITY_*``)."""
+    if task_exception(task):
+        return ACTIVITY_ERROR
+    data = task_data(task)
+    name = current_task(task).replace("_", "").casefold()
+    on_station = data.get("isOnBasestation") is True
+
+    if "pause" in name or "suspend" in name:
+        return ACTIVITY_PAUSED
+    if any(word in name for word in _RETURN_WORDS):
+        return ACTIVITY_RETURNING
+    if "charg" in name:
+        return ACTIVITY_DOCKED
+    if any(word in name for word in _STATION_WORDS):
+        return ACTIVITY_DOCKED
+    if name in _REST_WORDS:
+        return ACTIVITY_DOCKED if on_station else ACTIVITY_IDLE
+    if any(word in name for word in _CLEAN_WORDS):
+        return ACTIVITY_CLEANING
+
+    info = _device_infos(device)
+    if info.get("status") in (0, "0"):
+        return ACTIVITY_ERROR
+    return ACTIVITY_DOCKED if on_station else ACTIVITY_IDLE

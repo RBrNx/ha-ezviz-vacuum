@@ -18,6 +18,15 @@ from .entity import Rs20Entity
 from . import robot
 from .helpers import find_value as _find_value
 
+_ACTIVITIES = {
+    robot.ACTIVITY_CLEANING: VacuumActivity.CLEANING,
+    robot.ACTIVITY_PAUSED: VacuumActivity.PAUSED,
+    robot.ACTIVITY_RETURNING: VacuumActivity.RETURNING,
+    robot.ACTIVITY_DOCKED: VacuumActivity.DOCKED,
+    robot.ACTIVITY_IDLE: VacuumActivity.IDLE,
+    robot.ACTIVITY_ERROR: VacuumActivity.ERROR,
+}
+
 _ERROR_TRANSLATIONS = {
     "CR_CleanWaterBoxLow": "Clean water tank is low",
 }
@@ -54,35 +63,13 @@ class EzvizRs20ProVacuum(Rs20Entity, StateVacuumEntity):
 
     @property
     def activity(self) -> VacuumActivity:
-        """Return the task state reported by the sweeper endpoint."""
-        task = self.coordinator.data.get("task", {})
-        task_state = str(
-            _find_value(
-                task,
-                ("taskstate", "status", "cleantaskstatus", "currenttask"),
+        """Return the activity derived from the live task."""
+        return _ACTIVITIES[
+            robot.activity(
+                self.coordinator.data.get("task"),
+                self.coordinator.data.get("device"),
             )
-            or ""
-        ).casefold()
-        if any(value in task_state for value in ("clean", "working", "start", "running")):
-            return VacuumActivity.CLEANING
-        if any(value in task_state for value in ("pause", "suspend")):
-            return VacuumActivity.PAUSED
-        if any(value in task_state for value in ("return", "chargeback", "backcharge")):
-            return VacuumActivity.RETURNING
-        if any(value in task_state for value in ("dock", "charging", "charge")):
-            return VacuumActivity.DOCKED
-
-        device = self.coordinator.data["device"]
-        exception = _find_value(device, ("exception",))
-        if exception not in (None, "", "none", "normal"):
-            return VacuumActivity.ERROR
-        in_charging = _find_value(task or device, ("incharging", "charging"))
-        if in_charging in (True, 1, "1", "true"):
-            return VacuumActivity.DOCKED
-        status = _find_value(device, ("globalstatus", "onlinestatus", "status"))
-        if status in (0, "0", False, "offline"):
-            return VacuumActivity.ERROR
-        return VacuumActivity.IDLE
+        ]
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -94,10 +81,8 @@ class EzvizRs20ProVacuum(Rs20Entity, StateVacuumEntity):
             "cleaning_mode": _find_value(device, ("sweepmopmode",)),
             "error": error,
             "error_description": _ERROR_TRANSLATIONS.get(str(error), description),
-            "current_task": _find_value(
-                self.coordinator.data.get("task", {}),
-                ("currenttask", "taskstate", "cleantaskstatus"),
-            ),
+            "current_task": robot.current_task(self.coordinator.data.get("task"))
+            or None,
             "query_error": self.coordinator.data.get("task_error"),
         }
 

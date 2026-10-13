@@ -85,5 +85,39 @@ class DeviceTests(unittest.TestCase):
         self.assertIsNone(robot.device_details({})["sw_version"])
 
 
+class ActivityTests(unittest.TestCase):
+    """Vacuum activity from the live task."""
+
+    def check(self, task_name: str, expected: str, **data) -> None:
+        task = fixtures.task(currentTask=task_name, **data)
+        self.assertEqual(robot.activity(task, fixtures.device()), expected, task_name)
+
+    def test_cleaning(self) -> None:
+        for name in ("clean", "regionClean", "sweep", "mop", "edgeClean"):
+            self.check(name, robot.ACTIVITY_CLEANING, isOnBasestation=False)
+
+    def test_station_tasks_are_docked_not_cleaning(self) -> None:
+        for name in ("washMop", "dryMop", "collectDust", "baseSelfClean",
+                     "selfClean", "drainWater"):
+            self.check(name, robot.ACTIVITY_DOCKED)
+
+    def test_charging_and_standby(self) -> None:
+        self.check("charging", robot.ACTIVITY_DOCKED)
+        self.check("standby", robot.ACTIVITY_DOCKED)
+        self.check("standby", robot.ACTIVITY_IDLE, isOnBasestation=False)
+
+    def test_pause_and_return(self) -> None:
+        self.check("pause", robot.ACTIVITY_PAUSED, isOnBasestation=False)
+        self.check("returnCharge", robot.ACTIVITY_RETURNING, isOnBasestation=False)
+        self.check("recharge", robot.ACTIVITY_RETURNING, isOnBasestation=False)
+
+    def test_exception_is_error(self) -> None:
+        self.check("clean", robot.ACTIVITY_ERROR, exception="CR_CleanWaterBoxLow")
+
+    def test_unknown_task_uses_station_flag(self) -> None:
+        self.check("somethingNew", robot.ACTIVITY_DOCKED)
+        self.check("somethingNew", robot.ACTIVITY_IDLE, isOnBasestation=False)
+
+
 if __name__ == "__main__":
     unittest.main()
