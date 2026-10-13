@@ -317,6 +317,7 @@ class EzvizRs20ProApi:
         meta = result.get("meta")
         code = meta.get("code") if isinstance(meta, dict) else result.get("code")
         if code not in (None, 0, 200, "0", "200"):
-            message = meta.get("message") if isinstance(meta, dict) else result.get("msg")
-            raise EzvizRs20ProApiError(f"EZVIZ rejected the request {code}: {message}")
+            raise EzvizRs20ProApiError(
+                f"{domain}/{identifier}: {rejection_reason(result, code)}"
+            )
         return result

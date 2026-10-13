@@ -171,5 +171,24 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(result, {"path": [1, 2, 3]})
 
 
+class RejectionTests(unittest.TestCase):
+    """Refused requests explain why."""
+
+    def test_chinese_detail_is_translated(self) -> None:
+        reason = load("api").rejection_reason(
+            {"meta": {"code": 400, "message": "Incorrect request parameter.",
+                      "moreInfo": {"msgDetail": "设备不支持该功能"}}},
+            400,
+        )
+        self.assertEqual(
+            reason,
+            "Incorrect request parameter. (the robot does not support this, code 400)",
+        )
+
+    def test_without_detail(self) -> None:
+        reason = load("api").rejection_reason({"meta": {"message": "Bad"}}, 500)
+        self.assertEqual(reason, "Bad (code 500)")
+
+
 if __name__ == "__main__":
     unittest.main()
