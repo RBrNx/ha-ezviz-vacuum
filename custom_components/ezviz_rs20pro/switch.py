@@ -70,6 +70,32 @@ SWITCHES: Final[tuple[Rs20SwitchDescription, ...]] = (
         icon="mdi:play-pause",
         setting=RestPlanSetting("cleanContinue"),
     ),
+    Rs20SwitchDescription(
+        key="carpet_detection",
+        translation_key="carpet_detection",
+        icon="mdi:rug",
+        setting=FieldSetting("SweeperCleanTask", "CarpetCleanCfg", "detection"),
+    ),
+    Rs20SwitchDescription(
+        key="carpet_boost",
+        translation_key="carpet_boost",
+        icon="mdi:fan-plus",
+        setting=FieldSetting("SweeperCleanTask", "CarpetCleanCfg", "turboClean"),
+    ),
+    Rs20SwitchDescription(
+        key="carpet_extra_clean",
+        translation_key="carpet_extra_clean",
+        icon="mdi:repeat-once",
+        setting=FieldSetting("SweeperCleanTask", "CarpetCleanCfg", "additionalClean"),
+    ),
+    Rs20SwitchDescription(
+        key="carpet_cross_when_blocked",
+        translation_key="carpet_cross_when_blocked",
+        icon="mdi:debug-step-over",
+        setting=FieldSetting(
+            "SweeperCleanTask", "CarpetCleanCfg", "allowPassageWhenObstructed"
+        ),
+    ),
 )
 
 

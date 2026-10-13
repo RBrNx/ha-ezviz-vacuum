@@ -123,6 +123,18 @@
       },
       "schedule": {
         "name": "Schedule {schedule}"
+      },
+      "carpet_detection": {
+        "name": "Carpet detection"
+      },
+      "carpet_boost": {
+        "name": "Carpet suction boost"
+      },
+      "carpet_extra_clean": {
+        "name": "Carpet extra cleaning"
+      },
+      "carpet_cross_when_blocked": {
+        "name": "Cross carpets when no other path"
       }
     },
     "select": {
