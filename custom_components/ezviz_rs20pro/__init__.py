@@ -30,6 +30,7 @@ from .helpers import feature
 
 PLATFORMS = [
     Platform.IMAGE,
+    Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,

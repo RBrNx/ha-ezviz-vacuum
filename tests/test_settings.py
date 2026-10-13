@@ -76,6 +76,31 @@ class MapCleanSettingTests(unittest.TestCase):
         self.assertEqual(len(payload), 3)
 
 
+class RoomCleanSettingTests(unittest.TestCase):
+    """Per-room settings change one room of the active map."""
+
+    def test_read(self) -> None:
+        setting = settings.RoomCleanSetting(9, "fanMode")
+        self.assertEqual(setting.read(fixtures.device(), fixtures.task()), "normal")
+
+    def test_write_one_room(self) -> None:
+        setting = settings.RoomCleanSetting(8, "cleanTimes")
+        domain, identifier, payload = setting.write(
+            fixtures.device(), fixtures.task(), 2
+        )
+        self.assertEqual((domain, identifier), ("SweeperMapMgr", "RoomCustomCleanCfg"))
+        rooms = {room["roomID"]: room for room in payload[0]["room"]}
+        self.assertEqual(rooms[8]["cleanTimes"], 2)
+        self.assertEqual(rooms[9]["cleanTimes"], 1)
+        self.assertEqual(rooms[8]["order"], 3)
+
+    def test_unknown_room_is_rejected(self) -> None:
+        with self.assertRaises(ValueError):
+            settings.RoomCleanSetting(99, "fanMode").write(
+                fixtures.device(), fixtures.task(), "quiet"
+            )
+
+
 class ApplyWriteTests(unittest.TestCase):
     """Local updates mirror what was sent."""
 

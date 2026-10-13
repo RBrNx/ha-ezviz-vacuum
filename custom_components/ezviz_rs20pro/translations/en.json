@@ -133,6 +133,38 @@
           "sweepAndMop": "Vacuum and mop",
           "sweepThenMop": "Vacuum, then mop"
         }
+      },
+      "room_settings": {
+        "name": "Room settings",
+        "state": {
+          "universal": "Same for all rooms",
+          "custom": "Per room"
+        }
+      },
+      "room_suction": {
+        "name": "{room} suction",
+        "state": {
+          "quiet": "Quiet",
+          "normal": "Normal",
+          "strong": "Strong",
+          "super": "Max"
+        }
+      },
+      "room_water_level": {
+        "name": "{room} water level",
+        "state": {
+          "low": "Low",
+          "middle": "Medium",
+          "high": "High"
+        }
+      }
+    },
+    "number": {
+      "cleaning_passes": {
+        "name": "Cleaning passes"
+      },
+      "room_cleaning_passes": {
+        "name": "{room} cleaning passes"
       }
     }
   },
