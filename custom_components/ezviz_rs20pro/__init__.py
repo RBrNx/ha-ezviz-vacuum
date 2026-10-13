@@ -153,13 +153,17 @@ def _register_services(hass: HomeAssistant) -> None:  # noqa: C901
             coordinator.serial,
             map_id,
         )
+        # Reading the package version touches the disk.
+        client = await hass.async_add_executor_job(
+            coordinator.rs20_api.client_diagnostics
+        )
         operation = feature(device, "OperationDiagnosis", "DeviceOperationParams")
         operation = operation if isinstance(operation, Mapping) else {}
         return _sanitize(
             {
                 "map_id": map_id,
                 "candidates": result,
-                "client": coordinator.rs20_api.client_diagnostics(),
+                "client": client,
                 "clean_history": coordinator.rs20_api.decode_diagnostic_blob(
                     operation.get("cleanHistory")
                 ),
