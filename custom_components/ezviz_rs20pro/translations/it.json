@@ -1,25 +1,399 @@
 {
-  "title": "EZVIZ RS20 Pro",
+  "title": "EZVIZ RS20",
   "config": {
-    "step": { "user": { "title": "Collega EZVIZ RS20 Pro", "description": "Questa integrazione riutilizza la sessione attiva dell’integrazione EZVIZ ufficiale. Lascia vuoto il numero di serie per rilevare automaticamente un RS20 Pro.", "data": { "source_entry_id": "Account EZVIZ", "serial": "Numero di serie (opzionale)" } } },
-    "abort": { "already_configured": "EZVIZ RS20 Pro è già configurato.", "ezviz_not_configured": "Configura prima l’integrazione EZVIZ ufficiale." }
+    "step": {
+      "user": {
+        "title": "Collega un robot aspirapolvere EZVIZ",
+        "description": "Questa integrazione riutilizza la sessione attiva dell'integrazione ufficiale EZVIZ. Scegli l'account EZVIZ a cui appartiene il robot.",
+        "data": {
+          "source_entry_id": "Account EZVIZ"
+        }
+      },
+      "robot": {
+        "title": "Scegli il robot",
+        "description": "L'account ha più robot aspirapolvere. Scegli quello da aggiungere; ripeti la configurazione per gli altri.",
+        "data": {
+          "serial": "Robot"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Questo robot è già configurato.",
+      "ezviz_not_configured": "Configura prima l'integrazione ufficiale EZVIZ.",
+      "ezviz_not_loaded": "L'integrazione ufficiale EZVIZ non è caricata o non è riuscita a elencare i dispositivi. Ricaricala e riprova.",
+      "no_robots": "Su questo account EZVIZ non è stato trovato alcun robot aspirapolvere non ancora configurato."
+    }
   },
   "entity": {
-    "image": { "camera_snapshot": { "name": "Fotocamera — ultima immagine" } },
-    "sensor": {
-      "battery": { "name": "Batteria" }, "total_clean_area": { "name": "Superficie totale pulita" }, "main_brush": { "name": "Spazzola principale" }, "side_brush": { "name": "Spazzola laterale" }, "hepa_filter": { "name": "Filtro HEPA" }, "mop": { "name": "Panni mop" }, "dust_bag": { "name": "Sacchetto polvere" }, "sensors": { "name": "Sensori" }, "cleaning_solution": { "name": "Soluzione detergente" },
-      "station_mop_washing": { "name": "Stazione — lavaggio mop", "state": { "success": "Completato", "running": "Lavaggio", "idle": "Inattiva", "error": "Errore" } },
-      "station_mop_drying": { "name": "Stazione — asciugatura mop", "state": { "success": "Completato", "running": "Asciugatura", "idle": "Inattiva", "error": "Errore" } },
-      "station_dust_collection": { "name": "Stazione — raccolta polvere", "state": { "success": "Completato", "running": "Svuotamento", "idle": "Inattiva", "error": "Errore" } },
-      "station_water_tank_drain": { "name": "Stazione — scarico serbatoio", "state": { "success": "Completato", "running": "Scarico", "idle": "Inattiva", "error": "Errore" } },
-      "station_plumbing_module": { "name": "Modulo ingresso/scarico acqua", "state": { "installed": "Installato", "not_installed": "Non installato" } }
+    "image": {
+      "camera_snapshot": {
+        "name": "Fotocamera – ultima istantanea"
+      }
     },
-    "switch": { "station_child_lock": { "name": "Stazione — blocco bambini" }, "station_automatic_dust_collection": { "name": "Raccolta automatica della polvere" }, "station_automatic_cleaning_solution": { "name": "Dosaggio automatico del detergente" }, "station_rotating_brush_self_clean": { "name": "Autopulizia della spazzola rotante" } }
+    "sensor": {
+      "battery": {
+        "name": "Batteria"
+      },
+      "total_clean_area": {
+        "name": "Area totale pulita"
+      },
+      "main_brush": {
+        "name": "Spazzola principale"
+      },
+      "side_brush": {
+        "name": "Spazzola laterale"
+      },
+      "hepa_filter": {
+        "name": "Filtro HEPA"
+      },
+      "mop": {
+        "name": "Panni"
+      },
+      "dust_bag": {
+        "name": "Sacchetto della polvere"
+      },
+      "sensors": {
+        "name": "Sensori"
+      },
+      "cleaning_solution": {
+        "name": "Detergente"
+      },
+      "station_mop_washing": {
+        "name": "Lavaggio panni della base",
+        "state": {
+          "success": "Completato",
+          "running": "Lavaggio",
+          "idle": "Inattivo",
+          "error": "Errore"
+        }
+      },
+      "station_mop_drying": {
+        "name": "Asciugatura panni della base",
+        "state": {
+          "success": "Completato",
+          "running": "Asciugatura",
+          "idle": "Inattivo",
+          "error": "Errore"
+        }
+      },
+      "station_dust_collection": {
+        "name": "Svuotamento polvere della base",
+        "state": {
+          "success": "Completato",
+          "running": "Svuotamento",
+          "idle": "Inattivo",
+          "error": "Errore"
+        }
+      },
+      "station_water_tank_drain": {
+        "name": "Svuotamento serbatoio della base",
+        "state": {
+          "success": "Completato",
+          "running": "Svuotamento",
+          "idle": "Inattivo",
+          "error": "Errore"
+        }
+      },
+      "station_plumbing_module": {
+        "name": "Modulo di carico/scarico acqua",
+        "state": {
+          "installed": "Installato",
+          "not_installed": "Non installato"
+        }
+      },
+      "total_clean_time": {
+        "name": "Tempo totale di pulizia"
+      },
+      "total_clean_count": {
+        "name": "Pulizie totali"
+      },
+      "total_dust_collections": {
+        "name": "Svuotamenti polvere totali"
+      },
+      "total_mop_washes": {
+        "name": "Lavaggi panni totali"
+      },
+      "battery_cycles": {
+        "name": "Cicli di carica della batteria"
+      },
+      "dirty_water_filter": {
+        "name": "Filtro del serbatoio dell'acqua sporca"
+      },
+      "current_task": {
+        "name": "Attività corrente"
+      },
+      "task_duration": {
+        "name": "Durata dell'attività"
+      },
+      "relocation_failures": {
+        "name": "Rilocalizzazioni non riuscite"
+      },
+      "last_error": {
+        "name": "Ultimo errore"
+      },
+      "last_clean_area": {
+        "name": "Area dell'ultima pulizia"
+      },
+      "wifi_signal": {
+        "name": "Segnale Wi-Fi"
+      }
+    },
+    "switch": {
+      "station_child_lock": {
+        "name": "Blocco bambini della base"
+      },
+      "station_automatic_dust_collection": {
+        "name": "Svuotamento automatico della polvere"
+      },
+      "station_automatic_cleaning_solution": {
+        "name": "Dosaggio automatico del detergente"
+      },
+      "station_rotating_brush_self_clean": {
+        "name": "Autopulizia della spazzola rotante"
+      },
+      "do_not_disturb": {
+        "name": "Non disturbare"
+      },
+      "do_not_disturb_resume": {
+        "name": "Riprendi la pulizia dopo non disturbare"
+      },
+      "schedule": {
+        "name": "Programmazione {schedule}"
+      },
+      "carpet_detection": {
+        "name": "Rilevamento tappeti"
+      },
+      "carpet_boost": {
+        "name": "Aspirazione potenziata sui tappeti"
+      },
+      "carpet_extra_clean": {
+        "name": "Pulizia aggiuntiva dei tappeti"
+      },
+      "carpet_cross_when_blocked": {
+        "name": "Attraversa i tappeti se non c'è altro percorso"
+      },
+      "pet_mode": {
+        "name": "Modalità animali"
+      },
+      "smart_dirt_detection": {
+        "name": "Rilevamento intelligente dello sporco"
+      },
+      "ai_obstacle_detection_boost": {
+        "name": "Riconoscimento ostacoli avanzato"
+      },
+      "debris_boost": {
+        "name": "Potenziamento per sporco grossolano"
+      },
+      "deep_edge_cleaning": {
+        "name": "Pulizia profonda dei bordi"
+      },
+      "off_peak_charging": {
+        "name": "Ricarica nelle ore non di punta"
+      },
+      "voice_assistant": {
+        "name": "Assistente vocale"
+      }
+    },
+    "select": {
+      "water_level": {
+        "name": "Livello dell'acqua",
+        "state": {
+          "low": "Basso",
+          "middle": "Medio",
+          "high": "Alto"
+        }
+      },
+      "cleaning_mode": {
+        "name": "Modalità di pulizia",
+        "state": {
+          "sweep": "Solo aspirazione",
+          "mop": "Solo lavaggio",
+          "sweepAndMop": "Aspira e lava",
+          "sweepThenMop": "Prima aspira, poi lava"
+        }
+      },
+      "room_settings": {
+        "name": "Impostazioni delle stanze",
+        "state": {
+          "universal": "Uguale per tutte le stanze",
+          "custom": "Per stanza"
+        }
+      },
+      "room_suction": {
+        "name": "{room}: aspirazione",
+        "state": {
+          "quiet": "Silenzioso",
+          "normal": "Normale",
+          "strong": "Forte",
+          "super": "Max"
+        }
+      },
+      "room_water_level": {
+        "name": "{room}: livello dell'acqua",
+        "state": {
+          "low": "Basso",
+          "middle": "Medio",
+          "high": "Alto"
+        }
+      },
+      "mop_wash_trigger": {
+        "name": "Lava il panno",
+        "state": {
+          "time": "Dopo l'intervallo",
+          "region": "Dopo ogni stanza"
+        }
+      }
+    },
+    "number": {
+      "cleaning_passes": {
+        "name": "Passate di pulizia"
+      },
+      "room_cleaning_passes": {
+        "name": "{room}: passate di pulizia"
+      },
+      "mop_wash_interval": {
+        "name": "Intervallo di lavaggio del panno"
+      },
+      "mop_drying_time": {
+        "name": "Tempo di asciugatura del panno"
+      },
+      "dust_collection_frequency": {
+        "name": "Svuota il contenitore ogni N pulizie"
+      },
+      "voice_volume": {
+        "name": "Volume della voce"
+      }
+    },
+    "time": {
+      "do_not_disturb_start": {
+        "name": "Inizio non disturbare"
+      },
+      "do_not_disturb_end": {
+        "name": "Fine non disturbare"
+      },
+      "schedule_start": {
+        "name": "Inizio programmazione {schedule}"
+      },
+      "off_peak_charging_start": {
+        "name": "Inizio ricarica nelle ore non di punta"
+      },
+      "off_peak_charging_end": {
+        "name": "Fine ricarica nelle ore non di punta"
+      }
+    },
+    "binary_sensor": {
+      "on_base_station": {
+        "name": "Sulla base"
+      },
+      "do_not_disturb_active": {
+        "name": "Non disturbare attivo"
+      }
+    }
   },
   "services": {
-    "inspect": { "name": "Ispeziona RS20 Pro", "description": "Restituisce dati del dispositivo ripuliti per la diagnostica del protocollo." },
-    "map_diagnostics": { "name": "Ispeziona mappa RS20 Pro", "description": "Verifica l’accesso in sola lettura a mappa e percorso senza controllare il robot." },
-    "camera_diagnostics": { "name": "Ispeziona fotocamera RS20 Pro", "description": "Apre brevemente la diagnostica di trasporto senza salvare immagini." },
-    "refresh_camera_snapshot": { "name": "Acquisisci immagine RS20 Pro", "description": "Apre brevemente la fotocamera, salva un fotogramma in memoria e chiude il flusso." }
+    "inspect": {
+      "name": "Ispeziona robot",
+      "description": "Restituisce i dati del dispositivo senza informazioni sensibili per la diagnostica del protocollo.",
+      "fields": {
+        "serial": {
+          "name": "Numero di serie del robot",
+          "description": "Numero di serie del robot. Lascia vuoto per usare il primo robot configurato."
+        }
+      }
+    },
+    "map_diagnostics": {
+      "name": "Ispeziona mappa del robot",
+      "description": "Verifica l'accesso in sola lettura a mappa e percorso senza controllare il robot.",
+      "fields": {
+        "serial": {
+          "name": "Numero di serie del robot",
+          "description": "Numero di serie del robot. Lascia vuoto per usare il primo robot configurato."
+        }
+      }
+    },
+    "camera_diagnostics": {
+      "name": "Ispeziona fotocamera del robot",
+      "description": "Avvia una breve diagnostica di trasmissione senza salvare immagini.",
+      "fields": {
+        "serial": {
+          "name": "Numero di serie del robot",
+          "description": "Numero di serie del robot. Lascia vuoto per usare il primo robot configurato."
+        }
+      }
+    },
+    "refresh_camera_snapshot": {
+      "name": "Acquisisci un'istantanea dalla fotocamera del robot",
+      "description": "Apre brevemente la fotocamera, conserva un fotogramma in memoria e chiude lo stream.",
+      "fields": {
+        "serial": {
+          "name": "Numero di serie del robot",
+          "description": "Numero di serie del robot. Lascia vuoto per usare il primo robot configurato."
+        }
+      }
+    },
+    "feature_request": {
+      "name": "Invia richiesta di funzione grezza",
+      "description": "Solo amministratori. Invia un GET o PUT all'endpoint cloud feature/action del robot e restituisce la risposta grezza. Per l'analisi del protocollo; un PUT errato può modificare le impostazioni del robot.",
+      "fields": {
+        "method": {
+          "name": "Metodo",
+          "description": "GET legge un valore, PUT lo scrive."
+        },
+        "endpoint": {
+          "name": "Endpoint",
+          "description": "«feature» per le impostazioni, «action» per i comandi."
+        },
+        "domain": {
+          "name": "Dominio",
+          "description": "Dominio della funzione, ad esempio SweeperCleanTask."
+        },
+        "identifier": {
+          "name": "Identificatore",
+          "description": "Nome della funzione o azione, ad esempio CarpetCleanCfg."
+        },
+        "payload": {
+          "name": "Contenuto",
+          "description": "Corpo JSON per le richieste PUT."
+        },
+        "resource": {
+          "name": "Risorsa",
+          "description": "Identificatore della risorsa, predefinito SweepingRobot."
+        },
+        "local_index": {
+          "name": "Indice locale",
+          "description": "Canale della risorsa, predefinito 0."
+        },
+        "serial": {
+          "name": "Numero di serie del robot",
+          "description": "Numero di serie del robot. Lascia vuoto per usare il primo robot configurato."
+        }
+      }
+    },
+    "api_request": {
+      "name": "Invia richiesta API grezza",
+      "description": "Solo amministratori. Invia una richiesta all'host API EZVIZ della sessione dell'account e restituisce la risposta. Per l'analisi del protocollo.",
+      "fields": {
+        "method": {
+          "name": "Metodo",
+          "description": "Metodo HTTP."
+        },
+        "path": {
+          "name": "Percorso",
+          "description": "Percorso sull'host API EZVIZ, che inizia con «/»."
+        },
+        "params": {
+          "name": "Parametri di query",
+          "description": "Parametri di query facoltativi."
+        },
+        "data": {
+          "name": "Dati del modulo",
+          "description": "Corpo del modulo facoltativo."
+        },
+        "serial": {
+          "name": "Numero di serie del robot",
+          "description": "Numero di serie del robot. Lascia vuoto per usare il primo robot configurato."
+        }
+      }
+    }
   }
 }
