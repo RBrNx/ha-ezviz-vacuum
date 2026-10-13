@@ -15,8 +15,8 @@
 - Return to dock uses the robot's recharge command and works again.
 - Refusals from the robot are explained in English.
 - The raw API request service can send JSON bodies and headers.
-- Removed the enhanced obstacle recognition and voice assistant switches,
-  which the robot does not accept from Home Assistant.
+- Removed the enhanced obstacle recognition switch, which the robot refuses,
+  and the voice assistant switch.
 - README rewritten.
 
 ## 0.6.0
