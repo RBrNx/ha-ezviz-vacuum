@@ -105,8 +105,9 @@ class EzvizRs20ProVacuum(Rs20Entity, StateVacuumEntity):
         }
 
     async def async_start(self) -> None:
-        """Start or resume cleaning."""
-        await self.coordinator.async_clean_control("start")
+        """Start cleaning, or resume a paused clean."""
+        paused = self.activity == VacuumActivity.PAUSED
+        await self.coordinator.async_clean_control("resume" if paused else "start")
 
     async def async_pause(self) -> None:
         """Pause cleaning."""

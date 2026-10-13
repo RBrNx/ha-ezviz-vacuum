@@ -75,6 +75,10 @@ class ApiTests(unittest.TestCase):
         ))
         self.assertEqual(json.loads(call["data"]), "return_charge")
 
+    def test_resume_command(self) -> None:
+        self.api.clean_control("AB1234567", "resume")
+        self.assertEqual(json.loads(self.client._session.calls[0]["data"]), "resume")
+
     def test_unknown_command_is_rejected_locally(self) -> None:
         with self.assertRaises(ValueError):
             self.api.clean_control("AB1234567", "factory_reset")

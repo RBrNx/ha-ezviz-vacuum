@@ -65,7 +65,7 @@ class EzvizRs20ProApi:
 
     def clean_control(self, serial: str, command: str) -> dict[str, Any]:
         """Run one of the documented cleaning controls."""
-        if command not in {"start", "pause", "stop", "return_charge"}:
+        if command not in {"start", "resume", "pause", "stop", "return_charge"}:
             raise ValueError(f"Unsupported robot command: {command}")
         return self._iot_request(
             serial,
