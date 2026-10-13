@@ -16,7 +16,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .coordinator import EzvizRs20ProCoordinator
 from .entity import Rs20Entity
 from . import robot
-from .helpers import find_value as _find_value
 
 _ACTIVITIES = {
     robot.ACTIVITY_CLEANING: VacuumActivity.CLEANING,
@@ -27,9 +26,6 @@ _ACTIVITIES = {
     robot.ACTIVITY_ERROR: VacuumActivity.ERROR,
 }
 
-_ERROR_TRANSLATIONS = {
-    "CR_CleanWaterBoxLow": "Clean water tank is low",
-}
 
 
 
@@ -75,12 +71,15 @@ class EzvizRs20ProVacuum(Rs20Entity, StateVacuumEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Expose useful task and maintenance details."""
         device = self.coordinator.data["device"]
-        error = _find_value(device, ("exception",))
-        description = _find_value(device, ("exceptiondesc",))
+        task = self.coordinator.data.get("task")
+        error = robot.task_exception(task)
+        description = robot.task_data(task).get("exceptionDesc")
         return {
-            "cleaning_mode": _find_value(device, ("sweepmopmode",)),
+            "cleaning_mode": robot.clean_mode(device),
             "error": error,
-            "error_description": _ERROR_TRANSLATIONS.get(str(error), description),
+            "error_description": robot.error_description(error, description)
+            if error
+            else None,
             "current_task": robot.current_task(self.coordinator.data.get("task"))
             or None,
             "query_error": self.coordinator.data.get("task_error"),

@@ -119,5 +119,26 @@ class ActivityTests(unittest.TestCase):
         self.check("somethingNew", robot.ACTIVITY_IDLE, isOnBasestation=False)
 
 
+class ErrorTests(unittest.TestCase):
+    """English error descriptions."""
+
+    def test_numeric_and_named_codes(self) -> None:
+        self.assertEqual(robot.error_description("321"), "Mop pad fell off")
+        self.assertEqual(
+            robot.error_description("CR_CleanWaterBoxLow"), "Clean water tank is low"
+        )
+
+    def test_chinese_description_is_translated(self) -> None:
+        self.assertEqual(robot.error_description("", "主机被困"), "Robot is stuck")
+
+    def test_unknown_codes(self) -> None:
+        self.assertEqual(
+            robot.error_description("CR_DustBoxMissing"), "Dust box missing"
+        )
+        self.assertEqual(robot.error_description("999", "未知"), "Robot error 999")
+        self.assertEqual(robot.error_description("999", "Lidar blocked"), "Lidar blocked")
+        self.assertIsNone(robot.error_description("", ""))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import re
 from typing import Any
 
 from .const import CLEAN_MODES
@@ -254,3 +255,57 @@ def activity(
     if info.get("status") in (0, "0"):
         return ACTIVITY_ERROR
     return ACTIVITY_DOCKED if on_station else ACTIVITY_IDLE
+
+
+# Error codes reported in the robot's abnormal history and live task,
+# with the Chinese description the robot sends for each.
+ERROR_CODES: dict[str, str] = {
+    "201": "Mop pad installation failed",
+    "301": "Side brush is tangled",
+    "302": "Main brush is tangled",
+    "316": "Dirty water tank is full",
+    "321": "Mop pad fell off",
+    "324": "Clean water tank is empty",
+    "404": "Robot is stuck",
+    "405": "Docking failed in front of the station",
+    "406": "Could not relocate on the map",
+    "407": "Base station communication error",
+    "411": "Could not find the station to dock",
+    "413": "Docking failed (did not start from the station)",
+    "414": "Leaving the station is blocked",
+    "CR_CleanWaterBoxLow": "Clean water tank is low",
+}
+_CHINESE_ERRORS: dict[str, str] = {
+    "拖布盘安装失败": "201",
+    "边刷被缠绕": "301",
+    "滚刷缠绕": "302",
+    "污水箱满水": "316",
+    "拖布盘脱落异常": "321",
+    "清水箱缺水": "324",
+    "主机被困": "404",
+    "在基站前回充失败": "405",
+    "重定位失败": "406",
+    "基站通信连接异常": "407",
+    "不在基站前回充失败": "411",
+    "没有从基站出发回充失败": "413",
+    "出基站被阻挡": "414",
+}
+_CJK = re.compile(r"[\u3400-\u9fff]")
+
+
+def error_description(code: Any, description: Any = None) -> str | None:
+    """Return an English description for a robot error code."""
+    code_text = str(code or "").strip()
+    desc_text = str(description or "").strip()
+    if not code_text and not desc_text:
+        return None
+    if code_text in ERROR_CODES:
+        return ERROR_CODES[code_text]
+    if desc_text in _CHINESE_ERRORS:
+        return ERROR_CODES[_CHINESE_ERRORS[desc_text]]
+    if desc_text and not _CJK.search(desc_text):
+        return desc_text
+    if code_text.startswith("CR_"):
+        words = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", code_text[3:]).lower()
+        return words[:1].upper() + words[1:]
+    return f"Robot error {code_text}" if code_text else "Robot error"
