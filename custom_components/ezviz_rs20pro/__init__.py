@@ -74,11 +74,11 @@ async def async_setup_entry(
             """Return sanitized raw device data for protocol discovery."""
             entries = hass.config_entries.async_entries(DOMAIN)
             if not entries:
-                return {"error": "Integracja EZVIZ RS20 Pro nie jest skonfigurowana"}
+                return {"error": "EZVIZ RS20 integration is not configured"}
             active = entries[0]
             runtime = getattr(active, "runtime_data", None)
             if not isinstance(runtime, EzvizRs20ProCoordinator):
-                return {"error": "Integracja EZVIZ RS20 Pro nie jest załadowana"}
+                return {"error": "EZVIZ RS20 integration is not loaded"}
             await runtime.async_request_refresh()
             return _sanitize(runtime.data)
 
@@ -95,14 +95,14 @@ async def async_setup_entry(
             """Probe read-only map routes without returning authentication data."""
             entries = hass.config_entries.async_entries(DOMAIN)
             if not entries:
-                return {"error": "Integracja EZVIZ RS20 Pro nie jest skonfigurowana"}
+                return {"error": "EZVIZ RS20 integration is not configured"}
             runtime = getattr(entries[0], "runtime_data", None)
             if not isinstance(runtime, EzvizRs20ProCoordinator):
-                return {"error": "Integracja EZVIZ RS20 Pro nie jest załadowana"}
+                return {"error": "EZVIZ RS20 integration is not loaded"}
             if runtime.rs20_api is None:
                 await runtime.async_request_refresh()
             if runtime.rs20_api is None:
-                return {"error": "Klient RS20 Pro nie jest gotowy"}
+                return {"error": "RS20 Pro client is not ready"}
             map_id = 5
             device = runtime.data.get("device", {})
             try:
@@ -152,7 +152,7 @@ async def async_setup_entry(
             entries = hass.config_entries.async_entries(DOMAIN)
             runtime = getattr(entries[0], "runtime_data", None) if entries else None
             if not isinstance(runtime, EzvizRs20ProCoordinator):
-                return {"error": "Integracja EZVIZ RS20 Pro nie jest załadowana"}
+                return {"error": "EZVIZ RS20 integration is not loaded"}
             try:
                 return _sanitize(await runtime.async_camera_trace())
             except Exception as err:
@@ -172,7 +172,7 @@ async def async_setup_entry(
             entries = hass.config_entries.async_entries(DOMAIN)
             runtime = getattr(entries[0], "runtime_data", None) if entries else None
             if not isinstance(runtime, EzvizRs20ProCoordinator):
-                raise RuntimeError("Integracja EZVIZ RS20 Pro nie jest załadowana")
+                raise RuntimeError("EZVIZ RS20 integration is not loaded")
             ffmpeg = hass.data.get("ffmpeg")
             ffmpeg_path = str(getattr(ffmpeg, "binary", "ffmpeg"))
             await runtime.async_refresh_camera_snapshot(ffmpeg_path)

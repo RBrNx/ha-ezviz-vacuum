@@ -21,15 +21,15 @@ from .vtm_stream import (
 
 def _session_sign(session_id: Any) -> str:
     if not session_id:
-        raise PyEzvizError("Brak aktywnej sesji EZVIZ")
+        raise PyEzvizError("No active EZVIZ session")
     parts = str(session_id).split(".")
     if len(parts) < 2:
-        raise PyEzvizError("Sesja EZVIZ nie jest tokenem JWT")
+        raise PyEzvizError("EZVIZ session is not a JWT token")
     payload = parts[1] + "=" * (-len(parts[1]) % 4)
     claims = json.loads(base64.urlsafe_b64decode(payload.encode()).decode())
     sign = claims.get("s") if isinstance(claims, dict) else None
     if not isinstance(sign, str) or not sign:
-        raise PyEzvizError("Sesja EZVIZ nie zawiera podpisu VTDU")
+        raise PyEzvizError("EZVIZ session does not contain a VTDU signature")
     return sign
 
 
@@ -53,7 +53,7 @@ def _auth_base_url(token: dict[str, Any]) -> str:
         region = host[4 : -len(".ezvizlife.com")]
         if region:
             return f"https://{region}auth.ezvizlife.com"
-    raise PyEzvizError("Nie udało się ustalić serwera autoryzacji VTDU")
+    raise PyEzvizError("Could not determine the VTDU authorization server")
 
 
 def _find_resource(pagelist: dict[str, Any], serial: str, channel: int) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -70,11 +70,11 @@ def _find_resource(pagelist: dict[str, Any], serial: str, channel: int) -> tuple
         None,
     )
     if not isinstance(resource, dict):
-        raise PyEzvizError("Brak zasobu wideo RS20 Pro")
+        raise PyEzvizError("No RS20 Pro video resource")
     vtms = pagelist.get("VTM") or {}
     vtm = vtms.get(resource.get("resourceId")) if isinstance(vtms, dict) else None
     if not isinstance(vtm, dict):
-        raise PyEzvizError("Brak serwera transmisji VTM dla RS20 Pro")
+        raise PyEzvizError("No VTM streaming server for RS20 Pro")
     return resource, vtm
 
 
@@ -82,7 +82,7 @@ def _vtdu_token(client: Any) -> str:
     token = getattr(client, "_token", None)
     session = getattr(client, "_session", None)
     if not isinstance(token, dict) or session is None:
-        raise PyEzvizError("Aktywna sesja EZVIZ jest niedostępna")
+        raise PyEzvizError("Active EZVIZ session is unavailable")
     session_id = token.get("session_id")
     response = session.get(
         f"{_auth_base_url(token)}/vtdutoken2",
@@ -92,10 +92,10 @@ def _vtdu_token(client: Any) -> str:
     response.raise_for_status()
     payload = response.json()
     if payload.get("retcode") not in (0, "0"):
-        raise PyEzvizError(f"Serwer VTDU odrzucił token: {payload.get('retcode')}")
+        raise PyEzvizError(f"VTDU server rejected the token: {payload.get('retcode')}")
     tokens = payload.get("tokens")
     if not isinstance(tokens, list) or not tokens or not isinstance(tokens[0], str):
-        raise PyEzvizError("Serwer VTDU nie zwrócił tokenu transmisji")
+        raise PyEzvizError("VTDU server did not return a streaming token")
     return tokens[0]
 
 
@@ -103,12 +103,12 @@ def build_cloud_stream(client: Any, serial: str, channel: int = 1) -> tuple[VtmS
     """Build an unopened cloud stream and safe metadata."""
     pagelist = client._api_get_pagelist(page_filter="VTM", limit=50)
     if not isinstance(pagelist, dict):
-        raise PyEzvizError("EZVIZ nie zwrócił metadanych VTM")
+        raise PyEzvizError("EZVIZ did not return VTM metadata")
     resource, vtm = _find_resource(pagelist, serial, channel)
     host = vtm.get("externalIp") or vtm.get("domain") or vtm.get("internalIp")
     port = int(vtm.get("port") or 0)
     if not host or not 1 <= port <= 65535:
-        raise PyEzvizError("Nieprawidłowy adres serwera VTM")
+        raise PyEzvizError("Invalid VTM server address")
     stream_url = build_vtm_url(
         str(host),
         port,
@@ -155,13 +155,13 @@ def capture_cloud_snapshot(
         stream.start()
         for packet in stream.iter_packets(max_packets=500):
             if packet.channel == VtmChannel.ENCRYPTED_STREAM:
-                raise PyEzvizError("Transmisja VTM używa nieobsługiwanego szyfrowania kanału")
+                raise PyEzvizError("VTM stream uses an unsupported channel encryption")
             payloads.append(packet.body)
             if time.monotonic() >= deadline:
                 break
     raw = b"".join(payloads)
     if not raw:
-        raise PyEzvizError("Kamera RS20 Pro nie zwróciła obrazu")
+        raise PyEzvizError("RS20 Pro camera did not return an image")
 
     candidates = [raw]
     get_cam_key = getattr(client, "get_cam_key", None)
@@ -199,4 +199,4 @@ def capture_cloud_snapshot(
         if result.returncode == 0 and result.stdout.startswith(b"\xff\xd8"):
             return result.stdout
         last_error = result.stderr.decode(errors="replace")[-500:]
-    raise PyEzvizError(f"Nie udało się odczytać klatki wideo: {last_error}")
+    raise PyEzvizError(f"Could not read a video frame: {last_error}")

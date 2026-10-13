@@ -20,14 +20,23 @@ from .coordinator import EzvizRs20ProCoordinator
 from .helpers import find_value as _find_value
 
 _ERROR_TRANSLATIONS = {
-    "CR_CleanWaterBoxLow": "Mało wody w zbiorniku czystej wody",
+    "CR_CleanWaterBoxLow": "Clean water tank is low",
 }
 
 _ROOM_TRANSLATIONS = {
-    "#@ChuF#": "Kuchnia",
-    "#@KeT#": "Salon",
-    "#@WoS#": "Sypialnia",
-    "#@XuanG#": "Przedpokój",
+    "#@ChuF#": "Kitchen",
+    "#@KeT#": "Living Room",
+    "#@WoS#": "Bedroom",
+    "#@XuanG#": "Entrance",
+    "#@WeiYJ#": "Bathroom",
+    "#@ZouL#": "Hallway",
+    "#@CanT#": "Dining Room",
+    "#@ShuF#": "Study",
+    "#@ZhuW#": "Master Bedroom",
+    "#@CiW#": "Guest Bedroom",
+    "#@ErTF#": "Kids Room",
+    "#@YangT#": "Balcony",
+    "#@YiMJ#": "Closet",
 }
 
 
@@ -152,9 +161,9 @@ class EzvizRs20ProVacuum(CoordinatorEntity[EzvizRs20ProCoordinator], StateVacuum
                 id=str(region["ID"]),
                 name=_ROOM_TRANSLATIONS.get(
                     str(region.get("name", "")),
-                    str(region.get("name") or f"Pokój {region['ID']}"),
+                    str(region.get("name") or f"Room {region['ID']}"),
                 ),
-                group=f"Mapa {map_id}",
+                group=f"Map {map_id}",
             )
             for region in regions
             if region.get("regionType") == "room" and region.get("ID") is not None

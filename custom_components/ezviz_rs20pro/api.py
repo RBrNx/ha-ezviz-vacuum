@@ -33,7 +33,7 @@ class EzvizRs20ProApi:
     def clean_control(self, serial: str, command: str) -> dict[str, Any]:
         """Run one of the documented cleaning controls."""
         if command not in {"start", "pause", "stop", "return_charge"}:
-            raise ValueError(f"Nieobsługiwana komenda RS20 Pro: {command}")
+            raise ValueError(f"Unsupported RS20 Pro command: {command}")
         return self._iot_request(
             serial,
             endpoint="action",
@@ -45,7 +45,7 @@ class EzvizRs20ProApi:
     def set_clean_mode(self, serial: str, mode: str) -> dict[str, Any]:
         """Set the documented sweep/mop mode."""
         if mode not in {"dustAbsorption", "mop", "sweepMop"}:
-            raise ValueError(f"Nieobsługiwany tryb RS20 Pro: {mode}")
+            raise ValueError(f"Unsupported RS20 Pro mode: {mode}")
         return self._iot_request(
             serial,
             endpoint="feature",
@@ -93,7 +93,7 @@ class EzvizRs20ProApi:
     ) -> dict[str, Any]:
         """Start cleaning selected map rooms using the robot's native action."""
         if not rooms:
-            raise ValueError("Nie wybrano żadnego pomieszczenia")
+            raise ValueError("No room selected")
         payload = {
             "cleanMode": clean_mode,
             "mapID": int(map_id),
@@ -141,10 +141,10 @@ class EzvizRs20ProApi:
         session = getattr(self._client, "_session", None)
         token = getattr(self._client, "_token", None)
         if session is None or not isinstance(token, dict):
-            raise EzvizRs20ProApiError("Aktywna sesja EZVIZ jest niedostępna")
+            raise EzvizRs20ProApiError("Active EZVIZ session is unavailable")
         api_url = token.get("api_url")
         if not api_url:
-            raise EzvizRs20ProApiError("Brak adresu API w aktywnej sesji EZVIZ")
+            raise EzvizRs20ProApiError("No API address in the active EZVIZ session")
 
         routes = (
             "/v3/specialBizs/sweeprobot/v3/rule/path",
@@ -183,7 +183,7 @@ class EzvizRs20ProApi:
         try:
             raw = base64.b64decode(blob["content"], validate=True)
         except (ValueError, TypeError):
-            return {"error": "Nieprawidłowe kodowanie base64"}
+            return {"error": "Invalid base64 encoding"}
 
         decoded: bytes | None = None
         for decoder in (
@@ -284,10 +284,10 @@ class EzvizRs20ProApi:
         session = getattr(self._client, "_session", None)
         token = getattr(self._client, "_token", None)
         if session is None or not isinstance(token, dict):
-            raise EzvizRs20ProApiError("Aktywna sesja EZVIZ jest niedostępna")
+            raise EzvizRs20ProApiError("Active EZVIZ session is unavailable")
         api_url = token.get("api_url")
         if not api_url:
-            raise EzvizRs20ProApiError("Brak adresu API w aktywnej sesji EZVIZ")
+            raise EzvizRs20ProApiError("No API address in the active EZVIZ session")
         return session, str(api_url)
 
     def _iot_request(
@@ -316,11 +316,11 @@ class EzvizRs20ProApi:
         response.raise_for_status()
         result = response.json()
         if not isinstance(result, dict):
-            raise EzvizRs20ProApiError("EZVIZ zwrócił nieprawidłową odpowiedź")
+            raise EzvizRs20ProApiError("EZVIZ returned an invalid response")
 
         meta = result.get("meta")
         code = meta.get("code") if isinstance(meta, dict) else result.get("code")
         if code not in (None, 0, 200, "0", "200"):
             message = meta.get("message") if isinstance(meta, dict) else result.get("msg")
-            raise EzvizRs20ProApiError(f"EZVIZ odrzucił żądanie {code}: {message}")
+            raise EzvizRs20ProApiError(f"EZVIZ rejected the request {code}: {message}")
         return result

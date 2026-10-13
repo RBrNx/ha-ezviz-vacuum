@@ -80,10 +80,10 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _api(self) -> Any:
         if self.source_entry.state is not ConfigEntryState.LOADED:
-            raise ConfigEntryNotReady("Oficjalna integracja EZVIZ nie jest załadowana")
+            raise ConfigEntryNotReady("Official EZVIZ integration is not loaded")
         api = _find_api(getattr(self.source_entry, "runtime_data", None))
         if api is None:
-            raise ConfigEntryNotReady("Nie znaleziono aktywnej sesji EZVIZ")
+            raise ConfigEntryNotReady("No active EZVIZ session found")
         return api
 
     async def _async_update_data(self) -> dict[str, Any]:
@@ -93,16 +93,16 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except ConfigEntryNotReady:
             raise
         except Exception as err:
-            raise UpdateFailed(f"Błąd odczytu EZVIZ: {err}") from err
+            raise UpdateFailed(f"EZVIZ read error: {err}") from err
 
         if not isinstance(raw, Mapping):
-            raise UpdateFailed("EZVIZ zwrócił nieprawidłowy zestaw urządzeń")
+            raise UpdateFailed("EZVIZ returned an invalid device list")
 
         selected_serial = self.serial
         if selected_serial:
             selected = raw.get(selected_serial)
             if not isinstance(selected, Mapping):
-                raise UpdateFailed(f"Nie znaleziono urządzenia {selected_serial}")
+                raise UpdateFailed(f"Device not found: {selected_serial}")
         else:
             matches = [
                 (str(serial), payload)
@@ -110,7 +110,7 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 if isinstance(payload, Mapping) and _contains_rs20(payload)
             ]
             if not matches:
-                raise UpdateFailed("Nie znaleziono EZVIZ RS20 Pro na koncie")
+                raise UpdateFailed("No EZVIZ RS20 Pro found on the account")
             selected_serial, selected = matches[0]
             self.serial = selected_serial
 
@@ -135,7 +135,7 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def async_clean_control(self, command: str) -> None:
         """Send a documented robot control and refresh state."""
         if self.rs20_api is None:
-            raise UpdateFailed("Klient RS20 Pro nie jest gotowy")
+            raise UpdateFailed("RS20 Pro client is not ready")
         await self.hass.async_add_executor_job(
             self.rs20_api.clean_control,
             self.serial,
@@ -146,7 +146,7 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def async_set_clean_mode(self, mode: str) -> None:
         """Set cleaning mode and refresh state."""
         if self.rs20_api is None:
-            raise UpdateFailed("Klient RS20 Pro nie jest gotowy")
+            raise UpdateFailed("RS20 Pro client is not ready")
         await self.hass.async_add_executor_job(
             self.rs20_api.set_clean_mode,
             self.serial,
@@ -178,14 +178,14 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def async_clean_segments(self, segment_ids: list[str]) -> None:
         """Start a native room-cleaning task for selected segment IDs."""
         if self.rs20_api is None:
-            raise UpdateFailed("Klient RS20 Pro nie jest gotowy")
+            raise UpdateFailed("RS20 Pro client is not ready")
         device = self.data.get("device", {})
         try:
             map_mgr = device["FEATURE_INFO"]["0"]["SweepingRobot"]["SweeperMapMgr"]
             map_id = int(map_mgr["MapBasicProperty"][0]["mapID"])
             configs = map_mgr["RoomCustomCleanCfg"][0]["room"]
         except (KeyError, IndexError, TypeError, ValueError) as err:
-            raise UpdateFailed("Brak konfiguracji pomieszczeń RS20 Pro") from err
+            raise UpdateFailed("No RS20 Pro room configuration") from err
 
         requested = {str(item) for item in segment_ids}
         rooms = [dict(item) for item in configs if str(item.get("roomID")) in requested]
@@ -193,7 +193,7 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         missing = requested - found
         if missing:
             raise UpdateFailed(
-                f"Nieznane pomieszczenia RS20 Pro: {', '.join(sorted(missing))}"
+                f"Unknown RS20 Pro rooms: {', '.join(sorted(missing))}"
             )
         for order, room in enumerate(rooms, start=1):
             room["order"] = order
@@ -236,5 +236,5 @@ def get_source_entry(hass: HomeAssistant, entry: ConfigEntry) -> ConfigEntry:
     source_id = entry.data[CONF_SOURCE_ENTRY_ID]
     source = hass.config_entries.async_get_entry(source_id)
     if source is None:
-        raise ConfigEntryNotReady("Brak wskazanej integracji EZVIZ")
+        raise ConfigEntryNotReady("Referenced EZVIZ integration not found")
     return source
