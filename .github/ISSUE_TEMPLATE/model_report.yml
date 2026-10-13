@@ -1,0 +1,76 @@
+name: Report a robot model
+description: Tell us how the integration works with your EZVIZ robot vacuum.
+title: "[Model] "
+labels: ["model report"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping! The integration is only tested on the RS20 Max, so every
+        report about another model tells us what works and what needs fixing.
+
+        Before you start: set up the integration, let the robot run one clean, then
+        call **Developer tools → Actions → EZVIZ RS20: Inspect robot** and copy the
+        response. It removes credentials, but please read it before posting.
+  - type: input
+    id: model
+    attributes:
+      label: Model
+      description: As shown on the device page in Home Assistant, e.g. CS-RS20-MAX-TGA.
+      placeholder: CS-RS20-MAX-TGA
+    validations:
+      required: true
+  - type: input
+    id: firmware
+    attributes:
+      label: Firmware version
+      placeholder: V2.0.2417 build 250331
+    validations:
+      required: true
+  - type: input
+    id: base_station
+    attributes:
+      label: Base station
+      description: Which station the robot uses, if any.
+      placeholder: Self-emptying and mop-washing station
+  - type: input
+    id: version
+    attributes:
+      label: Integration version
+      placeholder: 0.7.0
+    validations:
+      required: true
+  - type: checkboxes
+    id: works
+    attributes:
+      label: What works
+      description: Tick everything you tried and that worked.
+      options:
+        - label: The robot was found during setup
+        - label: Start, pause and resume
+        - label: Stop
+        - label: Return to dock
+        - label: Changing suction
+        - label: Changing cleaning mode and water level
+        - label: Room cleaning
+        - label: The map shows rooms
+        - label: The map shows the path and robot while cleaning
+        - label: Battery and consumable sensors look right
+        - label: Settings (switches, selects, times) change on the robot
+  - type: textarea
+    id: problems
+    attributes:
+      label: What doesn't work
+      description: Errors shown in Home Assistant, entities that are missing, wrong values, settings that don't change anything.
+  - type: textarea
+    id: inspect
+    attributes:
+      label: Inspect robot output
+      description: Paste the response of the Inspect robot action.
+      render: json
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Any lines from Settings → System → Logs that mention ezviz_rs20pro.
+      render: text

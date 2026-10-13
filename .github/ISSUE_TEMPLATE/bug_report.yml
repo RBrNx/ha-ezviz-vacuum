@@ -1,0 +1,44 @@
+name: Bug report
+description: Something doesn't work as described.
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected and what happened instead.
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Robot model and firmware
+      placeholder: CS-RS20-MAX-TGA, V2.0.2417 build 250331
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Integration version
+      placeholder: 0.7.0
+    validations:
+      required: true
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home Assistant version
+      placeholder: 2026.10.1
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: Error message or logs
+      description: The error shown in Home Assistant, and lines from Settings → System → Logs that mention ezviz_rs20pro.
+      render: text
+  - type: textarea
+    id: inspect
+    attributes:
+      label: Inspect robot output (optional)
+      description: The response of the Inspect robot action. It removes credentials, but please read it before posting.
+      render: json

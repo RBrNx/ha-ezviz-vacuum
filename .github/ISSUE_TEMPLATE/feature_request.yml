@@ -1,0 +1,16 @@
+name: Feature request
+description: Something the EZVIZ app can do that Home Assistant can't yet.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What would you like
+      description: Describe the feature and where it is in the EZVIZ app.
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Robot model
+      placeholder: CS-RS20-MAX-TGA
