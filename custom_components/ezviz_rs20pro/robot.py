@@ -254,6 +254,20 @@ def task_exception(task: Mapping[str, Any] | None) -> str | None:
     return None
 
 
+def task_paused(task: Mapping[str, Any] | None) -> bool:
+    """Return whether the current task reports itself as paused.
+
+    A paused clean keeps ``currentTask: clean`` and reports the pause in
+    ``cleanTaskInfo.status`` (likewise for other ``*TaskInfo`` blocks).
+    """
+    for key, value in task_data(task).items():
+        if str(key).endswith("TaskInfo") and isinstance(value, Mapping):
+            status = str(value.get("status") or "").casefold()
+            if status.startswith("pause") or status == "suspend":
+                return True
+    return False
+
+
 def activity(
     task: Mapping[str, Any] | None, device: Mapping[str, Any] | None = None
 ) -> str:
@@ -264,7 +278,7 @@ def activity(
     name = current_task(task).replace("_", "").casefold()
     on_station = data.get("isOnBasestation") is True
 
-    if "pause" in name or "suspend" in name:
+    if "pause" in name or "suspend" in name or task_paused(task):
         return ACTIVITY_PAUSED
     if any(word in name for word in _RETURN_WORDS):
         return ACTIVITY_RETURNING

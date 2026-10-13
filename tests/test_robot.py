@@ -111,6 +111,13 @@ class ActivityTests(unittest.TestCase):
         self.check("returnCharge", robot.ACTIVITY_RETURNING, isOnBasestation=False)
         self.check("recharge", robot.ACTIVITY_RETURNING, isOnBasestation=False)
 
+    def test_paused_clean_task(self) -> None:
+        task = fixtures.task(currentTask="clean", isOnBasestation=False,
+                             cleanTaskInfo={"status": "pause", "cleanRange": "full"})
+        self.assertEqual(robot.activity(task), robot.ACTIVITY_PAUSED)
+        task["data"]["cleanTaskInfo"]["status"] = "running"
+        self.assertEqual(robot.activity(task), robot.ACTIVITY_CLEANING)
+
     def test_exception_is_error(self) -> None:
         self.check("clean", robot.ACTIVITY_ERROR, exception="CR_CleanWaterBoxLow")
 
