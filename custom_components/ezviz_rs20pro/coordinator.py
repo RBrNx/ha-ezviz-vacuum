@@ -206,6 +206,7 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.serial,
             map_id=map_id,
             rooms=rooms,
+            clean_mode=robot.clean_mode(device) or "sweep",
         )
         await self.async_request_refresh()
 

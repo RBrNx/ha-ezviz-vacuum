@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
+from .const import CLEAN_MODES
 from .helpers import feature
 
 # Preset room names are stored by the robot as pinyin codes.
@@ -128,3 +129,9 @@ def room_clean_configs(
             return [dict(room) for room in _as_list(item.get("room"))
                     if isinstance(room, Mapping)]
     return []
+
+
+def clean_mode(device: Mapping[str, Any] | None) -> str | None:
+    """Return the configured sweep/mop mode, if it is a known value."""
+    mode = feature(device, "SweeperCleanTask", "SweepMopMode")
+    return mode if mode in CLEAN_MODES else None

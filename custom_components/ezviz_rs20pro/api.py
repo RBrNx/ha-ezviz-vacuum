@@ -96,6 +96,8 @@ class EzvizRs20ProApi:
         """Start cleaning selected map rooms using the robot's native action."""
         if not rooms:
             raise ValueError("No room selected")
+        if clean_mode not in CLEAN_MODES:
+            raise ValueError(f"Unsupported cleaning mode: {clean_mode}")
         payload = {
             "cleanMode": clean_mode,
             "mapID": int(map_id),

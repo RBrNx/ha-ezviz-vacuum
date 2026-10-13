@@ -43,5 +43,18 @@ class MapTests(unittest.TestCase):
         self.assertEqual(robot.room_clean_configs(fixtures.device(), 0), [])
 
 
+class ModeTests(unittest.TestCase):
+    """Cleaning mode."""
+
+    def test_clean_mode_from_device(self) -> None:
+        self.assertEqual(robot.clean_mode(fixtures.device()), "sweepThenMop")
+
+    def test_unknown_clean_mode_is_ignored(self) -> None:
+        device = fixtures.device()
+        device["FEATURE_INFO"]["0"]["SweepingRobot"]["SweeperCleanTask"][
+            "SweepMopMode"] = "turbo"
+        self.assertIsNone(robot.clean_mode(device))
+
+
 if __name__ == "__main__":
     unittest.main()
