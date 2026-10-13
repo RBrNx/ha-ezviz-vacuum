@@ -68,12 +68,22 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(call["data"], "{}")
 
     def test_clean_control_uses_json_string(self) -> None:
-        self.api.clean_control("AB1234567", "return_charge")
+        self.api.clean_control("AB1234567", "pause")
         call = self.client._session.calls[0]
         self.assertTrue(call["url"].endswith(
             "/AB1234567/SweepingRobot/0/SweeperCleanTask/CleanControl"
         ))
-        self.assertEqual(json.loads(call["data"]), "return_charge")
+        self.assertEqual(json.loads(call["data"]), "pause")
+
+    def test_return_to_base_uses_recharge_control(self) -> None:
+        self.api.recharge_control("AB1234567", "start")
+        call = self.client._session.calls[0]
+        self.assertTrue(call["url"].endswith(
+            "/AB1234567/SweepingRobot/0/SweeperTaskMgr/RechargeControl"
+        ))
+        self.assertEqual(json.loads(call["data"]), "start")
+        with self.assertRaises(ValueError):
+            self.api.clean_control("AB1234567", "return_charge")
 
     def test_resume_command(self) -> None:
         self.api.clean_control("AB1234567", "resume")

@@ -119,7 +119,7 @@ class EzvizRs20ProVacuum(Rs20Entity, StateVacuumEntity):
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Return the robot to its base."""
-        await self.coordinator.async_clean_control("return_charge")
+        await self.coordinator.async_return_to_base()
 
     async def async_get_segments(self) -> list[Segment]:
         """Return the rooms available on the active robot map."""

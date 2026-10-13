@@ -66,13 +66,25 @@ class EzvizRs20ProApi:
 
     def clean_control(self, serial: str, command: str) -> dict[str, Any]:
         """Run one of the documented cleaning controls."""
-        if command not in {"start", "resume", "pause", "stop", "return_charge"}:
+        if command not in {"start", "resume", "pause", "stop"}:
             raise ValueError(f"Unsupported robot command: {command}")
         return self._iot_request(
             serial,
             endpoint="action",
             domain="SweeperCleanTask",
             identifier="CleanControl",
+            payload=command,
+        )
+
+    def recharge_control(self, serial: str, command: str) -> dict[str, Any]:
+        """Send the robot to its base (``start``) or cancel that (``stop``)."""
+        if command not in {"start", "stop"}:
+            raise ValueError(f"Unsupported recharge command: {command}")
+        return self._iot_request(
+            serial,
+            endpoint="action",
+            domain="SweeperTaskMgr",
+            identifier="RechargeControl",
             payload=command,
         )
 

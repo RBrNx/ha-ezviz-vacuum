@@ -257,6 +257,11 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         await self._async_call(self.rs20_api.clean_control, self.serial, command)
         await self.async_request_refresh()
 
+    async def async_return_to_base(self) -> None:
+        """Send the robot back to its base station."""
+        await self._async_call(self.rs20_api.recharge_control, self.serial, "start")
+        await self.async_request_refresh()
+
     async def async_write_setting(self, setting: Setting, value: Any) -> None:
         """Change one robot setting and show the new value immediately."""
         if self.rs20_api is None:
