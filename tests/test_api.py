@@ -113,15 +113,22 @@ class ApiTests(unittest.TestCase):
             )
         self.assertEqual(self.client._session.calls, [])
 
-    def test_map_path_candidates_are_read_only_posts(self) -> None:
-        result = self.api.query_map_path_candidates("ab1234567", 5)
-        self.assertEqual(len(result), 2)
-        self.assertEqual(len(self.client._session.calls), 2)
-        for call in self.client._session.calls:
-            self.assertEqual(
-                call["data"],
-                {"deviceSerial": "AB1234567", "mapId": "5"},
-            )
+    def test_fetch_map_layer_posts_to_rule_route(self) -> None:
+        self.client._session.post = lambda url, **kw: (
+            self.client._session.calls.append({"url": url, **kw})
+            or FakeResponse({"meta": {"code": 200}, "sweepRuleMapVo": {"mapId": 2}})
+        )
+        value = self.api.fetch_map_layer("ab1234567", "map", map_id=2, version=7)
+        call = self.client._session.calls[0]
+        self.assertTrue(call["url"].endswith("/v3/sweeprobot/v3/rule/map"))
+        self.assertEqual(
+            call["params"], {"deviceSerial": "AB1234567", "mapId": 2, "version": 7}
+        )
+        self.assertEqual(value, {"mapId": 2})
+
+    def test_unknown_map_layer_is_rejected(self) -> None:
+        with self.assertRaises(ValueError):
+            self.api.fetch_map_layer("ab1234567", "everything", map_id=2)
 
     def test_start_region_clean_uses_native_room_action(self) -> None:
         room = {

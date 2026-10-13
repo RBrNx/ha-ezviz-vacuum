@@ -144,16 +144,36 @@ def _register_services(hass: HomeAssistant) -> None:  # noqa: C901
         return _sanitize(coordinator.data)
 
     async def async_map_diagnostics(call: ServiceCall) -> dict[str, Any]:
-        """Probe read-only map routes without returning authentication data."""
+        """Read the map layers and summarise them (no raw map data)."""
         coordinator = await _ready(_coordinator(hass, call))
         device = coordinator.data.get("device", {})
-        map_id = robot.active_map_id(device, coordinator.data.get("task")) or 0
-        result = await hass.async_add_executor_job(
-            coordinator.rs20_api.query_map_path_candidates,
-            coordinator.serial,
-            map_id,
-        )
-        # Reading the package version touches the disk.
+        task = coordinator.data.get("task")
+        map_id = robot.active_map_id(device, task) or 0
+        versions = robot.map_versions(task, map_id)
+        layers: dict[str, Any] = {}
+        for layer in ("map", "region", "path"):
+            try:
+                value = await hass.async_add_executor_job(
+                    partial(
+                        coordinator.rs20_api.fetch_map_layer,
+                        coordinator.serial,
+                        layer,
+                        map_id=map_id,
+                        version=versions.get(layer),
+                    )
+                )
+            except Exception as err:  # noqa: BLE001 - diagnostics report it
+                layers[layer] = {"error": str(err)}
+                continue
+            layers[layer] = {
+                key: item
+                for key, item in value.items()
+                if key not in ("mapData", "coordinate", "pathdata", "room")
+            }
+            if layer == "region":
+                layers[layer]["rooms"] = [
+                    room.get("roomID") for room in value.get("room") or []
+                ]
         client = await hass.async_add_executor_job(
             coordinator.rs20_api.client_diagnostics
         )
@@ -162,7 +182,8 @@ def _register_services(hass: HomeAssistant) -> None:  # noqa: C901
         return _sanitize(
             {
                 "map_id": map_id,
-                "candidates": result,
+                "versions": versions,
+                "layers": layers,
                 "client": client,
                 "clean_history": coordinator.rs20_api.decode_diagnostic_blob(
                     operation.get("cleanHistory")

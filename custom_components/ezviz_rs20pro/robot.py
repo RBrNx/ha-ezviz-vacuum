@@ -75,6 +75,30 @@ def active_map_id(
     return current
 
 
+# Live task version keys for each map layer.
+_LAYER_VERSION_KEYS = {"map": "mapOutline", "region": "roomOutline", "path": "path"}
+
+
+def map_versions(
+    task: Mapping[str, Any] | None, map_id: int | None
+) -> dict[str, int]:
+    """Return the current version of each map layer of ``map_id``.
+
+    The cloud only needs to be asked for a layer again when its version
+    changes.
+    """
+    for item in _as_list(task_data(task).get("version")):
+        if not isinstance(item, Mapping) or _map_id(item.get("mapID")) != map_id:
+            continue
+        result = {}
+        for layer, key in _LAYER_VERSION_KEYS.items():
+            value = _map_id(item.get(key))
+            if value is not None:
+                result[layer] = value
+        return result
+    return {}
+
+
 def room_map_ids(device: Mapping[str, Any] | None) -> list[int]:
     """Return the IDs of maps that have room information."""
     info = feature(device, "SweeperMapMgr", "RegionBasicInfo")

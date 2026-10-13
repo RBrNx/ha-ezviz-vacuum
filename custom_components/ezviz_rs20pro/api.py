@@ -39,6 +39,14 @@ def rejection_reason(result: dict[str, Any], code: Any) -> str:
     return f"{message} (code {code})"
 
 
+# Map layer -> key of the layer in the cloud response.
+MAP_LAYERS = {
+    "map": "sweepRuleMapVo",
+    "region": "sweepRuleRegionVo",
+    "path": "sweepRulePathVo",
+}
+
+
 class EzvizRs20ProApi:
     """Use the official integration's session without copying credentials."""
 
@@ -155,44 +163,41 @@ class EzvizRs20ProApi:
             "service_urls": service_urls,
         }
 
-    def query_map_path_candidates(self, serial: str, map_id: int) -> list[dict[str, Any]]:
-        """Probe known read-only map-path routes used by EZVIZ applications."""
-        session = getattr(self._client, "_session", None)
-        token = getattr(self._client, "_token", None)
-        if session is None or not isinstance(token, dict):
-            raise EzvizRs20ProApiError("Active EZVIZ session is unavailable")
-        api_url = token.get("api_url")
-        if not api_url:
-            raise EzvizRs20ProApiError("No API address in the active EZVIZ session")
+    def fetch_map_layer(
+        self,
+        serial: str,
+        layer: str,
+        *,
+        map_id: int,
+        version: int | None = None,
+    ) -> dict[str, Any]:
+        """Read one map layer (``map``, ``region`` or ``path``) from the cloud.
 
-        routes = (
-            "/v3/specialBizs/sweeprobot/v3/rule/path",
-            "/api/specialbiz/v3/sweeprobot/v3/rule/path",
+        This is how the EZVIZ app loads the map; it only reads data.
+        """
+        if layer not in MAP_LAYERS:
+            raise ValueError(f"Unknown map layer: {layer}")
+        session, api_url = self._session_and_host()
+        params: dict[str, Any] = {"deviceSerial": serial.upper(), "mapId": int(map_id)}
+        if version is not None:
+            params["version"] = int(version)
+        response = session.post(
+            f"https://{api_url}/v3/sweeprobot/v3/rule/{layer}",
+            params=params,
+            timeout=getattr(self._client, "_timeout", 25),
         )
-        payload = {"deviceSerial": serial.upper(), "mapId": str(map_id)}
-        results: list[dict[str, Any]] = []
-        for route in routes:
-            try:
-                response = session.post(
-                    f"https://{api_url}{route}",
-                    data=payload,
-                    timeout=getattr(self._client, "_timeout", 25),
-                )
-                parsed: Any
-                try:
-                    parsed = response.json()
-                except ValueError:
-                    parsed = {"response_type": response.headers.get("Content-Type", "")}
-                results.append(
-                    {
-                        "route": route,
-                        "http_status": response.status_code,
-                        "response": parsed,
-                    }
-                )
-            except Exception as err:
-                results.append({"route": route, "error": str(err)})
-        return results
+        response.raise_for_status()
+        result = response.json()
+        if not isinstance(result, dict):
+            raise EzvizRs20ProApiError("EZVIZ returned an invalid map response")
+        meta = result.get("meta")
+        code = meta.get("code") if isinstance(meta, dict) else None
+        if code not in (None, 0, 200, "0", "200"):
+            raise EzvizRs20ProApiError(
+                f"map/{layer}: {rejection_reason(result, code)}"
+            )
+        value = result.get(MAP_LAYERS[layer])
+        return value if isinstance(value, dict) else {}
 
     @staticmethod
     def decode_diagnostic_blob(blob: Any) -> Any:

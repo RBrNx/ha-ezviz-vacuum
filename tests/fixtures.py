@@ -102,6 +102,8 @@ _DEVICE: dict[str, Any] = {
 _TASK: dict[str, Any] = {
     "meta": {"code": 200},
     "data": {"currentMapID": 2, "currentTask": "charging", "preTask": "standby",
+             "version": [{"mapID": 2, "mapOutline": 6126, "roomOutline": 1359,
+                          "path": 204225, "customRegion": 0}],
              "exception": "", "exceptionCode": "", "battery": 100,
              "isOnBasestation": True, "inCharging": False},
 }
