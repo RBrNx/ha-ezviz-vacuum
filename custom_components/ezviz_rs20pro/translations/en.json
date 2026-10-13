@@ -114,6 +114,12 @@
       },
       "station_rotating_brush_self_clean": {
         "name": "Rotating brush self-cleaning"
+      },
+      "do_not_disturb": {
+        "name": "Do not disturb"
+      },
+      "do_not_disturb_resume": {
+        "name": "Resume cleaning after do not disturb"
       }
     },
     "select": {
@@ -165,6 +171,14 @@
       },
       "room_cleaning_passes": {
         "name": "{room} cleaning passes"
+      }
+    },
+    "time": {
+      "do_not_disturb_start": {
+        "name": "Do not disturb start"
+      },
+      "do_not_disturb_end": {
+        "name": "Do not disturb end"
       }
     }
   },

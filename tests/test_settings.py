@@ -101,6 +101,35 @@ class RoomCleanSettingTests(unittest.TestCase):
             )
 
 
+class RestPlanSettingTests(unittest.TestCase):
+    """Do-not-disturb keeps the rest of the period."""
+
+    def test_read(self) -> None:
+        self.assertEqual(
+            settings.RestPlanSetting("endTime").read(fixtures.device()), "07:00:00"
+        )
+
+    def test_write(self) -> None:
+        _, identifier, payload = settings.RestPlanSetting("startTime").write(
+            fixtures.device(), None, "23:30:00"
+        )
+        self.assertEqual(identifier, "RestPlan")
+        self.assertEqual(
+            payload,
+            {"plan": [{"startTime": "23:30:00", "ID": 0, "endTime": "07:00:00",
+                       "enabled": True, "cleanContinue": False}]},
+        )
+
+    def test_write_creates_a_period(self) -> None:
+        device = fixtures.device()
+        device["FEATURE_INFO"]["0"]["SweepingRobot"]["SweeperMgr"]["RestPlan"] = {
+            "plan": []
+        }
+        _, _, payload = settings.RestPlanSetting("enabled").write(device, None, True)
+        self.assertTrue(payload["plan"][0]["enabled"])
+        self.assertEqual(payload["plan"][0]["ID"], 0)
+
+
 class ApplyWriteTests(unittest.TestCase):
     """Local updates mirror what was sent."""
 

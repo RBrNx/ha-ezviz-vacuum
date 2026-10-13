@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .coordinator import EzvizRs20ProCoordinator
 from .entity import Rs20SettingEntity
-from .settings import FieldSetting, Setting
+from .settings import FieldSetting, RestPlanSetting, Setting
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -51,6 +51,18 @@ SWITCHES: Final[tuple[Rs20SwitchDescription, ...]] = (
         translation_key="station_rotating_brush_self_clean",
         icon="mdi:brush-outline",
         setting=_enabled("SweeperCleanTask", "RotatingBrushSelfCleanSwitch"),
+    ),
+    Rs20SwitchDescription(
+        key="do_not_disturb",
+        translation_key="do_not_disturb",
+        icon="mdi:sleep",
+        setting=RestPlanSetting("enabled"),
+    ),
+    Rs20SwitchDescription(
+        key="do_not_disturb_resume",
+        translation_key="do_not_disturb_resume",
+        icon="mdi:play-pause",
+        setting=RestPlanSetting("cleanContinue"),
     ),
 )
 
