@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any, Final
 
@@ -14,6 +13,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import EzvizRs20ProCoordinator
+from .helpers import find_mapping as _find_mapping
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -56,24 +56,7 @@ STATION_SWITCHES: Final = (
 )
 
 
-def _find_mapping(value: Any, key: str) -> Mapping[str, Any] | None:
-    """Find a named mapping in a nested response."""
-    if isinstance(value, Mapping):
-        for current_key, item in value.items():
-            if str(current_key).casefold() == key.casefold() and isinstance(
-                item, Mapping
-            ):
-                return item
-        for item in value.values():
-            found = _find_mapping(item, key)
-            if found is not None:
-                return found
-    elif isinstance(value, (list, tuple)):
-        for item in value:
-            found = _find_mapping(item, key)
-            if found is not None:
-                return found
-    return None
+
 
 
 async def async_setup_entry(

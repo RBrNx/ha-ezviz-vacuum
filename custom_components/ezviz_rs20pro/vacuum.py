@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import Any
 
 from homeassistant.components.vacuum import (
@@ -18,6 +17,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import EzvizRs20ProCoordinator
+from .helpers import find_value as _find_value
 
 _ERROR_TRANSLATIONS = {
     "CR_CleanWaterBoxLow": "Mało wody w zbiorniku czystej wody",
@@ -31,22 +31,7 @@ _ROOM_TRANSLATIONS = {
 }
 
 
-def _find_value(value: Any, keys: tuple[str, ...]) -> Any | None:
-    """Find the first matching key in a nested mapping."""
-    if isinstance(value, Mapping):
-        for key, item in value.items():
-            if str(key).casefold() in keys and item not in (None, ""):
-                return item
-        for item in value.values():
-            found = _find_value(item, keys)
-            if found not in (None, ""):
-                return found
-    elif isinstance(value, (list, tuple)):
-        for item in value:
-            found = _find_value(item, keys)
-            if found not in (None, ""):
-                return found
-    return None
+
 
 
 async def async_setup_entry(

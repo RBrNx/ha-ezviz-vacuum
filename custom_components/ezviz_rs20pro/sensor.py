@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 import re
 from typing import Any, Final
@@ -21,6 +20,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import EzvizRs20ProCoordinator
+from .helpers import find_mapping as _find_mapping, find_scalar as _find_scalar
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -178,40 +178,10 @@ def _normalize_station_value(value: Any) -> str | None:
     return aliases.get(normalized, normalized)
 
 
-def _find_mapping(value: Any, key: str) -> Mapping[str, Any] | None:
-    """Find a named mapping in a nested response."""
-    if isinstance(value, Mapping):
-        for current_key, item in value.items():
-            if str(current_key).casefold() == key.casefold() and isinstance(item, Mapping):
-                return item
-        for item in value.values():
-            found = _find_mapping(item, key)
-            if found is not None:
-                return found
-    elif isinstance(value, (list, tuple)):
-        for item in value:
-            found = _find_mapping(item, key)
-            if found is not None:
-                return found
-    return None
 
 
-def _find_scalar(value: Any, key: str) -> Any | None:
-    """Find a named scalar in a nested response."""
-    if isinstance(value, Mapping):
-        for current_key, item in value.items():
-            if str(current_key).casefold() == key.casefold() and not isinstance(item, (Mapping, list, tuple)):
-                return item
-        for item in value.values():
-            found = _find_scalar(item, key)
-            if found is not None:
-                return found
-    elif isinstance(value, (list, tuple)):
-        for item in value:
-            found = _find_scalar(item, key)
-            if found is not None:
-                return found
-    return None
+
+
 
 
 async def async_setup_entry(
