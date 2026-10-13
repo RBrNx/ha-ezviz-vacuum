@@ -322,6 +322,7 @@ def _normalize_station_value(value: Any) -> str | None:
     }
     return aliases.get(normalized, normalized)
 
+
 def _consumable_attributes(
     block: Mapping[str, Any] | None, hours: bool
 ) -> dict[str, Any] | None:

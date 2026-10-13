@@ -8,7 +8,15 @@ from xml.sax.saxutils import escape
 
 from .mapdata import CELL_FLOOR, CELL_OBSTACLE, CELL_WALL, MapLayers
 
-ROOM_COLORS = ("#2dd4bf", "#60a5fa", "#a78bfa", "#f472b6", "#fbbf24", "#34d399", "#fb923c")
+ROOM_COLORS = (
+    "#2dd4bf",
+    "#60a5fa",
+    "#a78bfa",
+    "#f472b6",
+    "#fbbf24",
+    "#34d399",
+    "#fb923c",
+)
 PADDING = 6
 SCALE = 4  # pixels per cell for viewers that use the intrinsic size
 
@@ -24,7 +32,7 @@ def _polygon(points: list[tuple[float, float]]) -> str:
 def _label_point(points: list[tuple[float, float]]) -> tuple[float, float]:
     """Area centroid of a polygon, falling back to the vertex average."""
     area = cx = cy = 0.0
-    for (x1, y1), (x2, y2) in zip(points, points[1:] + points[:1]):
+    for (x1, y1), (x2, y2) in zip(points, points[1:] + points[:1], strict=True):
         cross = x1 * y2 - x2 * y1
         area += cross
         cx += (x1 + x2) * cross
@@ -63,7 +71,7 @@ def render_svg(
             f'<path d="{_runs_path(grid.runs[CELL_FLOOR])}" fill="#64748b" '
             'fill-opacity="0.28"/>'
         )
-    for index, (room_id, points) in enumerate(sorted(layers.rooms.items())):
+    for index, (_room_id, points) in enumerate(sorted(layers.rooms.items())):
         color = ROOM_COLORS[index % len(ROOM_COLORS)]
         parts.append(
             f'<polygon points="{_polygon(points)}" fill="{color}" '

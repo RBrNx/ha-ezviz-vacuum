@@ -206,12 +206,21 @@ def build_layers(
     if isinstance(map_layer, Mapping):
         layers.grid = decode_grid(map_layer)
         try:
-            layers.charger = (float(map_layer["chargerX"]), float(map_layer["chargerY"]))
+            layers.charger = (
+                float(map_layer["chargerX"]),
+                float(map_layer["chargerY"]),
+            )
         except (KeyError, TypeError, ValueError):
             layers.charger = None
-        extra = map_layer.get("extra") if isinstance(map_layer.get("extra"), Mapping) else {}
+        extra = (
+            map_layer.get("extra")
+            if isinstance(map_layer.get("extra"), Mapping)
+            else {}
+        )
         degree = extra.get("chargerDegree", map_layer.get("chargerDegree"))
-        layers.charger_degree = float(degree) if isinstance(degree, (int, float)) else None
+        layers.charger_degree = (
+            float(degree) if isinstance(degree, (int, float)) else None
+        )
     if isinstance(region_layer, Mapping):
         layers.rooms = decode_rooms(region_layer)
     if isinstance(path_layer, Mapping):

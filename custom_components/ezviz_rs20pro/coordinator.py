@@ -21,19 +21,19 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import robot
-from .mapdata import build_layers
-from .maprender import render_svg
-from .settings import Setting, apply_write
 from .api import EzvizRs20ProApi, EzvizRs20ProApiError
 from .cloud_camera import capture_cloud_snapshot, trace_cloud_stream
 from .const import (
+    ACTIVE_SCAN_INTERVAL,
     CONF_SERIAL,
     CONF_SOURCE_ENTRY_ID,
-    ACTIVE_SCAN_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
     DEVICE_REFRESH_INTERVAL,
     DOMAIN,
 )
+from .mapdata import build_layers
+from .maprender import render_svg
+from .settings import Setting, apply_write
 
 
 def find_api(runtime_data: Any) -> Any | None:
@@ -230,7 +230,10 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return
 
         layers = build_layers(
-            *(self._map_cache.get(layer, (None, None))[1] for layer in ("map", "region", "path"))
+            *(
+                self._map_cache.get(layer, (None, None))[1]
+                for layer in ("map", "region", "path")
+            )
         )
         names = {
             int(room_id): name for room_id, name in robot.rooms(self._device, map_id)
@@ -260,9 +263,7 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except EzvizRs20ProApiError as err:
             raise HomeAssistantError(f"EZVIZ rejected the command: {err}") from err
         except Exception as err:
-            raise HomeAssistantError(
-                f"Could not reach the EZVIZ cloud: {err}"
-            ) from err
+            raise HomeAssistantError(f"Could not reach the EZVIZ cloud: {err}") from err
 
     async def async_clean_control(self, command: str) -> None:
         """Send a documented robot control and refresh state."""
@@ -322,9 +323,7 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         requested = [str(item) for item in segment_ids]
         missing = sorted(set(requested) - known)
         if missing:
-            raise ServiceValidationError(
-                f"Unknown robot rooms: {', '.join(missing)}"
-            )
+            raise ServiceValidationError(f"Unknown robot rooms: {', '.join(missing)}")
         await self._async_call(
             self.rs20_api.start_region_clean,
             self.serial,

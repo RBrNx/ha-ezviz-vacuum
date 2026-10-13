@@ -5,12 +5,11 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-import voluptuous as vol
-
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import selector
+import voluptuous as vol
 
 from . import robot
 from .const import CONF_SERIAL, CONF_SOURCE_ENTRY_ID, DOMAIN, SOURCE_DOMAIN
@@ -70,8 +69,7 @@ class EzvizRs20ProConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if robots is None:
                 return self.async_abort(reason="ezviz_not_loaded")
             configured = {
-                str(entry.unique_id).upper()
-                for entry in self._async_current_entries()
+                str(entry.unique_id).upper() for entry in self._async_current_entries()
             }
             self._robots = {
                 serial: name

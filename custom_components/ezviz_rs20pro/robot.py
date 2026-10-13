@@ -79,9 +79,7 @@ def active_map_id(
 _LAYER_VERSION_KEYS = {"map": "mapOutline", "region": "roomOutline", "path": "path"}
 
 
-def map_versions(
-    task: Mapping[str, Any] | None, map_id: int | None
-) -> dict[str, int]:
+def map_versions(task: Mapping[str, Any] | None, map_id: int | None) -> dict[str, int]:
     """Return the current version of each map layer of ``map_id``.
 
     The cloud only needs to be asked for a layer again when its version
@@ -153,8 +151,11 @@ def room_clean_configs(
     """Return the per-room cleaning settings of ``map_id``."""
     for item in _as_list(feature(device, "SweeperMapMgr", "RoomCustomCleanCfg")):
         if isinstance(item, Mapping) and _map_id(item.get("mapID")) == map_id:
-            return [dict(room) for room in _as_list(item.get("room"))
-                    if isinstance(room, Mapping)]
+            return [
+                dict(room)
+                for room in _as_list(item.get("room"))
+                if isinstance(room, Mapping)
+            ]
     return []
 
 
@@ -191,8 +192,7 @@ def is_robot(device: Mapping[str, Any] | None) -> bool:
     for resource in _as_list(device.get("resourceInfos")):
         if (
             isinstance(resource, Mapping)
-            and str(resource.get("resourceCategory", "")).casefold()
-            == "sweepingrobot"
+            and str(resource.get("resourceCategory", "")).casefold() == "sweepingrobot"
         ):
             return True
     return bool(robot_features(device))
@@ -228,13 +228,30 @@ ACTIVITY_ERROR = "error"
 # generic "clean" check so that e.g. mop washing or self cleaning is not
 # reported as the robot cleaning the floor.
 _STATION_WORDS = (
-    "wash", "dry", "collect", "dust", "selfclean", "drain", "addwater",
-    "station", "upgrade",
+    "wash",
+    "dry",
+    "collect",
+    "dust",
+    "selfclean",
+    "drain",
+    "addwater",
+    "station",
+    "upgrade",
 )
 _RETURN_WORDS = ("return", "recharge", "backcharge", "gohome", "goback")
 _CLEAN_WORDS = (
-    "clean", "sweep", "mop", "work", "run", "explor", "buildmap", "relocat",
-    "spot", "zone", "region", "edge",
+    "clean",
+    "sweep",
+    "mop",
+    "work",
+    "run",
+    "explor",
+    "buildmap",
+    "relocat",
+    "spot",
+    "zone",
+    "region",
+    "edge",
 )
 _REST_WORDS = ("standby", "idle", "sleep", "rest", "none", "")
 
@@ -358,7 +375,9 @@ def _decode_history(content: str) -> tuple[Mapping[str, Any], ...]:
     return tuple(item for item in _as_list(items) if isinstance(item, Mapping))
 
 
-def history(device: Mapping[str, Any] | None, key: str) -> tuple[Mapping[str, Any], ...]:
+def history(
+    device: Mapping[str, Any] | None, key: str
+) -> tuple[Mapping[str, Any], ...]:
     """Return ``cleanHistory`` or ``abnormalHistory`` entries, oldest first."""
     params = feature(device, "OperationDiagnosis", "DeviceOperationParams")
     blob = params.get(key) if isinstance(params, Mapping) else None

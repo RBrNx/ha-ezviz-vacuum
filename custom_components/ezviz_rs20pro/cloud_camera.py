@@ -41,7 +41,9 @@ def _auth_base_url(token: dict[str, Any]) -> str:
         else ""
     )
     parsed_auth = urlparse(
-        auth_addr if auth_addr.startswith(("http://", "https://")) else f"https://{auth_addr}"
+        auth_addr
+        if auth_addr.startswith(("http://", "https://"))
+        else f"https://{auth_addr}"
     )
     if (parsed_auth.hostname or "").casefold() not in {"", "none", "null"}:
         return f"https://{parsed_auth.hostname}"
@@ -56,7 +58,9 @@ def _auth_base_url(token: dict[str, Any]) -> str:
     raise PyEzvizError("Could not determine the VTDU authorization server")
 
 
-def _find_resource(pagelist: dict[str, Any], serial: str, channel: int) -> tuple[dict[str, Any], dict[str, Any]]:
+def _find_resource(
+    pagelist: dict[str, Any], serial: str, channel: int
+) -> tuple[dict[str, Any], dict[str, Any]]:
     resources = pagelist.get("resourceInfos") or []
     resource = next(
         (
@@ -99,7 +103,9 @@ def _vtdu_token(client: Any) -> str:
     return tokens[0]
 
 
-def build_cloud_stream(client: Any, serial: str, channel: int = 1) -> tuple[VtmStreamClient, dict[str, Any]]:
+def build_cloud_stream(
+    client: Any, serial: str, channel: int = 1
+) -> tuple[VtmStreamClient, dict[str, Any]]:
     """Build an unopened cloud stream and safe metadata."""
     pagelist = client._api_get_pagelist(page_filter="VTM", limit=50)
     if not isinstance(pagelist, dict):

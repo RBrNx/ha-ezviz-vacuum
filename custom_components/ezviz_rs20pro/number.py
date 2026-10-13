@@ -90,7 +90,9 @@ NUMBERS: Final[tuple[Rs20NumberDescription, ...]] = (
 )
 
 
-def room_numbers(device: Any, task: Any) -> list[tuple[str, Rs20NumberDescription, str]]:
+def room_numbers(
+    device: Any, task: Any
+) -> list[tuple[str, Rs20NumberDescription, str]]:
     """Return ``(key, description, room name)`` for per-room passes."""
     map_id = robot.active_map_id(device, task)
     configured = {

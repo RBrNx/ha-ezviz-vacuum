@@ -12,12 +12,12 @@ from typing import Any
 from urllib.parse import parse_qsl, urlencode, urlparse
 
 from Crypto.Cipher import AES
-
 from pyezvizapi.exceptions import PyEzvizError
 
 
 class DeviceException(PyEzvizError):
     """Compatibility error for unreachable VTM devices."""
+
 
 VTM_MAGIC = 0x24
 VTM_HEADER_SIZE = 8
@@ -416,7 +416,8 @@ class VtmStreamClient:
                 chunk = sock.recv(remaining)
             except TimeoutError as err:
                 raise DeviceException(
-                    "Device offline or unreachable: timed out waiting for VTM stream data"
+                    "Device offline or unreachable: "
+                    "timed out waiting for VTM stream data"
                 ) from err
             if not chunk:
                 raise PyEzvizError("VTM socket closed while reading packet")
@@ -830,9 +831,7 @@ def _is_mpeg_ps_packet_start_id(stream_id: int) -> bool:
     )
 
 
-def _find_nal_start_codes(
-    data: bytes, start: int, end: int
-) -> list[tuple[int, int]]:
+def _find_nal_start_codes(data: bytes, start: int, end: int) -> list[tuple[int, int]]:
     """Find Annex B NAL start codes in ``data[start:end]``."""
 
     positions: list[tuple[int, int]] = []
@@ -867,7 +866,9 @@ def _h264_nal_type(data: bytes, start_code_pos: int, start_code_len: int) -> int
     return data[header_pos] & 0x1F
 
 
-def _is_plausible_hevc_header(data: bytes, start_code_pos: int, start_code_len: int) -> bool:
+def _is_plausible_hevc_header(
+    data: bytes, start_code_pos: int, start_code_len: int
+) -> bool:
     """Return True when the bytes after an Annex B start look like clear HEVC."""
 
     header_pos = start_code_pos + start_code_len
@@ -880,7 +881,9 @@ def _is_plausible_hevc_header(data: bytes, start_code_pos: int, start_code_len: 
     return nal_type <= 40 and layer_id == 0 and (data[header_pos + 1] & 0x07) != 0
 
 
-def _is_plausible_h264_header(data: bytes, start_code_pos: int, start_code_len: int) -> bool:
+def _is_plausible_h264_header(
+    data: bytes, start_code_pos: int, start_code_len: int
+) -> bool:
     """Return True when the byte after an Annex B start looks like clear H.264."""
 
     header_pos = start_code_pos + start_code_len
@@ -976,10 +979,7 @@ def detect_hikvision_ps_video_nalu_header_size(
         and scores["hevc-encrypted-header"] >= scores["h264-clear-header"]
     ):
         return 0
-    if (
-        scores["h264"] > scores["hevc"]
-        and scores["h264"] > scores["h264-clear-header"]
-    ):
+    if scores["h264"] > scores["hevc"] and scores["h264"] > scores["h264-clear-header"]:
         return 0
     if scores["h264-clear-header"] > scores["hevc"]:
         return 1
@@ -1054,6 +1054,7 @@ def decrypt_hikvision_ps_video(  # noqa: PLR0912, PLR0915
 
     key_bytes = key.encode() if isinstance(key, str) else key
     aes_key = key_bytes.ljust(16, b"\0")[:16]
+
     def find_encrypted_nal_start_codes(
         data: bytes,
         start: int,
@@ -1156,9 +1157,7 @@ def decrypt_hikvision_ps_video(  # noqa: PLR0912, PLR0915
 
             for idx, (start_code_pos, start_code_len) in enumerate(nal_starts):
                 decrypt_end = (
-                    nal_starts[idx + 1][0]
-                    if idx + 1 < len(nal_starts)
-                    else payload_end
+                    nal_starts[idx + 1][0] if idx + 1 < len(nal_starts) else payload_end
                 )
                 if active_nal:
                     candidate_decrypted = active_nal_decrypted + max(
@@ -1166,8 +1165,7 @@ def decrypt_hikvision_ps_video(  # noqa: PLR0912, PLR0915
                         start_code_pos - segment_start,
                     )
                     if (
-                        candidate_decrypted
-                        < HIKVISION_NAL_ENCRYPTED_PREFIX_LENGTH
+                        candidate_decrypted < HIKVISION_NAL_ENCRYPTED_PREFIX_LENGTH
                         and candidate_decrypted == 0
                     ):
                         continue
@@ -1257,9 +1255,7 @@ def decrypt_hikvision_ps_video(  # noqa: PLR0912, PLR0915
         segment_start = 0
         for idx, (start_code_pos, start_code_len) in enumerate(nal_starts):
             decrypt_end = (
-                nal_starts[idx + 1][0]
-                if idx + 1 < len(nal_starts)
-                else len(payload)
+                nal_starts[idx + 1][0] if idx + 1 < len(nal_starts) else len(payload)
             )
             if active_nal:
                 candidate_decrypted = active_nal_decrypted + max(
@@ -1465,5 +1461,3 @@ def _read_varint(data: bytes, pos: int) -> tuple[int, int]:
         if shift >= 64:
             break
     raise PyEzvizError("Malformed protobuf varint")
-
-

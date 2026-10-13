@@ -24,8 +24,14 @@ class GridTests(unittest.TestCase):
         # 3 x 2 grid: row 0 floor floor wall, row 1 empty obstacle floor
         cells = chr(4) + chr(4) + chr(2) + chr(0) + chr(8) + chr(4)
         grid = mapdata.decode_grid(
-            {"x": 10, "y": 20, "w": 3, "h": 2, "mapData": pack(cells),
-             "extra": {"mapEncodeType": "me2/gzip/base64"}}
+            {
+                "x": 10,
+                "y": 20,
+                "w": 3,
+                "h": 2,
+                "mapData": pack(cells),
+                "extra": {"mapEncodeType": "me2/gzip/base64"},
+            }
         )
         self.assertEqual(grid.runs["floor"], [(10, 20, 2), (12, 21, 1)])
         self.assertEqual(grid.runs["wall"], [(12, 20, 1)])
@@ -33,9 +39,7 @@ class GridTests(unittest.TestCase):
 
     def test_legacy_rle(self) -> None:
         # 'S' = 18 = 0b010010 -> floor, floor; '(5)' repeats it
-        grid = mapdata.decode_grid(
-            {"x": 0, "y": 0, "w": 10, "h": 1, "mapData": "S(5)"}
-        )
+        grid = mapdata.decode_grid({"x": 0, "y": 0, "w": 10, "h": 1, "mapData": "S(5)"})
         self.assertEqual(grid.runs["floor"], [(0, 0, 10)])
 
     def test_bad_layer(self) -> None:
@@ -66,8 +70,16 @@ class OutlineTests(unittest.TestCase):
 
     def test_build_layers(self) -> None:
         layers = mapdata.build_layers(
-            {"x": 0, "y": 0, "w": 1, "h": 1, "mapData": pack(chr(4)),
-             "chargerX": 5, "chargerY": 6, "extra": {"chargerDegree": 179}},
+            {
+                "x": 0,
+                "y": 0,
+                "w": 1,
+                "h": 1,
+                "mapData": pack(chr(4)),
+                "chargerX": 5,
+                "chargerY": 6,
+                "extra": {"chargerDegree": 179},
+            },
             None,
             {"pathdata": "", "currentPosition": {"x": 5, "y": 6, "degree": -174}},
         )
@@ -84,8 +96,15 @@ class RenderTests(unittest.TestCase):
         maprender = load("maprender")
         cells = chr(4) * 30 + chr(2) * 10
         layers = mapdata.build_layers(
-            {"x": 0, "y": 0, "w": 10, "h": 4, "mapData": pack(cells),
-             "chargerX": 9, "chargerY": 1},
+            {
+                "x": 0,
+                "y": 0,
+                "w": 10,
+                "h": 4,
+                "mapData": pack(cells),
+                "chargerX": 9,
+                "chargerY": 1,
+            },
             {"room": [{"roomID": 8, "coordinate": "0,0;9,0;9,2;0,2"}]},
             {"pathdata": "1,1;5,1", "currentPosition": {"x": 5, "y": 1, "degree": 90}},
         )

@@ -62,25 +62,31 @@ class ApiTests(unittest.TestCase):
     def test_query_current_task(self) -> None:
         self.api.query_current_task("ab1234567")
         call = self.client._session.calls[0]
-        self.assertTrue(call["url"].endswith(
-            "/AB1234567/SweepingRobot/0/SweeperTaskMgr/QueryCurrentTask"
-        ))
+        self.assertTrue(
+            call["url"].endswith(
+                "/AB1234567/SweepingRobot/0/SweeperTaskMgr/QueryCurrentTask"
+            )
+        )
         self.assertEqual(call["data"], "{}")
 
     def test_clean_control_uses_json_string(self) -> None:
         self.api.clean_control("AB1234567", "pause")
         call = self.client._session.calls[0]
-        self.assertTrue(call["url"].endswith(
-            "/AB1234567/SweepingRobot/0/SweeperCleanTask/CleanControl"
-        ))
+        self.assertTrue(
+            call["url"].endswith(
+                "/AB1234567/SweepingRobot/0/SweeperCleanTask/CleanControl"
+            )
+        )
         self.assertEqual(json.loads(call["data"]), "pause")
 
     def test_return_to_base_uses_recharge_control(self) -> None:
         self.api.recharge_control("AB1234567", "start")
         call = self.client._session.calls[0]
-        self.assertTrue(call["url"].endswith(
-            "/AB1234567/SweepingRobot/0/SweeperTaskMgr/RechargeControl"
-        ))
+        self.assertTrue(
+            call["url"].endswith(
+                "/AB1234567/SweepingRobot/0/SweeperTaskMgr/RechargeControl"
+            )
+        )
         self.assertEqual(json.loads(call["data"]), "start")
         with self.assertRaises(ValueError):
             self.api.clean_control("AB1234567", "return_charge")
@@ -102,9 +108,11 @@ class ApiTests(unittest.TestCase):
             value={"enabled": True},
         )
         call = self.client._session.calls[0]
-        self.assertTrue(call["url"].endswith(
-            "/AB1234567/SweepingRobot/0/SweeperBaseStationMgr/ChildLockSwitch"
-        ))
+        self.assertTrue(
+            call["url"].endswith(
+                "/AB1234567/SweepingRobot/0/SweeperBaseStationMgr/ChildLockSwitch"
+            )
+        )
         self.assertEqual(json.loads(call["data"]), {"enabled": True})
 
     def test_unlisted_feature_is_rejected_locally(self) -> None:
@@ -147,20 +155,29 @@ class ApiTests(unittest.TestCase):
     def test_start_region_clean_sends_room_ids_like_the_app(self) -> None:
         self.api.start_region_clean("ab1234567", map_id=2, room_ids=[11, 8])
         call = self.client._session.calls[0]
-        self.assertTrue(call["url"].endswith(
-            "/AB1234567/SweepingRobot/0/SweeperCleanTask/StartRegionClean"
-        ))
+        self.assertTrue(
+            call["url"].endswith(
+                "/AB1234567/SweepingRobot/0/SweeperCleanTask/StartRegionClean"
+            )
+        )
         self.assertEqual(
             json.loads(call["data"]),
-            {"mapID": 2, "region": [{"regionType": "room", "roomID": 11},
-                                    {"regionType": "room", "roomID": 8}]},
+            {
+                "mapID": 2,
+                "region": [
+                    {"regionType": "room", "roomID": 11},
+                    {"regionType": "room", "roomID": 8},
+                ],
+            },
         )
         with self.assertRaises(ValueError):
             self.api.start_region_clean("ab1234567", map_id=2, room_ids=[])
 
     def test_setting_action_is_allow_listed(self) -> None:
         self.api.send_setting_action(
-            "ab1234567", domain="SweeperMapMgr", action="SetFanModeOfStdClean",
+            "ab1234567",
+            domain="SweeperMapMgr",
+            action="SetFanModeOfStdClean",
             payload={"mapID": 2, "fanMode": "quiet"},
         )
         call = self.client._session.calls[0]
@@ -192,8 +209,13 @@ class RejectionTests(unittest.TestCase):
 
     def test_chinese_detail_is_translated(self) -> None:
         reason = load("api").rejection_reason(
-            {"meta": {"code": 400, "message": "Incorrect request parameter.",
-                      "moreInfo": {"msgDetail": "设备不支持该功能"}}},
+            {
+                "meta": {
+                    "code": 400,
+                    "message": "Incorrect request parameter.",
+                    "moreInfo": {"msgDetail": "设备不支持该功能"},
+                }
+            },
             400,
         )
         self.assertEqual(

@@ -8,8 +8,8 @@ from homeassistant.components.image import ImageEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import EzvizRs20ProCoordinator
 from . import robot
+from .coordinator import EzvizRs20ProCoordinator
 from .entity import Rs20Entity
 
 

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import unittest
 
-import fixtures
 from _loader import load
+import fixtures
 
 robot = load("robot")
 
@@ -28,8 +28,12 @@ class MapTests(unittest.TestCase):
     def test_rooms_are_translated(self) -> None:
         self.assertEqual(
             robot.rooms(fixtures.device(), 2),
-            [("8", "Bedroom"), ("9", "Living Room"), ("10", "Bathroom"),
-             ("11", "Hallway")],
+            [
+                ("8", "Bedroom"),
+                ("9", "Living Room"),
+                ("10", "Bathroom"),
+                ("11", "Hallway"),
+            ],
         )
         self.assertEqual(robot.rooms(fixtures.device(), 3), [])
 
@@ -52,7 +56,8 @@ class ModeTests(unittest.TestCase):
     def test_unknown_clean_mode_is_ignored(self) -> None:
         device = fixtures.device()
         device["FEATURE_INFO"]["0"]["SweepingRobot"]["SweeperCleanTask"][
-            "SweepMopMode"] = "turbo"
+            "SweepMopMode"
+        ] = "turbo"
         self.assertIsNone(robot.clean_mode(device))
 
 
@@ -97,8 +102,14 @@ class ActivityTests(unittest.TestCase):
             self.check(name, robot.ACTIVITY_CLEANING, isOnBasestation=False)
 
     def test_station_tasks_are_docked_not_cleaning(self) -> None:
-        for name in ("washMop", "dryMop", "collectDust", "baseSelfClean",
-                     "selfClean", "drainWater"):
+        for name in (
+            "washMop",
+            "dryMop",
+            "collectDust",
+            "baseSelfClean",
+            "selfClean",
+            "drainWater",
+        ):
             self.check(name, robot.ACTIVITY_DOCKED)
 
     def test_charging_and_standby(self) -> None:
@@ -112,8 +123,11 @@ class ActivityTests(unittest.TestCase):
         self.check("recharge", robot.ACTIVITY_RETURNING, isOnBasestation=False)
 
     def test_paused_clean_task(self) -> None:
-        task = fixtures.task(currentTask="clean", isOnBasestation=False,
-                             cleanTaskInfo={"status": "pause", "cleanRange": "full"})
+        task = fixtures.task(
+            currentTask="clean",
+            isOnBasestation=False,
+            cleanTaskInfo={"status": "pause", "cleanRange": "full"},
+        )
         self.assertEqual(robot.activity(task), robot.ACTIVITY_PAUSED)
         task["data"]["cleanTaskInfo"]["status"] = "running"
         self.assertEqual(robot.activity(task), robot.ACTIVITY_CLEANING)
@@ -143,7 +157,9 @@ class ErrorTests(unittest.TestCase):
             robot.error_description("CR_DustBoxMissing"), "Dust box missing"
         )
         self.assertEqual(robot.error_description("999", "未知"), "Robot error 999")
-        self.assertEqual(robot.error_description("999", "Lidar blocked"), "Lidar blocked")
+        self.assertEqual(
+            robot.error_description("999", "Lidar blocked"), "Lidar blocked"
+        )
         self.assertIsNone(robot.error_description("", ""))
 
 
@@ -153,8 +169,11 @@ class HistoryTests(unittest.TestCase):
     def test_last_error(self) -> None:
         self.assertEqual(
             robot.last_error(fixtures.device()),
-            {"code": "407", "description": "Base station communication error",
-             "time": "2026-10-05T18:14:38.062"},
+            {
+                "code": "407",
+                "description": "Base station communication error",
+                "time": "2026-10-05T18:14:38.062",
+            },
         )
 
     def test_last_clean_combines_passes(self) -> None:

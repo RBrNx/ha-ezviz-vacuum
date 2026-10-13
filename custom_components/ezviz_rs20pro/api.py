@@ -226,9 +226,7 @@ class EzvizRs20ProApi:
         meta = result.get("meta")
         code = meta.get("code") if isinstance(meta, dict) else None
         if code not in (None, 0, 200, "0", "200"):
-            raise EzvizRs20ProApiError(
-                f"map/{layer}: {rejection_reason(result, code)}"
-            )
+            raise EzvizRs20ProApiError(f"map/{layer}: {rejection_reason(result, code)}")
         value = result.get(MAP_LAYERS[layer])
         return value if isinstance(value, dict) else {}
 

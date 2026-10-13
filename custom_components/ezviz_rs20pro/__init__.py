@@ -88,9 +88,7 @@ async def async_setup_entry(
     return True
 
 
-def _migrate_to_serial(
-    hass: HomeAssistant, entry: ConfigEntry, serial: str
-) -> None:
+def _migrate_to_serial(hass: HomeAssistant, entry: ConfigEntry, serial: str) -> None:
     """Pin entries created before multi-robot support to their robot.
 
     Older versions used the integration domain as unique ID and stored an

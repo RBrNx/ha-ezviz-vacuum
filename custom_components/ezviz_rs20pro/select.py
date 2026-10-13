@@ -10,17 +10,17 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import EzvizRs20ProCoordinator
-from .entity import Rs20SettingEntity
 from . import robot
 from .const import CLEAN_MODES
+from .coordinator import EzvizRs20ProCoordinator
+from .entity import Rs20SettingEntity
 from .settings import (
     FAN_SPEEDS,
     ROOM_SETTING_MODES,
     WATER_LEVELS,
+    FieldSetting,
     MapCleanSetting,
     RoomCleanSetting,
-    FieldSetting,
     ScalarSetting,
     Setting,
 )
@@ -67,7 +67,9 @@ SELECTS: Final[tuple[Rs20SelectDescription, ...]] = (
 )
 
 
-def room_selects(device: Any, task: Any) -> list[tuple[str, Rs20SelectDescription, str]]:
+def room_selects(
+    device: Any, task: Any
+) -> list[tuple[str, Rs20SelectDescription, str]]:
     """Return ``(key, description, room name)`` for every room of the active map."""
     map_id = robot.active_map_id(device, task)
     configured = {

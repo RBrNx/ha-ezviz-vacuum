@@ -15,7 +15,9 @@ class FieldSettingTests(unittest.TestCase):
     """Object settings keep their other fields."""
 
     def test_read(self) -> None:
-        setting = settings.FieldSetting("SweeperCleanTask", "CarpetCleanCfg", "turboClean")
+        setting = settings.FieldSetting(
+            "SweeperCleanTask", "CarpetCleanCfg", "turboClean"
+        )
         self.assertIs(setting.read(fixtures.device()), True)
 
     def test_write_keeps_companions_and_drops_timestamp(self) -> None:
@@ -23,7 +25,9 @@ class FieldSettingTests(unittest.TestCase):
             "SweeperCleanTask", "DustCollectionCfg", "enabled"
         )
         domain, identifier, payload = setting.write(fixtures.device(), None, False)
-        self.assertEqual((domain, identifier), ("SweeperCleanTask", "DustCollectionCfg"))
+        self.assertEqual(
+            (domain, identifier), ("SweeperCleanTask", "DustCollectionCfg")
+        )
         self.assertEqual(payload, {"frequencyAfterClean": 1, "enabled": False})
 
     def test_write_does_not_touch_the_coordinator_data(self) -> None:
@@ -98,9 +102,17 @@ class ActionTests(unittest.TestCase):
             settings.RoomCleanSetting(8, "waterQuantity").action(
                 fixtures.device(), fixtures.task(), "high"
             ),
-            ("SweeperMapMgr", "SetRoomCustomCleanCfg",
-             {"mapID": 2, "roomID": 8, "fanMode": "normal",
-              "waterQuantity": "high", "cleanTimes": 1}),
+            (
+                "SweeperMapMgr",
+                "SetRoomCustomCleanCfg",
+                {
+                    "mapID": 2,
+                    "roomID": 8,
+                    "fanMode": "normal",
+                    "waterQuantity": "high",
+                    "cleanTimes": 1,
+                },
+            ),
         )
 
     def test_feature_settings_have_no_action(self) -> None:
@@ -151,8 +163,17 @@ class RestPlanSettingTests(unittest.TestCase):
         self.assertEqual(identifier, "RestPlan")
         self.assertEqual(
             payload,
-            {"plan": [{"startTime": "23:30:00", "ID": 0, "endTime": "07:00:00",
-                       "enabled": True, "cleanContinue": False}]},
+            {
+                "plan": [
+                    {
+                        "startTime": "23:30:00",
+                        "ID": 0,
+                        "endTime": "07:00:00",
+                        "enabled": True,
+                        "cleanContinue": False,
+                    }
+                ]
+            },
         )
 
     def test_write_creates_a_period(self) -> None:
@@ -200,9 +221,7 @@ class ApplyWriteTests(unittest.TestCase):
         updated = settings.apply_write(device, setting.write(device, None, 30))
         self.assertEqual(setting.read(updated), 30)
         self.assertEqual(setting.read(device), 15)
-        self.assertIn(
-            "ts", helpers.feature(updated, "SweeperCleanTask", "WashMopCfg")
-        )
+        self.assertIn("ts", helpers.feature(updated, "SweeperCleanTask", "WashMopCfg"))
 
     def test_apply_scalar(self) -> None:
         device = fixtures.device()
@@ -212,7 +231,9 @@ class ApplyWriteTests(unittest.TestCase):
 
     def test_every_setting_targets_an_allowed_feature(self) -> None:
         const = load("const")
-        self.assertNotIn(("SweeperMgr", "CliffDetectionSwitch"), const.WRITABLE_FEATURES)
+        self.assertNotIn(
+            ("SweeperMgr", "CliffDetectionSwitch"), const.WRITABLE_FEATURES
+        )
 
 
 if __name__ == "__main__":

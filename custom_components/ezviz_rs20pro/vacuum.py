@@ -14,9 +14,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import robot
 from .coordinator import EzvizRs20ProCoordinator
 from .entity import Rs20Entity
-from . import robot
 from .settings import MapCleanSetting
 
 # Suction levels of the active map (SweeperMapMgr/StdCleanCfg.fanMode).
@@ -31,6 +31,7 @@ _ACTIVITIES = {
     robot.ACTIVITY_IDLE: VacuumActivity.IDLE,
     robot.ACTIVITY_ERROR: VacuumActivity.ERROR,
 }
+
 
 async def async_setup_entry(
     hass: Any,
@@ -132,8 +133,6 @@ class EzvizRs20ProVacuum(Rs20Entity, StateVacuumEntity):
             for room_id, name in robot.rooms(device, map_id)
         ]
 
-    async def async_clean_segments(
-        self, segment_ids: list[str], **kwargs: Any
-    ) -> None:
+    async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
         """Clean rooms selected through Home Assistant area mapping."""
         await self.coordinator.async_clean_segments(segment_ids)
