@@ -43,14 +43,15 @@ and will often work, but are untested; see [Supported models](#supported-models)
 | Model | Status | Notes |
 |---|---|---|
 | RS20 Max | ✅ Tested | Firmware V2.0.2417. Everything in this README. |
-| RS20 Hair Free | 🟡 Likely | Uses the same app plugin as the RS20 Max. |
-| RS20 Pro | 🟡 Untested | Own app plugin, closely related to the RS20 Max. |
-| RE7 Edge | 🟡 Untested | Own app plugin. |
-| RS2 and other models | 🟡 Untested | Older app plugin; some features may be missing. |
-| RE3 Plus, RE4, RE5 | ❓ Unknown | Made by another manufacturer for EZVIZ; probably a different protocol. |
+| RS20 Pro | 🟡 Very likely | Its app plugin uses the same commands as the RS20 Max. |
+| RS2, RE4, RE5 | 🟡 Partly | Same cleaning and suction commands; no base-station or do-not-disturb settings. |
+| RE7 Edge | 🟠 Partly | Start, stop and dock match; suction and water use different commands, not supported yet. |
+| RS2 (manufacturer variant) | 🟠 Partly | Uses differently named start and dock commands, not supported yet. |
+| RE3 Plus | ❓ Unknown | EZVIZ did not return an app plugin for it. |
 
 Settings only appear when the robot reports them, so a model without, say,
-carpet settings simply won't get those switches.
+carpet settings simply won't get those switches. The comparison behind this
+table is in [docs/models.md](docs/models.md).
 
 **Have a robot that isn't marked tested?** Please
 [report how it works](https://github.com/stefanelul2000/ha-ezviz-rs20/issues/new?template=model_report.yml).
