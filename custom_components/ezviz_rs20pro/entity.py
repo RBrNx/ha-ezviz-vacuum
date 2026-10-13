@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import robot
 from .const import DOMAIN
 from .coordinator import EzvizRs20ProCoordinator
+from .settings import Setting
 
 
 class Rs20Entity(CoordinatorEntity[EzvizRs20ProCoordinator]):
@@ -29,3 +32,31 @@ class Rs20Entity(CoordinatorEntity[EzvizRs20ProCoordinator]):
             sw_version=details["sw_version"],
             serial_number=serial,
         )
+
+
+class Rs20SettingEntity(Rs20Entity):
+    """Entity that shows and changes one robot setting."""
+
+    def __init__(
+        self, coordinator: EzvizRs20ProCoordinator, key: str, setting: Setting
+    ) -> None:
+        super().__init__(coordinator, key)
+        self.setting = setting
+
+    @property
+    def setting_value(self) -> Any:
+        """Return the value the robot reported for this setting."""
+        data = self.coordinator.data
+        return self.setting.read(data.get("device"), data.get("task"))
+
+    @property
+    def available(self) -> bool:
+        """Hide settings the robot does not report."""
+        data = self.coordinator.data
+        return super().available and self.setting.available(
+            data.get("device"), data.get("task")
+        )
+
+    async def async_write_setting(self, value: Any) -> None:
+        """Send a new value to the robot."""
+        await self.coordinator.async_write_setting(self.setting, value)

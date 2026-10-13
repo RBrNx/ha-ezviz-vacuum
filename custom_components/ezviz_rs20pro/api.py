@@ -9,7 +9,7 @@ import json
 from typing import Any
 import zlib
 
-from .const import CLEAN_MODES
+from .const import CLEAN_MODES, WRITABLE_FEATURES
 
 
 class EzvizRs20ProApiError(Exception):
@@ -56,27 +56,19 @@ class EzvizRs20ProApi:
             payload=mode,
         )
 
-    def set_station_feature(
+    def set_feature(
         self,
         serial: str,
         *,
         domain: str,
         identifier: str,
-        value: dict[str, Any],
+        value: Any,
     ) -> dict[str, Any]:
-        """Update an allow-listed base-station setting."""
-        supported = {
-            ("SweeperBaseStationMgr", "ChildLockSwitch"),
-            ("SweeperCleanTask", "DustCollectionCfg"),
-            ("SweeperCleanTask", "CleaningSolutionCfg"),
-            ("SweeperCleanTask", "RotatingBrushSelfCleanSwitch"),
-        }
-        if (domain, identifier) not in supported:
-            raise ValueError(
-                f"Unsupported RS20 Pro station feature: {domain}/{identifier}"
-            )
-        if not isinstance(value.get("enabled"), bool):
-            raise ValueError("Station setting requires a boolean 'enabled' value")
+        """Write the complete value of an allow-listed robot setting."""
+        if (domain, identifier) not in WRITABLE_FEATURES:
+            raise ValueError(f"Unsupported robot setting: {domain}/{identifier}")
+        if value is None:
+            raise ValueError(f"No value for {domain}/{identifier}")
         return self._iot_request(
             serial,
             endpoint="feature",

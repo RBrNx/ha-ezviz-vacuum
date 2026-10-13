@@ -20,3 +20,30 @@ SERVICE_API_REQUEST = "api_request"
 # Cleaning modes accepted by SweeperCleanTask/SweepMopMode and by the
 # cleanMode field of cleaning actions (validated by the EZVIZ cloud schema).
 CLEAN_MODES = ("sweep", "mop", "sweepAndMop", "sweepThenMop")
+
+# Every robot feature the entities may write. The API refuses anything else;
+# safety settings such as cliff detection are deliberately missing.
+WRITABLE_FEATURES: frozenset[tuple[str, str]] = frozenset(
+    {
+        ("SweeperBaseStationMgr", "ChildLockSwitch"),
+        ("SweeperCleanTask", "DustCollectionCfg"),
+        ("SweeperCleanTask", "CleaningSolutionCfg"),
+        ("SweeperCleanTask", "RotatingBrushSelfCleanSwitch"),
+        ("SweeperCleanTask", "SweepMopMode"),
+        ("SweeperCleanTask", "CarpetCleanCfg"),
+        ("SweeperCleanTask", "WashMopCfg"),
+        ("SweeperCleanTask", "DryMopDuration"),
+        ("SweeperCleanTask", "ParticulateCleanEnhanceCfg"),
+        ("SweeperCleanTask", "EdgeDeepCleanCfg"),
+        ("SweeperCleanTask", "CleanPlan"),
+        ("SweeperMapMgr", "StdCleanCfg"),
+        ("SweeperMapMgr", "RoomCustomCleanCfg"),
+        ("SweeperMgr", "RestPlan"),
+        ("SweeperMgr", "PetModeSwitch"),
+        ("SweeperMgr", "SmartDirtDetectionCfg"),
+        ("SweeperMgr", "AIDetectionEnhanceCfg"),
+        ("SweeperMgr", "ValleyCharge"),
+        ("SweeperMgr", "VoiceAssistantCfg"),
+        ("SoundSetting", "PromptToneVolume"),
+    }
+)

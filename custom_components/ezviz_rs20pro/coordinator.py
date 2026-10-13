@@ -1,4 +1,4 @@
-"""Coordinator for EZVIZ RS20 Pro."""
+"""Coordinator for EZVIZ robot vacuums."""
 
 from __future__ import annotations
 
@@ -20,6 +20,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import robot
+from .settings import Setting, apply_write
 from .api import EzvizRs20ProApi, EzvizRs20ProApiError
 from .cloud_camera import capture_cloud_snapshot, trace_cloud_stream
 from .const import (
@@ -159,22 +160,27 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         await self._async_call(self.rs20_api.set_clean_mode, self.serial, mode)
         await self.async_request_refresh()
 
-    async def async_set_station_feature(
-        self,
-        *,
-        domain: str,
-        identifier: str,
-        value: dict[str, Any],
-    ) -> None:
-        """Update an allow-listed station setting and refresh device state."""
+    async def async_write_setting(self, setting: Setting, value: Any) -> None:
+        """Change one robot setting and show the new value immediately."""
+        if self.rs20_api is None:
+            raise HomeAssistantError("The robot client is not ready yet")
+        device = self.data.get("device", {})
+        try:
+            write = setting.write(device, self.data.get("task"), value)
+        except ValueError as err:
+            raise ServiceValidationError(str(err)) from err
+        domain, identifier, payload = write
         await self._async_call(
-            self.rs20_api.set_station_feature,
+            self.rs20_api.set_feature,
             self.serial,
             domain=domain,
             identifier=identifier,
-            value=value,
+            value=payload,
         )
-        await self.async_request_refresh()
+        # The cloud accepted the full value; reflect it until the next poll.
+        self.async_set_updated_data(
+            {**self.data, "device": apply_write(device, write)}
+        )
 
     async def async_clean_segments(self, segment_ids: list[str]) -> None:
         """Start a native room-cleaning task for selected segment IDs."""

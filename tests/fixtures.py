@@ -38,7 +38,39 @@ _ROBOT: dict[str, Any] = {
              "mapID": 2, "waterQuantity": "middle"},
         ],
     },
-    "SweeperCleanTask": {"SweepMopMode": "sweepThenMop"},
+    "SweeperCleanTask": {
+        "SweepMopMode": "sweepThenMop",
+        "CarpetCleanCfg": {"detection": True, "turboClean": True,
+                           "allowPassageWhenObstructed": False,
+                           "additionalClean": True,
+                           "ts": "2026-10-13T19:53:49.438+02:00"},
+        "DustCollectionCfg": {"frequencyAfterClean": 1, "enabled": True,
+                              "ts": "1970-01-01T00:00:53.270+02:00"},
+        "WashMopCfg": {"interval": 15, "type": "time",
+                       "ts": "1970-01-01T00:00:53.275+02:00"},
+        "DryMopDuration": {"duration": 270,
+                           "ts": "1970-01-01T00:00:53.266+02:00"},
+        "CleanPlan": {
+            "Plan": [
+                {"Action": {"cleanMode": "sweepThenMop", "mapID": 0,
+                            "cleanRange": "full", "region": []},
+                 "name": "", "invalid": False, "planID": 0,
+                 "startTime": "10:00:00", "RepeatPeriod": [1, 2, 3, 4, 5, 6, 7],
+                 "enabled": False}
+            ],
+            "ts": "2026-10-13T19:25:36.234+02:00",
+        },
+    },
+    "SweeperMgr": {
+        "RestPlan": {"plan": [{"startTime": "22:00:00", "ID": 0,
+                               "endTime": "07:00:00", "enabled": True,
+                               "cleanContinue": False}],
+                     "ts": "1970-01-01T00:00:53.292+02:00"},
+        "CliffDetectionSwitch": True,
+        "PetModeSwitch": {"enabled": False,
+                          "ts": "1970-01-01T00:00:53.288+02:00"},
+    },
+    "SoundSetting": {"PromptToneVolume": 100},
 }
 
 _DEVICE: dict[str, Any] = {

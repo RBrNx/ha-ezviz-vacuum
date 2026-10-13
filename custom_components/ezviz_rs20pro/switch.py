@@ -1,4 +1,4 @@
-"""Base-station switches for EZVIZ RS20 Pro."""
+"""Switches for EZVIZ robot settings."""
 
 from __future__ import annotations
 
@@ -7,54 +7,52 @@ from typing import Any, Final
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .coordinator import EzvizRs20ProCoordinator
-from .entity import Rs20Entity
-from .helpers import find_mapping as _find_mapping
+from .entity import Rs20SettingEntity
+from .settings import FieldSetting, Setting
 
 
 @dataclass(frozen=True, kw_only=True)
-class Rs20StationSwitchDescription(SwitchEntityDescription):
-    """Describe a station feature switch."""
+class Rs20SwitchDescription(SwitchEntityDescription):
+    """Describe a boolean robot setting."""
 
-    domain_id: str
-    identifier: str
+    setting: Setting
+    entity_category: EntityCategory | None = EntityCategory.CONFIG
 
 
-STATION_SWITCHES: Final = (
-    Rs20StationSwitchDescription(
+def _enabled(domain: str, identifier: str) -> FieldSetting:
+    return FieldSetting(domain, identifier, "enabled")
+
+
+SWITCHES: Final[tuple[Rs20SwitchDescription, ...]] = (
+    Rs20SwitchDescription(
         key="station_child_lock",
         translation_key="station_child_lock",
         icon="mdi:lock-outline",
-        domain_id="SweeperBaseStationMgr",
-        identifier="ChildLockSwitch",
+        setting=_enabled("SweeperBaseStationMgr", "ChildLockSwitch"),
     ),
-    Rs20StationSwitchDescription(
+    Rs20SwitchDescription(
         key="station_automatic_dust_collection",
         translation_key="station_automatic_dust_collection",
         icon="mdi:delete-sweep-outline",
-        domain_id="SweeperCleanTask",
-        identifier="DustCollectionCfg",
+        setting=_enabled("SweeperCleanTask", "DustCollectionCfg"),
     ),
-    Rs20StationSwitchDescription(
+    Rs20SwitchDescription(
         key="station_automatic_cleaning_solution",
         translation_key="station_automatic_cleaning_solution",
         icon="mdi:bottle-tonic-outline",
-        domain_id="SweeperCleanTask",
-        identifier="CleaningSolutionCfg",
+        setting=_enabled("SweeperCleanTask", "CleaningSolutionCfg"),
     ),
-    Rs20StationSwitchDescription(
+    Rs20SwitchDescription(
         key="station_rotating_brush_self_clean",
         translation_key="station_rotating_brush_self_clean",
         icon="mdi:brush-outline",
-        domain_id="SweeperCleanTask",
-        identifier="RotatingBrushSelfCleanSwitch",
+        setting=_enabled("SweeperCleanTask", "RotatingBrushSelfCleanSwitch"),
     ),
 )
-
-
-
 
 
 async def async_setup_entry(
@@ -62,58 +60,36 @@ async def async_setup_entry(
     entry: ConfigEntry[EzvizRs20ProCoordinator],
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up RS20 Pro station switches."""
+    """Set up the robot setting switches."""
     async_add_entities(
-        Rs20StationSwitch(entry.runtime_data, description)
-        for description in STATION_SWITCHES
+        Rs20SettingSwitch(entry.runtime_data, description)
+        for description in SWITCHES
     )
 
 
-class Rs20StationSwitch(Rs20Entity, SwitchEntity):
-    """A configurable RS20 Pro station feature."""
+class Rs20SettingSwitch(Rs20SettingEntity, SwitchEntity):
+    """A boolean robot setting."""
 
-    entity_description: Rs20StationSwitchDescription
+    entity_description: Rs20SwitchDescription
 
     def __init__(
         self,
         coordinator: EzvizRs20ProCoordinator,
-        description: Rs20StationSwitchDescription,
+        description: Rs20SwitchDescription,
     ) -> None:
-        super().__init__(coordinator, description.key)
+        super().__init__(coordinator, description.key, description.setting)
         self.entity_description = description
 
     @property
     def is_on(self) -> bool | None:
-        """Return the reported station setting."""
-        block = _find_mapping(
-            self.coordinator.data.get("device", {}),
-            self.entity_description.identifier,
-        )
-        enabled = block.get("enabled") if block is not None else None
-        return enabled if isinstance(enabled, bool) else None
-
-    async def _async_set(self, enabled: bool) -> None:
-        """Preserve companion fields while changing only enabled."""
-        block = _find_mapping(
-            self.coordinator.data.get("device", {}),
-            self.entity_description.identifier,
-        )
-        value = {
-            str(key): item
-            for key, item in (block or {}).items()
-            if key != "ts"
-        }
-        value["enabled"] = enabled
-        await self.coordinator.async_set_station_feature(
-            domain=self.entity_description.domain_id,
-            identifier=self.entity_description.identifier,
-            value=value,
-        )
+        """Return the reported setting."""
+        value = self.setting_value
+        return value if isinstance(value, bool) else None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Enable the station setting."""
-        await self._async_set(True)
+        """Enable the setting."""
+        await self.async_write_setting(True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Disable the station setting."""
-        await self._async_set(False)
+        """Disable the setting."""
+        await self.async_write_setting(False)

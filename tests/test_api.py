@@ -80,8 +80,8 @@ class ApiTests(unittest.TestCase):
             self.api.clean_control("AB1234567", "factory_reset")
         self.assertEqual(self.client._session.calls, [])
 
-    def test_station_feature_uses_feature_endpoint(self) -> None:
-        self.api.set_station_feature(
+    def test_set_feature_uses_feature_endpoint(self) -> None:
+        self.api.set_feature(
             "ab1234567",
             domain="SweeperBaseStationMgr",
             identifier="ChildLockSwitch",
@@ -93,13 +93,23 @@ class ApiTests(unittest.TestCase):
         ))
         self.assertEqual(json.loads(call["data"]), {"enabled": True})
 
-    def test_unknown_station_feature_is_rejected_locally(self) -> None:
+    def test_unlisted_feature_is_rejected_locally(self) -> None:
         with self.assertRaises(ValueError):
-            self.api.set_station_feature(
+            self.api.set_feature(
                 "ab1234567",
                 domain="SweeperBaseStationMgr",
                 identifier="FactoryReset",
                 value={"enabled": True},
+            )
+        self.assertEqual(self.client._session.calls, [])
+
+    def test_cliff_detection_is_never_written(self) -> None:
+        with self.assertRaises(ValueError):
+            self.api.set_feature(
+                "ab1234567",
+                domain="SweeperMgr",
+                identifier="CliffDetectionSwitch",
+                value=False,
             )
         self.assertEqual(self.client._session.calls, [])
 
