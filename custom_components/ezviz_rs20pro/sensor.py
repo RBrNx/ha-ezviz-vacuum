@@ -1,7 +1,8 @@
-"""Sensors for EZVIZ RS20 Pro."""
+"""Sensors for EZVIZ robot vacuums."""
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 import re
 from typing import Any, Final
@@ -13,21 +14,49 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, UnitOfArea
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfArea, UnitOfTime
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .coordinator import EzvizRs20ProCoordinator
 from .entity import Rs20Entity
-from .helpers import find_mapping as _find_mapping, find_scalar as _find_scalar
+from .helpers import (
+    feature,
+    find_mapping as _find_mapping,
+    find_scalar as _find_scalar,
+)
+
+Data = Mapping[str, Any]
 
 
 @dataclass(frozen=True, kw_only=True)
 class Rs20SensorDescription(SensorEntityDescription):
     """Describe a value in the RS20 response."""
 
-    source_key: str
+    source_key: str = ""
     remaining_percent: bool = False
     value_field: str | None = None
+    value_fn: Callable[[Data], Any] | None = None
+    attributes_fn: Callable[[Data], dict[str, Any] | None] | None = None
+
+
+def _permanent(field: str) -> Callable[[Data], Any]:
+    """Read a lifetime counter from InfoMgr/DeviceDescription."""
+
+    def read(data: Data) -> Any:
+        block = feature(data.get("device"), "InfoMgr", "DeviceDescription")
+        basic = block.get("basic") if isinstance(block, Mapping) else None
+        permanent = basic.get("permanent") if isinstance(basic, Mapping) else None
+        return permanent.get(field) if isinstance(permanent, Mapping) else None
+
+    return read
+
+
+def _battery_cycles(data: Data) -> Any:
+    block = feature(data.get("device"), "InfoMgr", "DeviceDescription")
+    basic = block.get("basic") if isinstance(block, Mapping) else {}
+    runtime = basic.get("runtime") if isinstance(basic, Mapping) else {}
+    battery = runtime.get("bat") if isinstance(runtime, Mapping) else {}
+    return battery.get("cycleCount") if isinstance(battery, Mapping) else None
 
 
 SENSORS: Final = (
@@ -46,6 +75,47 @@ SENSORS: Final = (
         native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         icon="mdi:texture-box",
+    ),
+    Rs20SensorDescription(
+        key="total_clean_time",
+        translation_key="total_clean_time",
+        value_fn=_permanent("totalCleanTimeMin"),
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:timer-outline",
+    ),
+    Rs20SensorDescription(
+        key="total_clean_count",
+        translation_key="total_clean_count",
+        value_fn=_permanent("totalCleanCount"),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:counter",
+    ),
+    Rs20SensorDescription(
+        key="total_dust_collections",
+        translation_key="total_dust_collections",
+        value_fn=_permanent("totalCollectDustCount"),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:delete-sweep-outline",
+    ),
+    Rs20SensorDescription(
+        key="total_mop_washes",
+        translation_key="total_mop_washes",
+        value_fn=_permanent("totalWashMopCount"),
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:washing-machine",
+    ),
+    Rs20SensorDescription(
+        key="battery_cycles",
+        translation_key="battery_cycles",
+        value_fn=_battery_cycles,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:battery-sync-outline",
     ),
     Rs20SensorDescription(
         key="main_brush",
@@ -175,13 +245,6 @@ def _normalize_station_value(value: Any) -> str | None:
     }
     return aliases.get(normalized, normalized)
 
-
-
-
-
-
-
-
 async def async_setup_entry(
     hass: Any,
     entry: ConfigEntry[EzvizRs20ProCoordinator],
@@ -210,6 +273,11 @@ class Rs20Sensor(Rs20Entity, SensorEntity):
     def native_value(self) -> int | float | str | None:
         """Return the current value."""
         device = self.coordinator.data["device"]
+        if self.entity_description.value_fn is not None:
+            value = self.entity_description.value_fn(self.coordinator.data)
+            if isinstance(value, bool) or value is None:
+                return None
+            return value
         if self.entity_description.value_field is not None:
             block = _find_mapping(device, self.entity_description.source_key)
             if block is None:
@@ -238,7 +306,9 @@ class Rs20Sensor(Rs20Entity, SensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Expose the original vendor state for station diagnostics."""
+        """Expose extra details and the original vendor station state."""
+        if self.entity_description.attributes_fn is not None:
+            return self.entity_description.attributes_fn(self.coordinator.data)
         if self.entity_description.value_field is None:
             return None
         block = _find_mapping(

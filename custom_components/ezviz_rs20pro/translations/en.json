@@ -100,6 +100,21 @@
           "installed": "Installed",
           "not_installed": "Not installed"
         }
+      },
+      "total_clean_time": {
+        "name": "Total cleaning time"
+      },
+      "total_clean_count": {
+        "name": "Total cleanings"
+      },
+      "total_dust_collections": {
+        "name": "Total dust collections"
+      },
+      "total_mop_washes": {
+        "name": "Total mop washes"
+      },
+      "battery_cycles": {
+        "name": "Battery charge cycles"
       }
     },
     "switch": {
