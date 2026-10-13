@@ -28,7 +28,13 @@ from .const import (
 from .coordinator import EzvizRs20ProCoordinator, get_source_entry
 from .helpers import feature
 
-PLATFORMS = [Platform.IMAGE, Platform.SENSOR, Platform.SWITCH, Platform.VACUUM]
+PLATFORMS = [
+    Platform.IMAGE,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.VACUUM,
+]
 
 type EzvizRs20ProConfigEntry = ConfigEntry[EzvizRs20ProCoordinator]
 

@@ -115,6 +115,16 @@
       "station_rotating_brush_self_clean": {
         "name": "Rotating brush self-cleaning"
       }
+    },
+    "select": {
+      "water_level": {
+        "name": "Water level",
+        "state": {
+          "low": "Low",
+          "middle": "Medium",
+          "high": "High"
+        }
+      }
     }
   },
   "services": {
