@@ -9,6 +9,8 @@ CONF_SOURCE_ENTRY_ID = "source_entry_id"
 CONF_SERIAL = "serial"
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
+# Seconds between full device reports (settings, consumables, history).
+DEVICE_REFRESH_INTERVAL = 300
 
 SERVICE_INSPECT = "inspect"
 SERVICE_MAP_DIAGNOSTICS = "map_diagnostics"

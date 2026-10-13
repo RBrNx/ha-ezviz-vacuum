@@ -122,7 +122,7 @@ class EzvizRs20ProVacuum(Rs20Entity, StateVacuumEntity):
 
     async def async_get_segments(self) -> list[Segment]:
         """Return the rooms available on the active robot map."""
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh_device()
         device = self.coordinator.data.get("device", {})
         map_id = robot.active_map_id(device, self.coordinator.data.get("task"))
         group = robot.map_name(device, map_id)

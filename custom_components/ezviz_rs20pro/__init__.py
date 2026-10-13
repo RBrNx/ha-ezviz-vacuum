@@ -140,7 +140,7 @@ def _register_services(hass: HomeAssistant) -> None:  # noqa: C901
     async def async_inspect(call: ServiceCall) -> dict[str, Any]:
         """Return sanitized raw device data for protocol discovery."""
         coordinator = _coordinator(hass, call)
-        await coordinator.async_request_refresh()
+        await coordinator.async_refresh_device()
         return _sanitize(coordinator.data)
 
     async def async_map_diagnostics(call: ServiceCall) -> dict[str, Any]:

@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import datetime
 from functools import partial
+from time import monotonic
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -27,6 +28,7 @@ from .const import (
     CONF_SERIAL,
     CONF_SOURCE_ENTRY_ID,
     DEFAULT_SCAN_INTERVAL,
+    DEVICE_REFRESH_INTERVAL,
     DOMAIN,
 )
 
@@ -69,6 +71,9 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.source_entry = source_entry
         self.serial: str = entry.data.get(CONF_SERIAL, "")
         self.rs20_api: EzvizRs20ProApi | None = None
+        self._device: dict[str, Any] | None = None
+        self._device_fetched: float = 0.0
+        self._device_task: str | None = None
         self.camera_snapshot: bytes | None = None
         self.camera_snapshot_updated: datetime | None = None
 
@@ -80,40 +85,54 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise ConfigEntryNotReady("No active EZVIZ session found")
         return api
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    def _device_is_stale(self, task_name: str | None) -> bool:
+        """Return whether the full device report should be fetched again.
+
+        The account-wide device list is large, so it is fetched every few
+        minutes and whenever the robot starts a different task; the small
+        live task is polled on every update.
+        """
+        if self._device is None:
+            return True
+        if task_name and self._device_task and task_name != self._device_task:
+            return True
+        return monotonic() - self._device_fetched >= DEVICE_REFRESH_INTERVAL
+
+    async def _async_fetch_device(self, source_api: Any) -> tuple[str, dict[str, Any]]:
         try:
-            source_api = self._api()
             raw = await self.hass.async_add_executor_job(source_api.get_device_infos)
-        except ConfigEntryNotReady:
-            raise
         except Exception as err:
             raise UpdateFailed(f"EZVIZ read error: {err}") from err
-
         if not isinstance(raw, Mapping):
             raise UpdateFailed("EZVIZ returned an invalid device list")
 
-        selected_serial = self.serial
-        if selected_serial:
-            selected = raw.get(selected_serial)
+        if self.serial:
+            selected = raw.get(self.serial)
             if not isinstance(selected, Mapping):
-                raise UpdateFailed(f"Device not found: {selected_serial}")
-        else:
-            taken = {
-                str(entry.unique_id).upper()
-                for entry in self.hass.config_entries.async_entries(DOMAIN)
-                if entry.entry_id != self.entry.entry_id and entry.unique_id
-            }
-            matches = [
-                (str(serial), payload)
-                for serial, payload in raw.items()
-                if isinstance(payload, Mapping)
+                raise UpdateFailed(f"Device not found: {self.serial}")
+            return self.serial, dict(selected)
+
+        taken = {
+            str(entry.unique_id).upper()
+            for entry in self.hass.config_entries.async_entries(DOMAIN)
+            if entry.entry_id != self.entry.entry_id and entry.unique_id
+        }
+        for serial, payload in raw.items():
+            if (
+                isinstance(payload, Mapping)
                 and robot.is_robot(payload)
                 and str(serial).upper() not in taken
-            ]
-            if not matches:
-                raise UpdateFailed("No EZVIZ robot vacuum found on the account")
-            selected_serial, selected = matches[0]
-            self.serial = selected_serial
+            ):
+                self.serial = str(serial)
+                return self.serial, dict(payload)
+        raise UpdateFailed("No EZVIZ robot vacuum found on the account")
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        source_api = self._api()
+        if self.serial == "" or self._device is None:
+            # The serial is needed before the live task can be queried.
+            self.serial, self._device = await self._async_fetch_device(source_api)
+            self._device_fetched = monotonic()
 
         self.rs20_api = EzvizRs20ProApi(source_api)
         task: dict[str, Any] = {}
@@ -121,17 +140,29 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             task = await self.hass.async_add_executor_job(
                 self.rs20_api.query_current_task,
-                selected_serial,
+                self.serial,
             )
         except Exception as err:
             task_error = str(err)
 
+        task_name = robot.current_task(task) if task else None
+        if self._device_is_stale(task_name):
+            self.serial, self._device = await self._async_fetch_device(source_api)
+            self._device_fetched = monotonic()
+        if task_name is not None:
+            self._device_task = task_name
+
         return {
-            "serial": selected_serial,
-            "device": dict(selected),
+            "serial": self.serial,
+            "device": self._device,
             "task": task,
             "task_error": task_error,
         }
+
+    async def async_refresh_device(self) -> None:
+        """Fetch the full device report on the next update."""
+        self._device_fetched = 0.0
+        await self.async_request_refresh()
 
     async def _async_call(self, func: Any, *args: Any, **kwargs: Any) -> Any:
         """Run a blocking API call and turn failures into HA errors."""
@@ -172,10 +203,10 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             identifier=identifier,
             value=payload,
         )
-        # The cloud accepted the full value; reflect it until the next poll.
-        self.async_set_updated_data(
-            {**self.data, "device": apply_write(device, write)}
-        )
+        # The cloud accepted the full value; keep showing it until the next
+        # full device report confirms it.
+        self._device = apply_write(device, write)
+        self.async_set_updated_data({**self.data, "device": self._device})
 
     async def async_clean_segments(self, segment_ids: list[str]) -> None:
         """Start a native room-cleaning task for selected segment IDs."""
