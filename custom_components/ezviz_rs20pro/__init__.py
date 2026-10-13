@@ -27,6 +27,7 @@ from .const import (
 )
 from .coordinator import EzvizRs20ProCoordinator, get_source_entry
 from .helpers import feature
+from .mapdata import decode_path
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -159,7 +160,6 @@ def _register_services(hass: HomeAssistant) -> None:  # noqa: C901
                         coordinator.serial,
                         layer,
                         map_id=map_id,
-                        version=versions.get(layer),
                     )
                 )
             except Exception as err:  # noqa: BLE001 - diagnostics report it
@@ -170,6 +170,11 @@ def _register_services(hass: HomeAssistant) -> None:  # noqa: C901
                 for key, item in value.items()
                 if key not in ("mapData", "coordinate", "pathdata", "room")
             }
+            if layer == "path":
+                segments = decode_path(value)
+                layers[layer]["pathdata_length"] = len(value.get("pathdata") or "")
+                layers[layer]["segments"] = len(segments)
+                layers[layer]["points"] = sum(len(seg) for seg in segments)
             if layer == "region":
                 layers[layer]["rooms"] = [
                     room.get("roomID") for room in value.get("room") or []

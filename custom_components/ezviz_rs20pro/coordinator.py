@@ -200,15 +200,19 @@ class EzvizRs20ProCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 cached = self._map_cache.get(layer)
                 if cached is not None and version is not None and cached[0] == version:
                     continue
+                # Like the app, ask for the latest layer without a version;
+                # with one, the path layer comes back empty while cleaning.
                 value = await self.hass.async_add_executor_job(
                     partial(
                         self.rs20_api.fetch_map_layer,
                         self.serial,
                         layer,
                         map_id=map_id,
-                        version=version,
                     )
                 )
+                if not value.get("mapId"):
+                    # Empty answer: keep the last layer and retry next poll.
+                    continue
                 self._map_cache[layer] = (version, value)
                 changed = True
         except Exception as err:  # noqa: BLE001 - the map is optional
