@@ -3,3 +3,6 @@ contact_links:
   - name: Questions and ideas
     url: https://github.com/stefanelul2000/ha-ezviz-vacuum/discussions
     about: Ask a question or share how you use the integration.
+  - name: Community forum thread
+    url: https://community.home-assistant.io/t/ezviz-robot-vacuum-full-control-with-live-map-rooms-and-base-station-settings/1028745
+    about: Chat with other users of the integration.

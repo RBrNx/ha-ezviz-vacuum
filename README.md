@@ -16,6 +16,8 @@ consumables and history.
   <br><sub>The live map, drawn by the integration (example floor plan).</sub>
 </p>
 
+Questions and ideas: [community forum thread](https://community.home-assistant.io/t/ezviz-robot-vacuum-full-control-with-live-map-rooms-and-base-station-settings/1028745).
+
 Developed and tested with an **RS20 Max**. The other current EZVIZ robots are
 supported too, but untested; see [Supported models](#supported-models).
 
