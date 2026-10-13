@@ -22,6 +22,7 @@ _REJECTIONS = {
     "设备功能未报备": "this model does not declare this function",
     "设备不在线": "the robot is offline",
     "设备响应超时": "the robot did not answer in time",
+    "主人，我正在清洁，请稍后再试": "the robot is busy cleaning, try again later",
 }
 
 
