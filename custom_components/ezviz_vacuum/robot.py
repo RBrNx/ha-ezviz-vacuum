@@ -135,12 +135,27 @@ def rooms(
     for item in _as_list(info.get("mapList") if isinstance(info, Mapping) else None):
         if not isinstance(item, Mapping) or _map_id(item.get("mapID")) != map_id:
             continue
-        return [
+        found = [
             (str(region["ID"]), room_name(region.get("name"), region["ID"]))
             for region in _as_list(item.get("regionList"))
             if isinstance(region, Mapping)
             and region.get("regionType") == "room"
             and region.get("ID") is not None
+        ]
+        if found:
+            return found
+    # Fallback: some models (e.g. the RE4 / CS-RE4P-PWT) don't report
+    # RegionBasicInfo at all — their rooms live in RoomCustomCleanCfg instead,
+    # keyed `roomID`. No name is carried there, so room_name() falls back to
+    # "Room N". The RoomBasicProperty feature holds only a capability flag
+    # (a bare `true`), not the user-assigned names.
+    for item in _as_list(feature(device, "SweeperMapMgr", "RoomCustomCleanCfg")):
+        if not isinstance(item, Mapping) or _map_id(item.get("mapID")) != map_id:
+            continue
+        return [
+            (str(room["roomID"]), room_name(room.get("name"), room["roomID"]))
+            for room in _as_list(item.get("room"))
+            if isinstance(room, Mapping) and room.get("roomID") is not None
         ]
     return []
 
