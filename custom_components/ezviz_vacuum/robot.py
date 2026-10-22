@@ -26,7 +26,12 @@ ROOM_NAMES = {
     "#@ShuF#": "Study",
     "#@YangT#": "Balcony",
     "#@YiMJ#": "Closet",
+    "#@XiYF#": "Laundry Room",
+    "#@FangJ#": "Room",
 }
+
+# A preset code, optionally with a trailing index (e.g. "#@FangJ#4").
+_PRESET_NAME = re.compile(r"^(#@\w+#)(\d*)$")
 
 
 def task_data(task: Mapping[str, Any] | None) -> Mapping[str, Any]:
@@ -120,11 +125,25 @@ def map_name(device: Mapping[str, Any] | None, map_id: int | None) -> str:
 
 
 def room_name(raw_name: Any, room_id: Any) -> str:
-    """Translate a robot room name; preset codes become English names."""
+    """Translate a robot room name into a readable name.
+
+    Rooms are named by a preset code (``#@CanT#`` -> Dining Room), a preset
+    code with a trailing index (``#@FangJ#4`` -> Room 4), or free text the
+    user typed in the app (returned as-is). An unknown preset code falls back
+    to ``Room N`` rather than surfacing the raw ``#@...#`` wrapper.
+    """
     name = str(raw_name or "").strip()
     if not name:
         return f"Room {room_id}"
-    return ROOM_NAMES.get(name, name)
+    if name in ROOM_NAMES:
+        return ROOM_NAMES[name]
+    match = _PRESET_NAME.match(name)
+    if match:
+        base, index = ROOM_NAMES.get(match.group(1)), match.group(2)
+        if base:
+            return f"{base} {index}" if index else base
+        return f"Room {index or room_id}"
+    return name
 
 
 def rooms(
