@@ -32,7 +32,7 @@ from .const import (
     DEVICE_REFRESH_INTERVAL,
     DOMAIN,
 )
-from .mapdata import build_layers
+from .mapdata import build_layers, decode_room_names
 from .maprender import render_svg
 from .settings import Setting, apply_write
 
@@ -65,6 +65,7 @@ class EzvizVacuumCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._map_cache: dict[str, tuple[int | None, dict[str, Any]]] = {}
         self._map_show_path: bool | None = None
         self._map_cache_id: int | None = None
+        self.room_names: dict[int, str] = {}
         self.camera_snapshot: bytes | None = None
         self.camera_snapshot_updated: datetime | None = None
 
@@ -209,6 +210,18 @@ class EzvizVacuumCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.logger.debug("Could not read the robot map: %s", err)
         else:
             self.map_error = None
+        # Room names live on the region layer (dropped from the geometry);
+        # translate the preset codes so segments and labels read sensibly.
+        region_layer = self._map_cache.get("region", (None, None))[1]
+        raw_names = (
+            decode_room_names(region_layer)
+            if isinstance(region_layer, Mapping)
+            else {}
+        )
+        self.room_names = {
+            room_id: robot.room_name(raw, room_id)
+            for room_id, raw in raw_names.items()
+        }
         # The path of a finished clean is hidden once the robot is docked.
         show_path = robot.activity(task, self._device) != robot.ACTIVITY_DOCKED
         if show_path != self._map_show_path:
@@ -224,7 +237,8 @@ class EzvizVacuumCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
         )
         names = {
-            int(room_id): name for room_id, name in robot.rooms(self._device, map_id)
+            int(room_id): self.room_names.get(int(room_id)) or name
+            for room_id, name in robot.rooms(self._device, map_id)
         }
         image = await self.hass.async_add_executor_job(
             partial(render_svg, layers, names, show_path=show_path)

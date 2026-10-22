@@ -180,6 +180,26 @@ def decode_rooms(layer: Mapping[str, Any]) -> dict[int, list[tuple[float, float]
     return rooms
 
 
+def decode_room_names(layer: Mapping[str, Any]) -> dict[int, str]:
+    """Return ``room id -> raw roomName`` from a region layer.
+
+    The name is left in its raw form (a preset code like ``#@CanT#`` or a
+    user-typed string); translation to a readable name is the caller's job.
+    """
+    names: dict[int, str] = {}
+    for room in layer.get("room") or []:
+        if not isinstance(room, Mapping):
+            continue
+        try:
+            room_id = int(room["roomID"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        name = room.get("roomName")
+        if isinstance(name, str) and name.strip():
+            names[room_id] = name.strip()
+    return names
+
+
 def decode_path(layer: Mapping[str, Any]) -> list[list[tuple[float, float]]]:
     """Return the cleaning path as line segments."""
     return _points(layer.get("pathdata"))
