@@ -31,7 +31,7 @@ from .const import (
     DEVICE_REFRESH_INTERVAL,
     DOMAIN,
 )
-from .mapdata import build_layers, decode_room_names
+from .mapdata import build_layers, decode_room_names, geometry_dict
 from .maprender import render_svg
 from .settings import Setting, apply_write
 
@@ -84,6 +84,7 @@ class EzvizVacuumCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._map_show_path: bool | None = None
         self._map_cache_id: int | None = None
         self.room_names: dict[int, str] = {}
+        self.map_geometry: dict[str, Any] = {}
         self.camera_snapshot: bytes | None = None
         self.camera_snapshot_updated: datetime | None = None
 
@@ -252,6 +253,9 @@ class EzvizVacuumCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             int(room_id): self.room_names.get(int(room_id)) or name
             for room_id, name in robot.rooms(self._device, map_id)
         }
+        # Expose the decoded vector geometry so clients can draw a native,
+        # interactive map instead of only the rendered PNG.
+        self.map_geometry = geometry_dict(layers, self.room_names)
         image = await self.hass.async_add_executor_job(
             partial(render_svg, layers, names, show_path=show_path)
         )

@@ -29,6 +29,9 @@ _B64_VALUE = {char: index for index, char in enumerate(_B64)}
 _RLE = re.compile(r"(.)\((\d+)\)")
 _LEGACY_TYPES = {2: CELL_FLOOR, 1: CELL_WALL}
 
+# pathdata is stored at this multiple of the occupancy-grid resolution.
+PATH_SCALE = 10
+
 
 @dataclass
 class Grid:
@@ -201,8 +204,17 @@ def decode_room_names(layer: Mapping[str, Any]) -> dict[int, str]:
 
 
 def decode_path(layer: Mapping[str, Any]) -> list[list[tuple[float, float]]]:
-    """Return the cleaning path as line segments."""
-    return _points(layer.get("pathdata"))
+    """Return the cleaning path as line segments, in grid coordinates.
+
+    ``pathdata`` is stored at a finer resolution than the occupancy grid and
+    the room outlines (the grid is a 10x downsample of the full map), so scale
+    it down to share the one coordinate system — otherwise the path renders
+    off-canvas relative to the rooms.
+    """
+    return [
+        [(x / PATH_SCALE, y / PATH_SCALE) for x, y in segment]
+        for segment in _points(layer.get("pathdata"))
+    ]
 
 
 def _position(value: Any) -> tuple[tuple[float, float] | None, float | None]:
@@ -247,3 +259,42 @@ def build_layers(
         layers.path = decode_path(path_layer)
         layers.robot, layers.robot_degree = _position(path_layer.get("currentPosition"))
     return layers
+
+
+def geometry_dict(
+    layers: MapLayers, room_names: Mapping[int, str]
+) -> dict[str, Any]:
+    """Serialise decoded layers so a client can draw its own interactive map.
+
+    All coordinates share the grid's coordinate system; ``bounds`` is the
+    frame to render within. Only the vector shapes are exposed (not the raw
+    occupancy grid).
+    """
+
+    def _pt(point: tuple[float, float]) -> list[float]:
+        return [round(point[0], 2), round(point[1], 2)]
+
+    def _node(
+        point: tuple[float, float] | None, degree: float | None
+    ) -> dict[str, Any] | None:
+        if point is None:
+            return None
+        return {"x": round(point[0], 2), "y": round(point[1], 2), "degree": degree}
+
+    grid = layers.grid
+    return {
+        "bounds": (
+            {"x": grid.x, "y": grid.y, "w": grid.w, "h": grid.h} if grid else None
+        ),
+        "rooms": [
+            {
+                "id": room_id,
+                "name": room_names.get(room_id) or f"Room {room_id}",
+                "outline": [_pt(point) for point in points],
+            }
+            for room_id, points in sorted(layers.rooms.items())
+        ],
+        "charger": _node(layers.charger, layers.charger_degree),
+        "robot": _node(layers.robot, layers.robot_degree),
+        "path": [[_pt(point) for point in segment] for segment in layers.path],
+    }
