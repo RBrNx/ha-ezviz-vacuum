@@ -335,15 +335,29 @@ class EzvizVacuumCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Clean the selected rooms with the robot's own settings."""
         if self.robot_api is None:
             raise HomeAssistantError("The robot client is not ready yet")
+        # Refresh so map_id/task are current before we send the clean.
+        await self.async_refresh_device()
         device = self.data.get("device", {})
         map_id = robot.active_map_id(device, self.data.get("task"))
         known = {room_id for room_id, _ in robot.rooms(device, map_id)}
-        if map_id is None or not known:
-            raise HomeAssistantError("The robot has not reported its rooms yet")
+        self.logger.debug(
+            "clean_segments: map_id=%s known=%s room_map_ids=%s requested=%s",
+            map_id,
+            sorted(known),
+            robot.room_map_ids(device),
+            list(segment_ids),
+        )
+        if map_id is None:
+            raise HomeAssistantError("The robot has not reported its map yet")
         requested = [str(item) for item in segment_ids]
-        missing = sorted(set(requested) - known)
-        if missing:
-            raise ServiceValidationError(f"Unknown robot rooms: {', '.join(missing)}")
+        # The device report doesn't reliably surface the room list on the RE4
+        # (the fetched map layer and HA's own area_mapping do), so only reject
+        # unknown rooms when the robot actually reported some — otherwise trust
+        # the already-mapped segments the caller passed.
+        if known:
+            missing = sorted(set(requested) - known)
+            if missing:
+                raise ServiceValidationError(f"Unknown robot rooms: {', '.join(missing)}")
         await self._async_call(
             self.robot_api.start_region_clean,
             self.serial,
