@@ -63,7 +63,8 @@ class OutlineTests(unittest.TestCase):
 
     def test_path_segments_continue_deltas(self) -> None:
         path = mapdata.decode_path({"pathdata": pack("0,0;1,0|0,2;1,0")})
-        self.assertEqual(path, [[(0, 0), (1, 0)], [(1, 2), (2, 2)]])
+        # Deltas decode to (0,0),(1,0) and (1,2),(2,2), each scaled by PATH_SCALE.
+        self.assertEqual(path, [[(0.0, 0.0), (0.1, 0.0)], [(0.1, 0.2), (0.2, 0.2)]])
 
     def test_empty_path(self) -> None:
         self.assertEqual(mapdata.decode_path({"pathdata": ""}), [])

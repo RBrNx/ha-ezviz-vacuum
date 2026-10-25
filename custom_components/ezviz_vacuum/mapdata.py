@@ -261,9 +261,7 @@ def build_layers(
     return layers
 
 
-def geometry_dict(
-    layers: MapLayers, room_names: Mapping[int, str]
-) -> dict[str, Any]:
+def geometry_dict(layers: MapLayers, room_names: Mapping[int, str]) -> dict[str, Any]:
     """Serialise decoded layers so a client can draw its own interactive map.
 
     All coordinates share the grid's coordinate system; ``bounds`` is the
