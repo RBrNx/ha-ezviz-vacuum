@@ -167,11 +167,11 @@ def new_client(username: str, password: str, url: str) -> EzvizClient:
     return EzvizClient(username, password, url or EU_URL, DEFAULT_TIMEOUT)
 
 
-def sign_in(client: EzvizClient, sms_code: int | None = None) -> dict[str, Any]:
+def sign_in(client: EzvizClient, sms_code: str | None = None) -> dict[str, Any]:
     """Log in and return the session token (never the password).
 
     When EZVIZ asks for a verification code, call again with the same client
-    and ``sms_code``.
+    and ``sms_code``. The code stays a string so a leading zero is kept.
     """
     client.login(sms_code=sms_code)
     return client.export_token()

@@ -106,9 +106,12 @@ class EzvizVacuumConfigFlow(ConfigFlow, domain=DOMAIN):
         """Ask for the verification code EZVIZ sent to the account."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            errors = await self._async_login(
-                {}, sms_code=int(user_input[CONF_SMS_CODE])
-            )
+            # Keep the code as text: a leading zero is part of the code.
+            code = "".join(str(user_input[CONF_SMS_CODE]).split())
+            if not code.isdigit():
+                errors = {"base": "invalid_code"}
+            else:
+                errors = await self._async_login({}, sms_code=code)
             if not errors:
                 if self.source == SOURCE_REAUTH:
                     return self._async_finish_reauth()
@@ -117,12 +120,8 @@ class EzvizVacuumConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="sms_code",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_SMS_CODE): selector.NumberSelector(
-                        selector.NumberSelectorConfig(
-                            min=0,
-                            max=999999,
-                            mode=selector.NumberSelectorMode.BOX,
-                        )
+                    vol.Required(CONF_SMS_CODE): selector.TextSelector(
+                        selector.TextSelectorConfig(autocomplete="one-time-code")
                     )
                 }
             ),
@@ -211,7 +210,7 @@ class EzvizVacuumConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_login(
-        self, user_input: Mapping[str, Any], *, sms_code: int | None = None
+        self, user_input: Mapping[str, Any], *, sms_code: str | None = None
     ) -> dict[str, str]:
         """Log in; return form errors (empty on success)."""
         if user_input:
