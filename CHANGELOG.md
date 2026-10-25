@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.1.0
+
+The integration now signs in to EZVIZ on its own instead of borrowing the
+official EZVIZ integration's session.
+
+- New setup: EZVIZ email or phone number, password and server, with the
+  verification-code step when EZVIZ asks for one. Only the session token is
+  stored, never the password.
+- Re-authentication when the session expires. Existing robots ask to sign in
+  once after updating; entities, room mapping and settings are kept.
+- The official EZVIZ integration is no longer needed.
+- Robot requests use the integration's own HTTP session and only public parts
+  of pyezvizapi, which is now a declared requirement.
+
 ## 1.0.0
 
 The integration is now **EZVIZ Robot Vacuum** (`ezviz_vacuum`) and supports

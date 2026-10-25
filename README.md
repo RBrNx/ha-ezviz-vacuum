@@ -131,8 +131,9 @@ Cliff detection is deliberately not exposed.
 
 - Home Assistant **2026.7** or newer.
 - The robot set up in the EZVIZ app.
-- The official **EZVIZ** integration configured and loaded. This integration
-  reuses its cloud session and never stores your EZVIZ credentials.
+- The login of the EZVIZ account the robot belongs to. The password is only
+  used to sign in and is not stored; Home Assistant keeps the session token.
+  The official EZVIZ integration is not needed.
 
 ## Installation
 
@@ -142,15 +143,28 @@ Cliff detection is deliberately not exposed.
 2. Add `https://github.com/stefanelul2000/ha-ezviz-vacuum` with the type
    **Integration**.
 3. Download **EZVIZ Robot Vacuum**, then restart Home Assistant.
-4. Go to **Settings → Devices & services → Add integration** and choose
-   **EZVIZ Robot Vacuum**. With several robots on the account, pick one and repeat for
-   the others.
+4. Go to **Settings → Devices & services → Add integration**, choose
+   **EZVIZ Robot Vacuum** and sign in with your EZVIZ email or phone number
+   and password. Keep the default server unless your account is on the
+   Russian one; other regions are found automatically. If EZVIZ sends a
+   verification code, enter it in the next step.
+5. With several robots on the account, pick one and repeat for the others.
+
+If the session ever expires, Home Assistant shows a **Re-authenticate**
+prompt; sign in again and everything is kept.
 
 ### Manually
 
 Copy `custom_components/ezviz_vacuum` into the `custom_components` folder of
 your Home Assistant configuration, restart, and add the integration as in
 step 4.
+
+### Upgrading from 1.0
+
+Up to 1.0 the integration borrowed the session of the official EZVIZ
+integration. From 1.1 it signs in on its own. After updating, Home Assistant
+shows **Re-authenticate** for the robot once: sign in with your EZVIZ account
+and everything (entities, room mapping, dashboards) carries on.
 
 ### Upgrading from 0.x (EZVIZ RS20)
 
@@ -259,8 +273,10 @@ change robot settings, so use them with care.
 
 ## Troubleshooting
 
-- **"EZVIZ is missing" during setup:** configure or reload the official EZVIZ
-  integration first.
+- **Wrong email, phone number or password:** use the login of the EZVIZ app
+  account the robot is added to.
+- **Re-authenticate keeps coming back:** EZVIZ ended the session (for example
+  after a password change). Sign in again.
 - **New entities don't appear after an update:** restart Home Assistant.
 - **A room is missing or wrongly named:** reload the integration after
   changing the map in the app.
