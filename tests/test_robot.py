@@ -41,6 +41,21 @@ class MapTests(unittest.TestCase):
         self.assertEqual(robot.room_name("Office", 4), "Office")
         self.assertEqual(robot.room_name("", 4), "Room 4")
 
+    def test_room_names_follow_the_language(self) -> None:
+        self.assertEqual(robot.room_name("#@ChuF#", 1, "nl"), "Keuken")
+        self.assertEqual(robot.room_name("#@ZouL#", 1, "de"), "Flur")
+        self.assertEqual(robot.room_name("#@KeT#", 1, "en-GB"), "Living Room")
+        self.assertEqual(robot.room_name("#@FangJ#4", 4, "nl"), "Kamer 4")
+        self.assertEqual(robot.room_name("", 7, "pl"), "Pokój 7")
+        # Languages without a table fall back to English; typed names stay.
+        self.assertEqual(robot.room_name("#@WoS#", 1, "ro"), "Bedroom")
+        self.assertEqual(robot.room_name("Office", 1, "nl"), "Office")
+        self.assertEqual(robot.rooms(fixtures.device(), 2, "fr")[0], ("8", "Chambre"))
+
+    def test_every_preset_has_every_language(self) -> None:
+        for names in robot._ROOM_TABLE.values():
+            self.assertEqual(len(names), len(robot._ROOM_LANGUAGES))
+
     def test_preset_names_with_index(self) -> None:
         self.assertEqual(robot.room_name("#@FangJ#4", 4), "Room 4")
         self.assertEqual(robot.room_name("#@KeT#2", 9), "Living Room 2")

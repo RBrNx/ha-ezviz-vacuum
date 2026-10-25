@@ -80,7 +80,7 @@ SELECTS: Final[tuple[RobotSelectDescription, ...]] = (
 
 
 def room_selects(
-    device: Any, task: Any
+    device: Any, task: Any, language: str | None = "en"
 ) -> list[tuple[str, RobotSelectDescription, str]]:
     """Return ``(key, description, room name)`` for every room of the active map."""
     map_id = robot.active_map_id(device, task)
@@ -88,7 +88,7 @@ def room_selects(
         str(room.get("roomID")) for room in robot.room_clean_configs(device, map_id)
     }
     result = []
-    for room_id, name in robot.rooms(device, map_id):
+    for room_id, name in robot.rooms(device, map_id, language):
         if room_id not in configured:
             continue
         for field, suffix, options, icon in (
@@ -121,7 +121,9 @@ async def async_setup_entry(
     entities.extend(
         RobotSettingSelect(coordinator, key, description, {"room": name})
         for key, description, name in room_selects(
-            coordinator.data.get("device"), coordinator.data.get("task")
+            coordinator.data.get("device"),
+            coordinator.data.get("task"),
+            hass.config.language,
         )
     )
     async_add_entities(entities)

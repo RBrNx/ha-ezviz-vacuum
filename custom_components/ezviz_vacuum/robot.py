@@ -11,24 +11,151 @@ from .api import EzvizVacuumApi
 from .const import CLEAN_MODES
 from .helpers import feature, robot_features
 
-# Preset room names are stored by the robot as pinyin codes.
-ROOM_NAMES = {
-    "#@ChuF#": "Kitchen",
-    "#@KeT#": "Living Room",
-    "#@WoS#": "Bedroom",
-    "#@ZhuW#": "Master Bedroom",
-    "#@CiW#": "Guest Bedroom",
-    "#@ErTF#": "Kids Room",
-    "#@XuanG#": "Entrance",
-    "#@WeiYJ#": "Bathroom",
-    "#@ZouL#": "Hallway",
-    "#@CanT#": "Dining Room",
-    "#@ShuF#": "Study",
-    "#@YangT#": "Balcony",
-    "#@YiMJ#": "Closet",
-    "#@XiYF#": "Laundry Room",
-    "#@FangJ#": "Room",
+# Preset room names are stored by the robot as pinyin codes. Each code has a
+# name per interface language: en, de, es, fr, it, nl, pl.
+_ROOM_LANGUAGES = ("en", "de", "es", "fr", "it", "nl", "pl")
+_ROOM_TABLE = {
+    "#@ChuF#": ("Kitchen", "Küche", "Cocina", "Cuisine", "Cucina", "Keuken", "Kuchnia"),
+    "#@KeT#": (
+        "Living Room",
+        "Wohnzimmer",
+        "Salón",
+        "Salon",
+        "Soggiorno",
+        "Woonkamer",
+        "Salon",
+    ),
+    "#@WoS#": (
+        "Bedroom",
+        "Schlafzimmer",
+        "Dormitorio",
+        "Chambre",
+        "Camera da letto",
+        "Slaapkamer",
+        "Sypialnia",
+    ),
+    "#@ZhuW#": (
+        "Master Bedroom",
+        "Elternschlafzimmer",
+        "Dormitorio principal",
+        "Chambre parentale",
+        "Camera matrimoniale",
+        "Ouderslaapkamer",
+        "Sypialnia główna",
+    ),
+    "#@CiW#": (
+        "Guest Bedroom",
+        "Gästezimmer",
+        "Habitación de invitados",
+        "Chambre d'amis",
+        "Camera degli ospiti",
+        "Logeerkamer",
+        "Pokój gościnny",
+    ),
+    "#@ErTF#": (
+        "Kids Room",
+        "Kinderzimmer",
+        "Habitación infantil",
+        "Chambre d'enfant",
+        "Cameretta",
+        "Kinderkamer",
+        "Pokój dziecięcy",
+    ),
+    "#@XuanG#": (
+        "Entrance",
+        "Eingang",
+        "Entrada",
+        "Entrée",
+        "Ingresso",
+        "Entree",
+        "Wejście",
+    ),
+    "#@WeiYJ#": (
+        "Bathroom",
+        "Badezimmer",
+        "Baño",
+        "Salle de bain",
+        "Bagno",
+        "Badkamer",
+        "Łazienka",
+    ),
+    "#@ZouL#": (
+        "Hallway",
+        "Flur",
+        "Pasillo",
+        "Couloir",
+        "Corridoio",
+        "Gang",
+        "Korytarz",
+    ),
+    "#@CanT#": (
+        "Dining Room",
+        "Esszimmer",
+        "Comedor",
+        "Salle à manger",
+        "Sala da pranzo",
+        "Eetkamer",
+        "Jadalnia",
+    ),
+    "#@ShuF#": (
+        "Study",
+        "Arbeitszimmer",
+        "Estudio",
+        "Bureau",
+        "Studio",
+        "Werkkamer",
+        "Gabinet",
+    ),
+    "#@YangT#": (
+        "Balcony",
+        "Balkon",
+        "Balcón",
+        "Balcon",
+        "Balcone",
+        "Balkon",
+        "Balkon",
+    ),
+    "#@YiMJ#": (
+        "Closet",
+        "Ankleidezimmer",
+        "Vestidor",
+        "Dressing",
+        "Cabina armadio",
+        "Inloopkast",
+        "Garderoba",
+    ),
+    "#@XiYF#": (
+        "Laundry Room",
+        "Waschküche",
+        "Lavadero",
+        "Buanderie",
+        "Lavanderia",
+        "Washok",
+        "Pralnia",
+    ),
+    "#@FangJ#": ("Room", "Raum", "Habitación", "Pièce", "Stanza", "Kamer", "Pokój"),
 }
+# The generic word used for unnamed rooms ("Room 4").
+_ROOM_WORD = "#@FangJ#"
+
+# English names, kept for callers that do not pass a language.
+ROOM_NAMES = {code: names[0] for code, names in _ROOM_TABLE.items()}
+
+
+def _language_index(language: str | None) -> int:
+    """Return the table column for a Home Assistant language such as ``nl``."""
+    code = str(language or "en").replace("_", "-").split("-")[0].lower()
+    return _ROOM_LANGUAGES.index(code) if code in _ROOM_LANGUAGES else 0
+
+
+def _preset(code: str, language: str | None) -> str | None:
+    names = _ROOM_TABLE.get(code)
+    return names[_language_index(language)] if names else None
+
+
+def _unnamed(room_id: Any, language: str | None) -> str:
+    return f"{_preset(_ROOM_WORD, language)} {room_id}"
+
 
 # A preset code, optionally with a trailing index (e.g. "#@FangJ#4").
 _PRESET_NAME = re.compile(r"^(#@\w+#)(\d*)$")
@@ -124,30 +251,34 @@ def map_name(device: Mapping[str, Any] | None, map_id: int | None) -> str:
     return f"Map {map_id}" if map_id is not None else "Map"
 
 
-def room_name(raw_name: Any, room_id: Any) -> str:
+def room_name(raw_name: Any, room_id: Any, language: str | None = "en") -> str:
     """Translate a robot room name into a readable name.
 
     Rooms are named by a preset code (``#@CanT#`` -> Dining Room), a preset
     code with a trailing index (``#@FangJ#4`` -> Room 4), or free text the
-    user typed in the app (returned as-is). An unknown preset code falls back
-    to ``Room N`` rather than surfacing the raw ``#@...#`` wrapper.
+    user typed in the app (returned as-is). Preset codes are translated into
+    ``language`` (English, German, Spanish, French, Italian, Dutch or Polish;
+    other languages get English). An unknown preset code falls back to
+    ``Room N`` rather than surfacing the raw ``#@...#`` wrapper.
     """
     name = str(raw_name or "").strip()
     if not name:
-        return f"Room {room_id}"
-    if name in ROOM_NAMES:
-        return ROOM_NAMES[name]
+        return _unnamed(room_id, language)
+    if (preset := _preset(name, language)) is not None:
+        return preset
     match = _PRESET_NAME.match(name)
     if match:
-        base, index = ROOM_NAMES.get(match.group(1)), match.group(2)
+        base, index = _preset(match.group(1), language), match.group(2)
         if base:
             return f"{base} {index}" if index else base
-        return f"Room {index or room_id}"
+        return _unnamed(index or room_id, language)
     return name
 
 
 def rooms(
-    device: Mapping[str, Any] | None, map_id: int | None
+    device: Mapping[str, Any] | None,
+    map_id: int | None,
+    language: str | None = "en",
 ) -> list[tuple[str, str]]:
     """Return ``(room_id, name)`` for the rooms of ``map_id``."""
     info = feature(device, "SweeperMapMgr", "RegionBasicInfo")
@@ -155,7 +286,7 @@ def rooms(
         if not isinstance(item, Mapping) or _map_id(item.get("mapID")) != map_id:
             continue
         found = [
-            (str(region["ID"]), room_name(region.get("name"), region["ID"]))
+            (str(region["ID"]), room_name(region.get("name"), region["ID"], language))
             for region in _as_list(item.get("regionList"))
             if isinstance(region, Mapping)
             and region.get("regionType") == "room"
@@ -172,7 +303,7 @@ def rooms(
         if not isinstance(item, Mapping) or _map_id(item.get("mapID")) != map_id:
             continue
         return [
-            (str(room["roomID"]), room_name(room.get("name"), room["roomID"]))
+            (str(room["roomID"]), room_name(room.get("name"), room["roomID"], language))
             for room in _as_list(item.get("room"))
             if isinstance(room, Mapping) and room.get("roomID") is not None
         ]

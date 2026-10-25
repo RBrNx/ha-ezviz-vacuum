@@ -91,7 +91,7 @@ NUMBERS: Final[tuple[RobotNumberDescription, ...]] = (
 
 
 def room_numbers(
-    device: Any, task: Any
+    device: Any, task: Any, language: str | None = "en"
 ) -> list[tuple[str, RobotNumberDescription, str]]:
     """Return ``(key, description, room name)`` for per-room passes."""
     map_id = robot.active_map_id(device, task)
@@ -111,7 +111,7 @@ def room_numbers(
             ),
             name,
         )
-        for room_id, name in robot.rooms(device, map_id)
+        for room_id, name in robot.rooms(device, map_id, language)
         if room_id in configured
     ]
 
@@ -130,7 +130,9 @@ async def async_setup_entry(
     entities.extend(
         RobotSettingNumber(coordinator, key, description, {"room": name})
         for key, description, name in room_numbers(
-            coordinator.data.get("device"), coordinator.data.get("task")
+            coordinator.data.get("device"),
+            coordinator.data.get("task"),
+            hass.config.language,
         )
     )
     async_add_entities(entities)

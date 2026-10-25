@@ -217,7 +217,8 @@ class EzvizVacuumCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             decode_room_names(region_layer) if isinstance(region_layer, Mapping) else {}
         )
         self.room_names = {
-            room_id: robot.room_name(raw, room_id) for room_id, raw in raw_names.items()
+            room_id: robot.room_name(raw, room_id, self.hass.config.language)
+            for room_id, raw in raw_names.items()
         }
         # The path of a finished clean is hidden once the robot is docked.
         show_path = robot.activity(task, self._device) != robot.ACTIVITY_DOCKED
@@ -235,7 +236,9 @@ class EzvizVacuumCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         names = {
             int(room_id): self.room_names.get(int(room_id)) or name
-            for room_id, name in robot.rooms(self._device, map_id)
+            for room_id, name in robot.rooms(
+                self._device, map_id, self.hass.config.language
+            )
         }
         image = await self.hass.async_add_executor_job(
             partial(render_svg, layers, names, show_path=show_path)

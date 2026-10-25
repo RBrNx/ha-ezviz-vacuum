@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.1b2 (beta)
+## 1.1.1b3 (beta)
 
 RE4 support, found and tested on real RE4 hardware by @RBrNx (#3, #4) and
 @larsoss (#5, #6).
@@ -17,6 +17,9 @@ RE4 support, found and tested on real RE4 hardware by @RBrNx (#3, #4) and
   ten times the map's resolution; the scale is detected from the map itself.
 - Carpet boost works on the RE4, which stores it as a 0/1 flag (#6).
 - Dutch translation (#6).
+- Standard room names (Kitchen, Bedroom, ...) follow Home Assistant's
+  language: English, German, Spanish, French, Italian, Dutch or Polish. Names
+  typed in the app are kept as written (#5).
 
 ## 1.1.0
 
