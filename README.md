@@ -295,7 +295,7 @@ ruff format --check custom_components tests
 
 The tests cover the API client, settings, robot state and map decoding, and
 use synthetic data only. Every push runs HACS validation, Hassfest, Ruff, the
-tests on Python 3.13 and 3.14, and a check that every translation has the same
+tests on Python 3.14, and a check that every translation has the same
 keys as English. Publishing a release checks that the tag matches the manifest
 version and attaches a zip of the integration.
 
