@@ -37,6 +37,7 @@ WRITABLE_FEATURES: frozenset[tuple[str, str]] = frozenset(
         ("SweeperCleanTask", "RotatingBrushSelfCleanSwitch"),
         ("SweeperCleanTask", "SweepMopMode"),
         ("SweeperCleanTask", "CarpetCleanCfg"),
+        ("SweeperCleanTask", "CarpetTurboCleanSwitch"),
         ("SweeperCleanTask", "WashMopCfg"),
         ("SweeperCleanTask", "DryMopDuration"),
         ("SweeperCleanTask", "ParticulateCleanEnhanceCfg"),
