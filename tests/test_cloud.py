@@ -104,3 +104,19 @@ class CloudTests(unittest.TestCase):
         client._token["session_id"] = None
         with self.assertRaises(cloud_module.EzvizCloudError):
             cloud.request("GET", "/v3/z")
+
+
+class TokenReportTests(unittest.TestCase):
+    def test_renewed_session_is_reported_once(self) -> None:
+        saved: list[dict] = []
+        client = FakeClient()
+        cloud = cloud_module.EzvizCloud(client, on_token_updated=saved.append)
+        cloud.refresh()
+        cloud.refresh()  # same session again: nothing new to save
+        self.assertEqual([t["session_id"] for t in saved], ["new"])
+
+    def test_no_callback_no_report(self) -> None:
+        client = FakeClient()
+        cloud = cloud_module.EzvizCloud(client)
+        cloud.refresh()
+        self.assertEqual(client.logins, 1)

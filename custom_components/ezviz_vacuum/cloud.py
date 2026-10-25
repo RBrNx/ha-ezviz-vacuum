@@ -36,10 +36,20 @@ def _meta_code(response: requests.Response) -> Any:
 class EzvizCloud:
     """One logged-in EZVIZ account."""
 
-    def __init__(self, client: EzvizClient, *, timeout: int = DEFAULT_TIMEOUT) -> None:
+    def __init__(
+        self,
+        client: EzvizClient,
+        *,
+        timeout: int = DEFAULT_TIMEOUT,
+        on_token_updated: Callable[[dict[str, Any]], None] | None = None,
+    ) -> None:
         self.client = client
         self.timeout = timeout
         self._http = requests.Session()
+        self._on_token_updated = on_token_updated
+        self._last_session: tuple[Any, Any] | None = None
+        if on_token_updated is not None:
+            self._last_session = self._session_key(self.token())
 
     @classmethod
     def from_token(
@@ -50,26 +60,48 @@ class EzvizCloud:
         timeout: int = DEFAULT_TIMEOUT,
     ) -> EzvizCloud:
         """Resume a stored session; ``refresh()`` renews it."""
+        # pyezvizapi releases before the token callback existed do not accept
+        # ``on_token_updated``; this class reports token changes itself.
         client = EzvizClient(
             token=dict(token),
             url=str(token.get("api_url") or EU_URL),
             timeout=timeout,
-            on_token_updated=on_token_updated,
         )
-        return cls(client, timeout=timeout)
+        return cls(client, timeout=timeout, on_token_updated=on_token_updated)
+
+    @staticmethod
+    def _session_key(token: dict[str, Any]) -> tuple[Any, Any]:
+        return (token.get("session_id"), token.get("rf_session_id"))
+
+    def _report_token_change(self) -> None:
+        """Call ``on_token_updated`` when the client renewed its session."""
+        if self._on_token_updated is None:
+            return
+        token = self.token()
+        key = self._session_key(token)
+        if key != self._last_session:
+            self._last_session = key
+            self._on_token_updated(token)
 
     def refresh(self) -> dict[str, Any]:
         """Renew the session from its refresh token; return the new token."""
         self.client.login()
+        self._report_token_change()
         return self.token()
 
     def token(self) -> dict[str, Any]:
         """Return a copy of the current session token."""
         return self.client.export_token()
 
-    def device_infos(self) -> dict[str, Any]:
-        """Return every device on the account, keyed by serial."""
-        return self.client.get_device_infos()
+    def device_infos(self, serial: str | None = None) -> dict[str, Any]:
+        """Return every device on the account keyed by serial, or one device."""
+        try:
+            if serial is None:
+                return self.client.get_device_infos()
+            return self.client.get_device_infos(serial)
+        finally:
+            # pyezvizapi re-logs in by itself when the session has expired.
+            self._report_token_change()
 
     def request(
         self,

@@ -101,7 +101,7 @@ def build_cloud_stream(
     cloud: Any, serial: str, channel: int = 1
 ) -> tuple[VtmStreamClient, dict[str, Any]]:
     """Build an unopened cloud stream and safe metadata."""
-    device = cloud.client.get_device_infos(serial)
+    device = cloud.device_infos(serial)
     if not isinstance(device, dict) or not device:
         raise PyEzvizError("EZVIZ did not return the robot's streaming details")
     resource, vtm = _find_resource(device, serial, channel)
