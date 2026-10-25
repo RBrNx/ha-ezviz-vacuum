@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.1.1b1 (beta)
 
 RE4 support, found and tested on real RE4 hardware by @RBrNx (#3, #4).
 
