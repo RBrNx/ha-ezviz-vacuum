@@ -3,25 +3,56 @@
   "config": {
     "step": {
       "user": {
-        "title": "Conectar un robot aspirador EZVIZ",
-        "description": "Esta integración reutiliza la sesión activa de la integración oficial de EZVIZ. Elige la cuenta de EZVIZ a la que pertenece el robot.",
+        "title": "Iniciar sesión en EZVIZ",
+        "description": "Inicia sesión con la cuenta en la que el robot aspirador está añadido en la app EZVIZ. La contraseña solo se usa para iniciar sesión y no se guarda.",
         "data": {
-          "source_entry_id": "Cuenta de EZVIZ"
+          "username": "Correo electrónico o teléfono",
+          "password": "Contraseña",
+          "url": "Servidor"
+        },
+        "data_description": {
+          "url": "Deja el valor predeterminado salvo que tu cuenta esté en el servidor ruso o te hayan dado otra dirección; las demás regiones se detectan automáticamente."
+        }
+      },
+      "sms_code": {
+        "title": "Código de verificación",
+        "description": "EZVIZ ha enviado un código de verificación al teléfono o correo de la cuenta. Introdúcelo para terminar de iniciar sesión.",
+        "data": {
+          "sms_code": "Código"
         }
       },
       "robot": {
         "title": "Elige el robot",
-        "description": "La cuenta tiene varios robots aspiradores. Elige el que quieres añadir; repite la configuración para añadir los demás.",
+        "description": "La cuenta tiene varios robots aspiradores. Elige el que quieres añadir; repite la configuración para los demás.",
         "data": {
           "serial": "Robot"
         }
+      },
+      "reauth_confirm": {
+        "title": "Vuelve a iniciar sesión en EZVIZ",
+        "description": "La sesión de EZVIZ de {robot} ha caducado o aún no está configurada. Vuelve a iniciar sesión; se conservan las entidades y los ajustes.",
+        "data": {
+          "username": "Correo electrónico o teléfono",
+          "password": "Contraseña",
+          "url": "Servidor"
+        },
+        "data_description": {
+          "url": "Deja el valor predeterminado salvo que tu cuenta esté en el servidor ruso o te hayan dado otra dirección; las demás regiones se detectan automáticamente."
+        }
       }
+    },
+    "error": {
+      "invalid_auth": "Correo, teléfono o contraseña incorrectos.",
+      "invalid_code": "El código de verificación no es válido. Inténtalo de nuevo.",
+      "user_locked": "EZVIZ ha bloqueado esta cuenta tras demasiados intentos. Inténtalo más tarde.",
+      "cannot_connect": "No se pudo conectar con la nube de EZVIZ. Comprueba el servidor y tu conexión.",
+      "unknown": "Error inesperado. Revisa los registros."
     },
     "abort": {
       "already_configured": "Este robot ya está configurado.",
-      "ezviz_not_configured": "Configura primero la integración oficial de EZVIZ.",
-      "ezviz_not_loaded": "La integración oficial de EZVIZ no está cargada o no pudo listar los dispositivos. Recárgala e inténtalo de nuevo.",
-      "no_robots": "No se encontró en esta cuenta de EZVIZ ningún robot aspirador que no esté ya configurado."
+      "no_robots": "No se encontró en esta cuenta de EZVIZ ningún robot aspirador sin configurar.",
+      "cannot_connect": "Sesión iniciada, pero no se pudieron leer los dispositivos de la cuenta. Inténtalo de nuevo.",
+      "reauth_successful": "Sesión iniciada de nuevo. El robot se recarga ahora."
     }
   },
   "entity": {

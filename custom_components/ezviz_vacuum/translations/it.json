@@ -3,10 +3,22 @@
   "config": {
     "step": {
       "user": {
-        "title": "Collega un robot aspirapolvere EZVIZ",
-        "description": "Questa integrazione riutilizza la sessione attiva dell'integrazione ufficiale EZVIZ. Scegli l'account EZVIZ a cui appartiene il robot.",
+        "title": "Accedi a EZVIZ",
+        "description": "Accedi con l'account a cui il robot aspirapolvere è aggiunto nell'app EZVIZ. La password serve solo per l'accesso e non viene salvata.",
         "data": {
-          "source_entry_id": "Account EZVIZ"
+          "username": "Email o numero di telefono",
+          "password": "Password",
+          "url": "Server"
+        },
+        "data_description": {
+          "url": "Lascia il valore predefinito, a meno che il tuo account sia sul server russo o ti sia stato dato un altro indirizzo; le altre regioni vengono rilevate automaticamente."
+        }
+      },
+      "sms_code": {
+        "title": "Codice di verifica",
+        "description": "EZVIZ ha inviato un codice di verifica al telefono o all'email dell'account. Inseriscilo per completare l'accesso.",
+        "data": {
+          "sms_code": "Codice"
         }
       },
       "robot": {
@@ -15,13 +27,32 @@
         "data": {
           "serial": "Robot"
         }
+      },
+      "reauth_confirm": {
+        "title": "Accedi di nuovo a EZVIZ",
+        "description": "La sessione EZVIZ di {robot} è scaduta o non è ancora configurata. Accedi di nuovo; entità e impostazioni vengono mantenute.",
+        "data": {
+          "username": "Email o numero di telefono",
+          "password": "Password",
+          "url": "Server"
+        },
+        "data_description": {
+          "url": "Lascia il valore predefinito, a meno che il tuo account sia sul server russo o ti sia stato dato un altro indirizzo; le altre regioni vengono rilevate automaticamente."
+        }
       }
+    },
+    "error": {
+      "invalid_auth": "Email, numero di telefono o password errati.",
+      "invalid_code": "Il codice di verifica non è valido. Riprova.",
+      "user_locked": "EZVIZ ha bloccato questo account dopo troppi tentativi. Riprova più tardi.",
+      "cannot_connect": "Impossibile raggiungere il cloud EZVIZ. Controlla il server e la connessione.",
+      "unknown": "Errore imprevisto. Controlla i log."
     },
     "abort": {
       "already_configured": "Questo robot è già configurato.",
-      "ezviz_not_configured": "Configura prima l'integrazione ufficiale EZVIZ.",
-      "ezviz_not_loaded": "L'integrazione ufficiale EZVIZ non è caricata o non è riuscita a elencare i dispositivi. Ricaricala e riprova.",
-      "no_robots": "Su questo account EZVIZ non è stato trovato alcun robot aspirapolvere non ancora configurato."
+      "no_robots": "Su questo account EZVIZ non è stato trovato nessun robot aspirapolvere non ancora configurato.",
+      "cannot_connect": "Accesso eseguito, ma impossibile leggere i dispositivi dell'account. Riprova.",
+      "reauth_successful": "Accesso eseguito di nuovo. Il robot viene ricaricato."
     }
   },
   "entity": {

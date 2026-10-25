@@ -3,10 +3,22 @@
   "config": {
     "step": {
       "user": {
-        "title": "Connect an EZVIZ robot vacuum",
-        "description": "This integration reuses the active session of the official EZVIZ integration. Choose the EZVIZ account the robot belongs to.",
+        "title": "Sign in to EZVIZ",
+        "description": "Sign in with the account your robot vacuum is added to in the EZVIZ app. The password is used once to sign in and is not stored.",
         "data": {
-          "source_entry_id": "EZVIZ account"
+          "username": "Email or phone number",
+          "password": "Password",
+          "url": "Server"
+        },
+        "data_description": {
+          "url": "Leave the default unless your account is on the Russian server or you were given another address; other regions are found automatically."
+        }
+      },
+      "sms_code": {
+        "title": "Verification code",
+        "description": "EZVIZ sent a verification code to the phone number or email of the account. Enter it to finish signing in.",
+        "data": {
+          "sms_code": "Code"
         }
       },
       "robot": {
@@ -15,13 +27,32 @@
         "data": {
           "serial": "Robot"
         }
+      },
+      "reauth_confirm": {
+        "title": "Sign in to EZVIZ again",
+        "description": "The EZVIZ session for {robot} has expired or has not been set up yet. Sign in again; your entities and settings are kept.",
+        "data": {
+          "username": "Email or phone number",
+          "password": "Password",
+          "url": "Server"
+        },
+        "data_description": {
+          "url": "Leave the default unless your account is on the Russian server or you were given another address; other regions are found automatically."
+        }
       }
+    },
+    "error": {
+      "invalid_auth": "Wrong email, phone number or password.",
+      "invalid_code": "The verification code is not valid. Try again.",
+      "user_locked": "EZVIZ has locked this account after too many attempts. Try again later.",
+      "cannot_connect": "Could not reach the EZVIZ cloud. Check the server and your connection.",
+      "unknown": "Unexpected error. Check the logs."
     },
     "abort": {
       "already_configured": "This robot is already configured.",
-      "ezviz_not_configured": "Set up the official EZVIZ integration first.",
-      "ezviz_not_loaded": "The official EZVIZ integration is not loaded or could not list devices. Reload it and try again.",
-      "no_robots": "No robot vacuum that is not already configured was found on this EZVIZ account."
+      "no_robots": "No robot vacuum that is not already configured was found on this EZVIZ account.",
+      "cannot_connect": "Signed in, but could not read the account's devices. Try again.",
+      "reauth_successful": "Signed in again. The robot reloads now."
     }
   },
   "entity": {

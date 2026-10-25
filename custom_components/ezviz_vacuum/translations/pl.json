@@ -3,25 +3,56 @@
   "config": {
     "step": {
       "user": {
-        "title": "Połącz robota sprzątającego EZVIZ",
-        "description": "Ta integracja korzysta z aktywnej sesji oficjalnej integracji EZVIZ. Wybierz konto EZVIZ, do którego należy robot.",
+        "title": "Zaloguj się do EZVIZ",
+        "description": "Zaloguj się kontem, do którego robot sprzątający jest dodany w aplikacji EZVIZ. Hasło służy tylko do logowania i nie jest zapisywane.",
         "data": {
-          "source_entry_id": "Konto EZVIZ"
+          "username": "E-mail lub numer telefonu",
+          "password": "Hasło",
+          "url": "Serwer"
+        },
+        "data_description": {
+          "url": "Zostaw domyślny, chyba że konto jest na serwerze rosyjskim albo otrzymano inny adres; pozostałe regiony są wykrywane automatycznie."
+        }
+      },
+      "sms_code": {
+        "title": "Kod weryfikacyjny",
+        "description": "EZVIZ wysłał kod weryfikacyjny na numer telefonu lub e-mail konta. Wpisz go, aby dokończyć logowanie.",
+        "data": {
+          "sms_code": "Kod"
         }
       },
       "robot": {
         "title": "Wybierz robota",
-        "description": "Konto ma kilka robotów sprzątających. Wybierz robota do dodania; powtórz konfigurację, aby dodać pozostałe.",
+        "description": "Konto ma kilka robotów sprzątających. Wybierz robota do dodania; powtórz konfigurację dla pozostałych.",
         "data": {
           "serial": "Robot"
         }
+      },
+      "reauth_confirm": {
+        "title": "Zaloguj się ponownie do EZVIZ",
+        "description": "Sesja EZVIZ dla {robot} wygasła lub nie została jeszcze skonfigurowana. Zaloguj się ponownie; encje i ustawienia zostaną zachowane.",
+        "data": {
+          "username": "E-mail lub numer telefonu",
+          "password": "Hasło",
+          "url": "Serwer"
+        },
+        "data_description": {
+          "url": "Zostaw domyślny, chyba że konto jest na serwerze rosyjskim albo otrzymano inny adres; pozostałe regiony są wykrywane automatycznie."
+        }
       }
+    },
+    "error": {
+      "invalid_auth": "Nieprawidłowy e-mail, numer telefonu lub hasło.",
+      "invalid_code": "Kod weryfikacyjny jest nieprawidłowy. Spróbuj ponownie.",
+      "user_locked": "EZVIZ zablokował to konto po zbyt wielu próbach. Spróbuj później.",
+      "cannot_connect": "Nie można połączyć się z chmurą EZVIZ. Sprawdź serwer i połączenie.",
+      "unknown": "Nieoczekiwany błąd. Sprawdź logi."
     },
     "abort": {
       "already_configured": "Ten robot jest już skonfigurowany.",
-      "ezviz_not_configured": "Najpierw skonfiguruj oficjalną integrację EZVIZ.",
-      "ezviz_not_loaded": "Oficjalna integracja EZVIZ nie jest załadowana lub nie mogła wyświetlić urządzeń. Przeładuj ją i spróbuj ponownie.",
-      "no_robots": "Na tym koncie EZVIZ nie znaleziono nieskonfigurowanego robota sprzątającego."
+      "no_robots": "Na tym koncie EZVIZ nie znaleziono nieskonfigurowanego robota sprzątającego.",
+      "cannot_connect": "Zalogowano, ale nie udało się odczytać urządzeń konta. Spróbuj ponownie.",
+      "reauth_successful": "Zalogowano ponownie. Robot zostanie przeładowany."
     }
   },
   "entity": {

@@ -44,12 +44,34 @@ class FakeSession:
 
 
 class FakeClient:
-    """Minimum pyezviz-compatible client."""
+    """Stand-in for ``EzvizCloud``: records requests on a fake HTTP session."""
 
     def __init__(self) -> None:
         self._session = FakeSession()
-        self._token = {"api_url": "api.example.test"}
-        self._timeout = 25
+        self._token = {"api_url": "api.example.test", "session_id": "secret"}
+
+    def token(self) -> dict:
+        return dict(self._token)
+
+    def request(
+        self,
+        method: str,
+        path: str,
+        *,
+        params=None,
+        data=None,
+        json_body=None,
+        headers=None,
+    ):
+        url = f"https://{self._token['api_url']}{path}"
+        kwargs = {"params": params, "data": data, "json": json_body}
+        if headers:
+            kwargs["headers"] = headers
+        if method == "PUT":
+            return self._session.put(url, **kwargs)
+        if method == "POST":
+            return self._session.post(url, **kwargs)
+        return self._session.request(method, url, **kwargs)
 
 
 class ApiTests(unittest.TestCase):

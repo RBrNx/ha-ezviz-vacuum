@@ -3,10 +3,22 @@
   "config": {
     "step": {
       "user": {
-        "title": "EZVIZ-Saugroboter verbinden",
-        "description": "Diese Integration nutzt die aktive Sitzung der offiziellen EZVIZ-Integration. Wähle das EZVIZ-Konto, zu dem der Roboter gehört.",
+        "title": "Bei EZVIZ anmelden",
+        "description": "Melde dich mit dem Konto an, in dem dein Saugroboter in der EZVIZ-App hinzugefügt ist. Das Passwort wird nur für die Anmeldung verwendet und nicht gespeichert.",
         "data": {
-          "source_entry_id": "EZVIZ-Konto"
+          "username": "E-Mail oder Telefonnummer",
+          "password": "Passwort",
+          "url": "Server"
+        },
+        "data_description": {
+          "url": "Lass den Standard, außer dein Konto liegt auf dem russischen Server oder du hast eine andere Adresse erhalten; andere Regionen werden automatisch erkannt."
+        }
+      },
+      "sms_code": {
+        "title": "Bestätigungscode",
+        "description": "EZVIZ hat einen Bestätigungscode an die Telefonnummer oder E-Mail des Kontos gesendet. Gib ihn ein, um die Anmeldung abzuschließen.",
+        "data": {
+          "sms_code": "Code"
         }
       },
       "robot": {
@@ -15,13 +27,32 @@
         "data": {
           "serial": "Roboter"
         }
+      },
+      "reauth_confirm": {
+        "title": "Erneut bei EZVIZ anmelden",
+        "description": "Die EZVIZ-Sitzung für {robot} ist abgelaufen oder noch nicht eingerichtet. Melde dich erneut an; Entitäten und Einstellungen bleiben erhalten.",
+        "data": {
+          "username": "E-Mail oder Telefonnummer",
+          "password": "Passwort",
+          "url": "Server"
+        },
+        "data_description": {
+          "url": "Lass den Standard, außer dein Konto liegt auf dem russischen Server oder du hast eine andere Adresse erhalten; andere Regionen werden automatisch erkannt."
+        }
       }
+    },
+    "error": {
+      "invalid_auth": "Falsche E-Mail, Telefonnummer oder falsches Passwort.",
+      "invalid_code": "Der Bestätigungscode ist ungültig. Versuche es erneut.",
+      "user_locked": "EZVIZ hat dieses Konto nach zu vielen Versuchen gesperrt. Versuche es später erneut.",
+      "cannot_connect": "Die EZVIZ-Cloud ist nicht erreichbar. Prüfe den Server und deine Verbindung.",
+      "unknown": "Unerwarteter Fehler. Prüfe die Protokolle."
     },
     "abort": {
       "already_configured": "Dieser Roboter ist bereits eingerichtet.",
-      "ezviz_not_configured": "Richte zuerst die offizielle EZVIZ-Integration ein.",
-      "ezviz_not_loaded": "Die offizielle EZVIZ-Integration ist nicht geladen oder konnte keine Geräte auflisten. Lade sie neu und versuche es erneut.",
-      "no_robots": "Auf diesem EZVIZ-Konto wurde kein noch nicht eingerichteter Saugroboter gefunden."
+      "no_robots": "Auf diesem EZVIZ-Konto wurde kein noch nicht eingerichteter Saugroboter gefunden.",
+      "cannot_connect": "Angemeldet, aber die Geräte des Kontos konnten nicht gelesen werden. Versuche es erneut.",
+      "reauth_successful": "Erneut angemeldet. Der Roboter wird neu geladen."
     }
   },
   "entity": {
