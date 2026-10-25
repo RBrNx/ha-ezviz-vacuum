@@ -29,6 +29,10 @@ _B64_VALUE = {char: index for index, char in enumerate(_B64)}
 _RLE = re.compile(r"(.)\((\d+)\)")
 _LEGACY_TYPES = {2: CELL_FLOOR, 1: CELL_WALL}
 
+# Some robots (the RE4) store the cleaning path at ten times the resolution
+# of the grid; others (the RS20) use the grid's own coordinates.
+FINE_PATH_SCALE = 10
+
 
 @dataclass
 class Grid:
@@ -205,6 +209,36 @@ def decode_path(layer: Mapping[str, Any]) -> list[list[tuple[float, float]]]:
     return _points(layer.get("pathdata"))
 
 
+def _inside(path: list[list[tuple[float, float]]], grid: Grid) -> int:
+    """Count the path points that fall on the grid (with a small margin)."""
+    margin_x, margin_y = grid.w * 0.1, grid.h * 0.1
+    return sum(
+        grid.x - margin_x <= x <= grid.x + grid.w + margin_x
+        and grid.y - margin_y <= y <= grid.y + grid.h + margin_y
+        for segment in path
+        for x, y in segment
+    )
+
+
+def fit_path(
+    path: list[list[tuple[float, float]]], grid: Grid | None
+) -> list[list[tuple[float, float]]]:
+    """Bring the path into grid coordinates when it uses the finer scale.
+
+    The scale is detected from the data itself: the path is scaled down only
+    when that puts clearly more of its points on the map than it already has.
+    """
+    if not path or grid is None:
+        return path
+    scaled = [
+        [(x / FINE_PATH_SCALE, y / FINE_PATH_SCALE) for x, y in segment]
+        for segment in path
+    ]
+    if _inside(scaled, grid) > 2 * _inside(path, grid):
+        return scaled
+    return path
+
+
 def _position(value: Any) -> tuple[tuple[float, float] | None, float | None]:
     if not isinstance(value, Mapping):
         return None, None
@@ -244,6 +278,6 @@ def build_layers(
     if isinstance(region_layer, Mapping):
         layers.rooms = decode_rooms(region_layer)
     if isinstance(path_layer, Mapping):
-        layers.path = decode_path(path_layer)
+        layers.path = fit_path(decode_path(path_layer), layers.grid)
         layers.robot, layers.robot_degree = _position(path_layer.get("currentPosition"))
     return layers

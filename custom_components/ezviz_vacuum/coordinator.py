@@ -214,13 +214,10 @@ class EzvizVacuumCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # translate the preset codes so segments and labels read sensibly.
         region_layer = self._map_cache.get("region", (None, None))[1]
         raw_names = (
-            decode_room_names(region_layer)
-            if isinstance(region_layer, Mapping)
-            else {}
+            decode_room_names(region_layer) if isinstance(region_layer, Mapping) else {}
         )
         self.room_names = {
-            room_id: robot.room_name(raw, room_id)
-            for room_id, raw in raw_names.items()
+            room_id: robot.room_name(raw, room_id) for room_id, raw in raw_names.items()
         }
         # The path of a finished clean is hidden once the robot is docked.
         show_path = robot.activity(task, self._device) != robot.ACTIVITY_DOCKED
@@ -346,7 +343,9 @@ class EzvizVacuumCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if known:
             missing = sorted(set(requested) - known)
             if missing:
-                raise ServiceValidationError(f"Unknown robot rooms: {', '.join(missing)}")
+                raise ServiceValidationError(
+                    f"Unknown robot rooms: {', '.join(missing)}"
+                )
         await self._async_call(
             self.robot_api.start_region_clean,
             self.serial,
