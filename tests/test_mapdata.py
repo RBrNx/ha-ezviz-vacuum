@@ -89,6 +89,38 @@ class OutlineTests(unittest.TestCase):
         self.assertEqual(layers.robot_degree, -174.0)
 
 
+class GeometryTests(unittest.TestCase):
+    """Decoded layers are exposed as plain data for clients to draw."""
+
+    def test_geometry_dict(self) -> None:
+        layers = mapdata.MapLayers(
+            grid=mapdata.Grid(10, 20, 30, 40),
+            charger=(11.0, 21.0),
+            charger_degree=90.0,
+            rooms={6: [(10, 20), (15, 20), (15, 25)], 5: [(1, 1), (2, 1), (2, 2)]},
+            path=[[(12.346, 22.0), (13.0, 23.0)]],
+            robot=(13.0, 23.0),
+            robot_degree=None,
+        )
+        geometry = mapdata.geometry_dict(layers, {5: "Dining Room"})
+        self.assertEqual(geometry["bounds"], {"x": 10, "y": 20, "w": 30, "h": 40})
+        self.assertEqual(
+            [(room["id"], room["name"]) for room in geometry["rooms"]],
+            [(5, "Dining Room"), (6, "Room 6")],
+        )
+        self.assertEqual(geometry["rooms"][1]["outline"][1], [15, 20])
+        self.assertEqual(geometry["charger"], {"x": 11.0, "y": 21.0, "degree": 90.0})
+        self.assertEqual(geometry["robot"], {"x": 13.0, "y": 23.0, "degree": None})
+        self.assertEqual(geometry["path"], [[[12.35, 22.0], [13.0, 23.0]]])
+
+    def test_empty_layers(self) -> None:
+        geometry = mapdata.geometry_dict(mapdata.MapLayers(), {})
+        self.assertEqual(
+            geometry,
+            {"bounds": None, "rooms": [], "charger": None, "robot": None, "path": []},
+        )
+
+
 class PathScaleTests(unittest.TestCase):
     """The path is scaled only when it uses the finer coordinates."""
 
