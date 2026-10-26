@@ -38,7 +38,7 @@ from .const import (
     EVENT_MATCH_SECONDS,
     EVENT_RECENT_DAYS,
 )
-from .mapdata import build_layers, decode_room_names
+from .mapdata import build_layers, decode_room_names, geometry_dict
 from .maprender import render_svg
 from .settings import Setting, apply_write
 
@@ -73,6 +73,7 @@ class EzvizVacuumCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._map_cache_id: int | None = None
         self.room_names: dict[int, str] = {}
         self.room_generic: frozenset[int] = frozenset()
+        self.map_geometry: dict[str, Any] = {}
         self.camera_snapshot: bytes | None = None
         self.camera_snapshot_updated: datetime | None = None
         self._clean_log: dict[str, Any] | None = None
@@ -430,6 +431,9 @@ class EzvizVacuumCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self._device, map_id, self.hass.config.language
             )
         }
+        # Vector geometry lets a client draw a native, interactive map rather
+        # than only the rendered SVG.
+        self.map_geometry = geometry_dict(layers, names)
         image = await self.hass.async_add_executor_job(
             partial(render_svg, layers, names, show_path=show_path)
         )

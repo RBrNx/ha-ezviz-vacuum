@@ -52,6 +52,9 @@ class EzvizVacuumMapImage(RobotEntity, ImageEntity):
 
     _attr_translation_key = "map"
     _attr_content_type = "image/svg+xml"
+    # The geometry is large and the robot/path move constantly while cleaning;
+    # keep it out of the recorder (clients read it live).
+    _unrecorded_attributes = frozenset({"bounds", "rooms", "charger", "robot", "path"})
 
     def __init__(self, hass: Any, coordinator: EzvizVacuumCoordinator) -> None:
         ImageEntity.__init__(self, hass)
@@ -73,6 +76,7 @@ class EzvizVacuumMapImage(RobotEntity, ImageEntity):
             "map_name": robot.map_name(device, map_id),
             "versions": robot.map_versions(task, map_id),
             "error": self.coordinator.map_error,
+            **self.coordinator.map_geometry,
         }
 
     async def async_image(self) -> bytes | None:
