@@ -117,13 +117,13 @@ clean_spot:
     serial:
       selector:
         text:
-    x:
+    point_x:
       required: true
       example: 1271
       selector:
         number:
           mode: box
-    y:
+    point_y:
       required: true
       example: 1015
       selector:

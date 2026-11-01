@@ -395,7 +395,9 @@ def _register_services(hass: HomeAssistant) -> None:  # noqa: C901
         """Clean a square around one point of the map."""
         coordinator = await _ready(_coordinator(hass, call))
         try:
-            zone = spot_zone(call.data["x"], call.data["y"], call.data["size"])
+            zone = spot_zone(
+                call.data["point_x"], call.data["point_y"], call.data["size"]
+            )
         except ValueError as err:
             raise ServiceValidationError(str(err)) from err
         await coordinator.async_clean_zones([zone], **_clean_options(call))
@@ -421,8 +423,8 @@ def _register_services(hass: HomeAssistant) -> None:  # noqa: C901
         schema=vol.Schema(
             {
                 **_CLEAN_SCHEMA,
-                vol.Required("x"): vol.Coerce(float),
-                vol.Required("y"): vol.Coerce(float),
+                vol.Required("point_x"): vol.Coerce(float),
+                vol.Required("point_y"): vol.Coerce(float),
                 vol.Optional("size", default=DEFAULT_SPOT_SIZE): vol.All(
                     vol.Coerce(float), vol.Range(min=4, max=200)
                 ),

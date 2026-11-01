@@ -263,8 +263,8 @@ cells (about 5 cm each), the same ones the map image is drawn in.
 action: ezviz_vacuum.clean_spot
 data:
   entity_id: vacuum.ezviz_rs20_max
-  x: 1271
-  y: 1015
+  point_x: 1271
+  point_y: 1015
 ```
 
 ```yaml
@@ -279,7 +279,8 @@ data:
 ```
 
 Suction, water and passes are optional and default to the robot's whole-home
-settings. `clean_spot` takes an optional `size` (default 36 cells).
+settings. `clean_spot` takes an optional `size` (default 36 cells). The
+fields are `point_x` and `point_y` because a bare `y` is a boolean in YAML.
 
 To pick the spot by tapping the map, use the
 [Xiaomi Vacuum Map Card](https://github.com/PiotrMachowski/lovelace-xiaomi-vacuum-map-card):
@@ -305,8 +306,8 @@ map_modes:
       service: ezviz_vacuum.clean_spot
       service_data:
         entity_id: "[[entity_id]]"
-        x: "[[point_x]]"
-        y: "[[point_y]]"
+        point_x: "[[point_x]]"
+        point_y: "[[point_y]]"
   - name: Zone
     icon: mdi:select-drag
     selection_type: MANUAL_RECTANGLE

@@ -498,11 +498,11 @@
       "name": "Clean spot",
       "description": "Cleans a square around one point of the active map, like a spot clean in the EZVIZ app.",
       "fields": {
-        "x": {
+        "point_x": {
           "name": "X",
           "description": "X coordinate on the map."
         },
-        "y": {
+        "point_y": {
           "name": "Y",
           "description": "Y coordinate on the map."
         },

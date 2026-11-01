@@ -498,11 +498,11 @@
       "name": "Plek reinigen",
       "description": "Reinigt een vierkant rond één punt op de actieve kaart, zoals puntreiniging in de EZVIZ-app.",
       "fields": {
-        "x": {
+        "point_x": {
           "name": "X",
           "description": "X-coördinaat op de kaart."
         },
-        "y": {
+        "point_y": {
           "name": "Y",
           "description": "Y-coördinaat op de kaart."
         },
