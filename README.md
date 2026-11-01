@@ -282,6 +282,10 @@ Suction, water and passes are optional and default to the robot's whole-home
 settings. `clean_spot` takes an optional `size` (default 36 cells). The
 fields are `point_x` and `point_y` because a bare `y` is a boolean in YAML.
 
+The map image's `last_zones` attribute holds the rectangles of the last zone
+or spot clean, so a zone drawn once on the map can be copied into a script or
+a predefined zone of the map card.
+
 To pick the spot by tapping the map, use the
 [Xiaomi Vacuum Map Card](https://github.com/PiotrMachowski/lovelace-xiaomi-vacuum-map-card):
 the map image's `calibration_points` attribute converts taps into robot

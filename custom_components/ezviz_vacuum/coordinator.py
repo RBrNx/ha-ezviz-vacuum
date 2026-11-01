@@ -71,6 +71,8 @@ class EzvizVacuumCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.map_error: str | None = None
         # The grid the map image was drawn from, for click-to-clean cards.
         self.map_grid: Grid | None = None
+        # The last zone/spot clean sent, to copy into saved zones.
+        self.last_zones: list[Zone] = []
         self._map_cache: dict[str, tuple[int | None, dict[str, Any]]] = {}
         self._map_show_path: bool | None = None
         self._map_cache_id: int | None = None
@@ -586,6 +588,7 @@ class EzvizVacuumCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             or MapCleanSetting("cleanTimes").read(device, task)
             or 1,
         )
+        self.last_zones = list(zones)
         await self.async_request_refresh()
 
     async def async_camera_trace(self) -> dict[str, Any]:

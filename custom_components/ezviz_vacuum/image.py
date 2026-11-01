@@ -75,6 +75,7 @@ class EzvizVacuumMapImage(RobotEntity, ImageEntity):
             "versions": robot.map_versions(task, map_id),
             "error": self.coordinator.map_error,
             "calibration_points": calibration_points(self.coordinator.map_grid),
+            "last_zones": [list(zone) for zone in self.coordinator.last_zones],
         }
 
     async def async_image(self) -> bytes | None:

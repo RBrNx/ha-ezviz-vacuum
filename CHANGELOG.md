@@ -7,6 +7,8 @@
   `StartTempRegionClean` command (captured from the app on an RE4).
 - The map image has a `calibration_points` attribute, so map cards such as the
   Xiaomi Vacuum Map Card can turn a tap on the map into robot coordinates.
+- The map image's `last_zones` attribute shows the last zone or spot clean, to
+  copy into saved zones.
 
 ## 1.2.0
 
