@@ -288,6 +288,37 @@ class ApiTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.api.start_region_clean("ab1234567", map_id=2, room_ids=[])
 
+    def test_start_temp_region_clean_sends_rectangles(self) -> None:
+        self.api.start_temp_region_clean(
+            "ab1234567",
+            map_id=2,
+            zones=[(1254, 997, 1288, 1034)],
+            fan_mode="strong",
+            water_quantity="high",
+            clean_times=2,
+        )
+        call = self.client._session.calls[0]
+        self.assertTrue(
+            call["url"].endswith(
+                "/AB1234567/SweepingRobot/0/SweeperCleanTask/StartTempRegionClean"
+            )
+        )
+        body = json.loads(call["data"])
+        self.assertEqual(body["mapID"], 2)
+        self.assertEqual(
+            body["tempRegion"][0]["area"],
+            {"ltx": 1254, "lty": 997, "rbx": 1288, "rby": 1034},
+        )
+        with self.assertRaises(ValueError):
+            self.api.start_temp_region_clean(
+                "ab1234567",
+                map_id=2,
+                zones=[],
+                fan_mode="normal",
+                water_quantity="middle",
+                clean_times=1,
+            )
+
     def test_setting_action_is_allow_listed(self) -> None:
         self.api.send_setting_action(
             "ab1234567",

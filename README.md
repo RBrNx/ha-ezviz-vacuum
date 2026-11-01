@@ -38,6 +38,7 @@ supported too, but untested; see [Supported models](#supported-models).
 - [Installation](#installation)
 - [Room cleaning](#room-cleaning)
 - [The map](#the-map)
+- [Zone and spot cleaning](#zone-and-spot-cleaning)
 - [Good to know](#good-to-know)
 - [Services](#services)
 - [Troubleshooting](#troubleshooting)
@@ -251,6 +252,71 @@ type: picture-entity
 entity: image.ezviz_rs20_max_map
 show_name: false
 show_state: false
+```
+
+## Zone and spot cleaning
+
+Clean any part of the map, not just whole rooms. Coordinates are map grid
+cells (about 5 cm each), the same ones the map image is drawn in.
+
+```yaml
+action: ezviz_vacuum.clean_spot
+data:
+  entity_id: vacuum.ezviz_rs20_max
+  x: 1271
+  y: 1015
+```
+
+```yaml
+action: ezviz_vacuum.clean_zone
+data:
+  entity_id: vacuum.ezviz_rs20_max
+  zones:
+    - [1254, 997, 1288, 1034]
+  fan_mode: strong
+  water_quantity: high
+  clean_times: 2
+```
+
+Suction, water and passes are optional and default to the robot's whole-home
+settings. `clean_spot` takes an optional `size` (default 36 cells).
+
+To pick the spot by tapping the map, use the
+[Xiaomi Vacuum Map Card](https://github.com/PiotrMachowski/lovelace-xiaomi-vacuum-map-card):
+the map image's `calibration_points` attribute converts taps into robot
+coordinates.
+
+```yaml
+type: custom:xiaomi-vacuum-map-card
+entity: vacuum.ezviz_rs20_max
+vacuum_platform: default
+map_source:
+  camera: image.ezviz_rs20_max_map
+calibration_source:
+  entity: image.ezviz_rs20_max_map
+  attribute: calibration_points
+map_modes:
+  - name: Spot
+    icon: mdi:map-marker
+    selection_type: MANUAL_POINT
+    coordinates_rounding: true
+    run_immediately: false
+    service_call_schema:
+      service: ezviz_vacuum.clean_spot
+      service_data:
+        entity_id: "[[entity_id]]"
+        x: "[[point_x]]"
+        y: "[[point_y]]"
+  - name: Zone
+    icon: mdi:select-drag
+    selection_type: MANUAL_RECTANGLE
+    coordinates_rounding: true
+    max_selections: 5
+    service_call_schema:
+      service: ezviz_vacuum.clean_zone
+      service_data:
+        entity_id: "[[entity_id]]"
+        zones: "[[selection]]"
 ```
 
 ## Good to know

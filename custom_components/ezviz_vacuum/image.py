@@ -11,6 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import robot
 from .coordinator import EzvizVacuumCoordinator
 from .entity import RobotEntity
+from .zones import calibration_points
 
 
 async def async_setup_entry(
@@ -73,6 +74,7 @@ class EzvizVacuumMapImage(RobotEntity, ImageEntity):
             "map_name": robot.map_name(device, map_id),
             "versions": robot.map_versions(task, map_id),
             "error": self.coordinator.map_error,
+            "calibration_points": calibration_points(self.coordinator.map_grid),
         }
 
     async def async_image(self) -> bytes | None:

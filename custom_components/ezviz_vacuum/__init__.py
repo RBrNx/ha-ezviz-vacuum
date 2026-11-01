@@ -33,6 +33,8 @@ from .const import (
     DOMAIN,
     SERVICE_API_REQUEST,
     SERVICE_CAMERA_DIAGNOSTICS,
+    SERVICE_CLEAN_SPOT,
+    SERVICE_CLEAN_ZONE,
     SERVICE_FEATURE_REQUEST,
     SERVICE_INSPECT,
     SERVICE_MAP_DIAGNOSTICS,
@@ -41,6 +43,8 @@ from .const import (
 from .coordinator import EzvizVacuumCoordinator
 from .helpers import feature
 from .mapdata import decode_path
+from .settings import FAN_SPEEDS, WATER_LEVELS
+from .zones import DEFAULT_SPOT_SIZE, normalize_zones, spot_zone
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -56,7 +60,15 @@ PLATFORMS = [
 type EzvizVacuumConfigEntry = ConfigEntry[EzvizVacuumCoordinator]
 
 ATTR_SERIAL = "serial"
+ATTR_ENTITY_ID = "entity_id"
 _SERIAL_SCHEMA = {vol.Optional(ATTR_SERIAL): cv.string}
+_CLEAN_SCHEMA = {
+    **_SERIAL_SCHEMA,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
+    vol.Optional("fan_mode"): vol.In(list(FAN_SPEEDS)),
+    vol.Optional("water_quantity"): vol.In(list(WATER_LEVELS)),
+    vol.Optional("clean_times"): vol.All(vol.Coerce(int), vol.Range(min=1, max=3)),
+}
 
 _SENSITIVE_PARTS = (
     "accesscode",
@@ -208,6 +220,22 @@ def _migrate_to_serial(hass: HomeAssistant, entry: ConfigEntry, serial: str) -> 
 
 def _coordinator(hass: HomeAssistant, call: ServiceCall) -> EzvizVacuumCoordinator:
     """Return the robot addressed by a service call (default: the first)."""
+    entity_id = call.data.get(ATTR_ENTITY_ID)
+    if entity_id:
+        registry_entry = er.async_get(hass).async_get(entity_id)
+        entry = (
+            hass.config_entries.async_get_entry(registry_entry.config_entry_id)
+            if registry_entry is not None and registry_entry.config_entry_id
+            else None
+        )
+        runtime = getattr(entry, "runtime_data", None) if entry else None
+        if (
+            entry is None
+            or entry.domain != DOMAIN
+            or not isinstance(runtime, EzvizVacuumCoordinator)
+        ):
+            raise ServiceValidationError(f"{entity_id} is not a loaded EZVIZ robot")
+        return runtime
     wanted = str(call.data.get(ATTR_SERIAL) or "").strip().upper()
     loaded = [
         entry.runtime_data
@@ -347,6 +375,61 @@ def _register_services(hass: HomeAssistant) -> None:  # noqa: C901
         )
         return _sanitize(result)
 
+    def _clean_options(call: ServiceCall) -> dict[str, Any]:
+        return {
+            "fan_mode": call.data.get("fan_mode"),
+            "water_quantity": call.data.get("water_quantity"),
+            "clean_times": call.data.get("clean_times"),
+        }
+
+    async def async_clean_zone(call: ServiceCall) -> None:
+        """Clean one or more rectangles of the map."""
+        coordinator = await _ready(_coordinator(hass, call))
+        try:
+            zones = normalize_zones(call.data["zones"])
+        except ValueError as err:
+            raise ServiceValidationError(str(err)) from err
+        await coordinator.async_clean_zones(zones, **_clean_options(call))
+
+    async def async_clean_spot(call: ServiceCall) -> None:
+        """Clean a square around one point of the map."""
+        coordinator = await _ready(_coordinator(hass, call))
+        try:
+            zone = spot_zone(call.data["x"], call.data["y"], call.data["size"])
+        except ValueError as err:
+            raise ServiceValidationError(str(err)) from err
+        await coordinator.async_clean_zones([zone], **_clean_options(call))
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CLEAN_ZONE,
+        async_clean_zone,
+        schema=vol.Schema(
+            {
+                **_CLEAN_SCHEMA,
+                vol.Required("zones"): vol.All(
+                    cv.ensure_list,
+                    [vol.All(vol.ExactSequence([vol.Coerce(float)] * 4))],
+                ),
+            }
+        ),
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CLEAN_SPOT,
+        async_clean_spot,
+        schema=vol.Schema(
+            {
+                **_CLEAN_SCHEMA,
+                vol.Required("x"): vol.Coerce(float),
+                vol.Required("y"): vol.Coerce(float),
+                vol.Optional("size", default=DEFAULT_SPOT_SIZE): vol.All(
+                    vol.Coerce(float), vol.Range(min=4, max=200)
+                ),
+            }
+        ),
+    )
+
     serial_only = vol.Schema(_SERIAL_SCHEMA)
     for name, handler, response in (
         (SERVICE_INSPECT, async_inspect, SupportsResponse.ONLY),
@@ -412,6 +495,8 @@ async def async_unload_entry(
             SERVICE_REFRESH_CAMERA,
             SERVICE_FEATURE_REQUEST,
             SERVICE_API_REQUEST,
+            SERVICE_CLEAN_ZONE,
+            SERVICE_CLEAN_SPOT,
         ):
             hass.services.async_remove(DOMAIN, name)
     return unloaded
