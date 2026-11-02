@@ -10,6 +10,7 @@ from typing import Any
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -26,13 +27,14 @@ from pyezvizapi.exceptions import (
 )
 import voluptuous as vol
 
-from . import robot
+from . import account_key, account_sessions, robot
 from .cloud import EU_URL, RUSSIA_URL, new_client, sign_in
 from .const import CONF_ROOM_DEVICES, CONF_SERIAL, CONF_TOKEN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SMS_CODE = "sms_code"
+CONF_ACCOUNT = "account"
 
 
 def _error_key(err: Exception) -> str:
@@ -96,6 +98,16 @@ class EzvizVacuumConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
+        """Start: reuse an account that is already signed in, or sign in."""
+        if user_input is None and self._signed_in_accounts():
+            return self.async_show_menu(
+                step_id="user", menu_options=["known_account", "sign_in"]
+            )
+        return await self.async_step_sign_in(user_input)
+
+    async def async_step_sign_in(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Ask for the EZVIZ account."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -105,10 +117,59 @@ class EzvizVacuumConfigFlow(ConfigFlow, domain=DOMAIN):
             if errors.get("base") == "verification_required":
                 return await self.async_step_sms_code()
         return self.async_show_form(
-            step_id="user",
+            step_id="sign_in",
             data_schema=_account_schema(user_input or {}),
             errors=errors,
         )
+
+    async def async_step_known_account(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Add another robot with the session of an account already signed in."""
+        accounts = self._signed_in_accounts()
+        if not accounts:
+            return await self.async_step_sign_in()
+        if user_input is not None:
+            chosen = accounts.get(str(user_input[CONF_ACCOUNT]))
+        elif len(accounts) == 1:
+            chosen = next(iter(accounts.values()))
+        else:
+            chosen = None
+        if chosen is None:
+            return self.async_show_form(
+                step_id="known_account",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(CONF_ACCOUNT): selector.SelectSelector(
+                            selector.SelectSelectorConfig(
+                                options=[
+                                    selector.SelectOptionDict(value=key, label=username)
+                                    for key, (username, _) in accounts.items()
+                                ],
+                                mode=selector.SelectSelectorMode.LIST,
+                            )
+                        )
+                    }
+                ),
+            )
+        username, cloud = chosen
+        # Use the running session instead of a new login: robots of one
+        # account share a session, and a second login could end it.
+        self._username = username
+        self._client = cloud.client
+        self._token = await self.hass.async_add_executor_job(cloud.token)
+        return await self.async_step_robot()
+
+    def _signed_in_accounts(self) -> dict[str, tuple[str, Any]]:
+        """Return ``account -> (username, session)`` of the loaded robots."""
+        accounts: dict[str, tuple[str, Any]] = {}
+        for entry in self._async_current_entries(include_ignore=False):
+            runtime = getattr(entry, "runtime_data", None)
+            cloud = getattr(runtime, "cloud", None)
+            key = account_key(entry)
+            if entry.state is ConfigEntryState.LOADED and cloud and key:
+                accounts.setdefault(key, (str(entry.data[CONF_USERNAME]), cloud))
+        return accounts
 
     async def async_step_sms_code(
         self, user_input: dict[str, Any] | None = None
@@ -214,8 +275,25 @@ class EzvizVacuumConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     def _async_finish_reauth(self) -> ConfigFlowResult:
+        entry = self._get_reauth_entry()
+        account = account_key(entry)
+        if account:
+            # The other robots of the account used the expired session too:
+            # give them the new one and start them again.
+            account_sessions(self.hass).pop(account, None)
+            for other in self._async_current_entries(include_ignore=False):
+                if other.entry_id != entry.entry_id and account_key(other) == account:
+                    self.hass.config_entries.async_update_entry(
+                        other,
+                        data={
+                            **other.data,
+                            CONF_TOKEN: self._token,
+                            CONF_USERNAME: self._username,
+                        },
+                    )
+                    self.hass.config_entries.async_schedule_reload(other.entry_id)
         return self.async_update_reload_and_abort(
-            self._get_reauth_entry(),
+            entry,
             data_updates={CONF_TOKEN: self._token, CONF_USERNAME: self._username},
         )
 

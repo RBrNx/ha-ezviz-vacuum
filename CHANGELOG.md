@@ -5,6 +5,10 @@
 - The integration no longer reloads every time it saves a renewed EZVIZ
   session; it reloads only when its options change. Thanks @frenck for
   spotting this in the HACS review.
+- Adding another robot no longer asks for the password again: the setup
+  offers the EZVIZ account that is already signed in. Robots of one account
+  now share one session, so renewing it for one robot no longer signs the
+  others out.
 - Ready for the Home Assistant Marketplace (2026.11): the manifest declares
   its category (Appliances & cleaning), and the README has install buttons
   for the Marketplace, HACS and the setup.

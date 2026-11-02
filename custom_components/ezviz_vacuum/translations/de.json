@@ -3,6 +3,14 @@
   "config": {
     "step": {
       "user": {
+        "title": "EZVIZ-Roboter hinzufügen",
+        "description": "Einen Roboter aus einem bereits angemeldeten EZVIZ-Konto hinzufügen oder bei einem anderen Konto anmelden.",
+        "menu_options": {
+          "known_account": "Roboter aus einem bereits angemeldeten Konto hinzufügen",
+          "sign_in": "Bei einem EZVIZ-Konto anmelden"
+        }
+      },
+      "sign_in": {
         "title": "Bei EZVIZ anmelden",
         "description": "Melde dich mit dem Konto an, in dem dein Saugroboter in der EZVIZ-App hinzugefügt ist. Das Passwort wird nur für die Anmeldung verwendet und nicht gespeichert.",
         "data": {
@@ -12,6 +20,13 @@
         },
         "data_description": {
           "url": "Lass den Standard, außer dein Konto liegt auf dem russischen Server oder du hast eine andere Adresse erhalten; andere Regionen werden automatisch erkannt."
+        }
+      },
+      "known_account": {
+        "title": "Konto wählen",
+        "description": "Einen Roboter aus diesem EZVIZ-Konto hinzufügen; kein Passwort nötig.",
+        "data": {
+          "account": "EZVIZ-Konto"
         }
       },
       "sms_code": {

@@ -3,6 +3,14 @@
   "config": {
     "step": {
       "user": {
+        "title": "Dodaj robota EZVIZ",
+        "description": "Dodaj robota z konta EZVIZ, na którym już się zalogowano, albo zaloguj się na inne konto.",
+        "menu_options": {
+          "known_account": "Dodaj robota z konta, na którym już się zalogowano",
+          "sign_in": "Zaloguj się na konto EZVIZ"
+        }
+      },
+      "sign_in": {
         "title": "Zaloguj się do EZVIZ",
         "description": "Zaloguj się kontem, do którego robot sprzątający jest dodany w aplikacji EZVIZ. Hasło służy tylko do logowania i nie jest zapisywane.",
         "data": {
@@ -12,6 +20,13 @@
         },
         "data_description": {
           "url": "Zostaw domyślny, chyba że konto jest na serwerze rosyjskim albo otrzymano inny adres; pozostałe regiony są wykrywane automatycznie."
+        }
+      },
+      "known_account": {
+        "title": "Wybierz konto",
+        "description": "Dodaj robota z tego konta EZVIZ; hasło nie jest potrzebne.",
+        "data": {
+          "account": "Konto EZVIZ"
         }
       },
       "sms_code": {
