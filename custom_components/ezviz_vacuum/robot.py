@@ -204,6 +204,25 @@ def rooms(
     return []
 
 
+def map_rooms(
+    device: Mapping[str, Any] | None,
+    map_id: int | None,
+    map_names: Mapping[int, str],
+    language: str | None = "en",
+) -> list[tuple[str, str]]:
+    """Return ``(room_id, name)`` for the rooms of ``map_id``, named as on the map.
+
+    ``map_names`` are the room names from the map's region layer (id -> name).
+    The RE4 doesn't always report its room list: ``RoomCustomCleanCfg`` can
+    come back as a bare ``true`` instead. The region layer still lists every
+    room on the map, so it stands in for the device's list then.
+    """
+    found = rooms(device, map_id, language)
+    if not found:
+        return [(str(room_id), name) for room_id, name in sorted(map_names.items())]
+    return [(room_id, map_names.get(int(room_id)) or name) for room_id, name in found]
+
+
 def room_clean_configs(
     device: Mapping[str, Any] | None, map_id: int | None
 ) -> list[dict[str, Any]]:
