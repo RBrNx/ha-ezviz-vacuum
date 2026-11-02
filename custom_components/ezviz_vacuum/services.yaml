@@ -76,3 +76,79 @@ api_request:
     headers:
       selector:
         object:
+clean_zone:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          integration: ezviz_vacuum
+          domain: vacuum
+    serial:
+      selector:
+        text:
+    zones:
+      required: true
+      example: "[[1254, 997, 1288, 1034]]"
+      selector:
+        object:
+    fan_mode:
+      selector:
+        select:
+          options: ["quiet", "normal", "strong", "super"]
+          translation_key: fan_mode
+    water_quantity:
+      selector:
+        select:
+          options: ["low", "middle", "high"]
+          translation_key: water_quantity
+    clean_times:
+      selector:
+        number:
+          min: 1
+          max: 3
+          mode: box
+clean_spot:
+  fields:
+    entity_id:
+      selector:
+        entity:
+          integration: ezviz_vacuum
+          domain: vacuum
+    serial:
+      selector:
+        text:
+    point_x:
+      required: true
+      example: 1271
+      selector:
+        number:
+          mode: box
+    point_y:
+      required: true
+      example: 1015
+      selector:
+        number:
+          mode: box
+    size:
+      default: 36
+      selector:
+        number:
+          min: 4
+          max: 200
+          mode: box
+    fan_mode:
+      selector:
+        select:
+          options: ["quiet", "normal", "strong", "super"]
+          translation_key: fan_mode
+    water_quantity:
+      selector:
+        select:
+          options: ["low", "middle", "high"]
+          translation_key: water_quantity
+    clean_times:
+      selector:
+        number:
+          min: 1
+          max: 3
+          mode: box

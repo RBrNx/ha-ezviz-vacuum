@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.2.1
+
+- The integration no longer reloads every time it saves a renewed EZVIZ
+  session; it reloads only when its options change. Thanks @frenck for
+  spotting this in the HACS review.
+- Adding another robot no longer asks for the password again: the setup
+  offers the EZVIZ account that is already signed in. Robots of one account
+  now share one session, so renewing it for one robot no longer signs the
+  others out.
+- Ready for the Home Assistant Marketplace (2026.11): the manifest declares
+  its category (Appliances & cleaning), and the README has install buttons
+  for the Marketplace, HACS and the setup.
+- Zone and spot cleaning: `ezviz_vacuum.clean_zone` cleans rectangles of the
+  map and `ezviz_vacuum.clean_spot` a square around a point, with the app's
+  `StartTempRegionClean` command (captured from the app on an RE4).
+- The map image has a `calibration_points` attribute, so map cards such as the
+  Xiaomi Vacuum Map Card can turn a tap on the map into robot coordinates.
+- The map image's `last_zones` attribute shows the last zone or spot clean, to
+  copy into saved zones.
+- Robots that report no room list (some RE4s) get their rooms, room names
+  and area mapping from the map's room layer instead (#11).
+
 ## 1.2.0
 
 RE4 support and a lot of polish, found and tested on real RE4 robots by

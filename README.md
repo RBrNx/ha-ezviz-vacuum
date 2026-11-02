@@ -1,6 +1,6 @@
 # EZVIZ Robot Vacuum for Home Assistant
 
-[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories)
+[![HACS Default](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://hacs.xyz/)
 [![Version](https://img.shields.io/github/v/release/stefanelul2000/ha-ezviz-vacuum)](https://github.com/stefanelul2000/ha-ezviz-vacuum/releases)
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2026.7%2B-18BCF2)
 [![License](https://img.shields.io/github/license/stefanelul2000/ha-ezviz-vacuum)](https://github.com/stefanelul2000/ha-ezviz-vacuum/blob/main/LICENSE)
@@ -38,6 +38,7 @@ supported too, but untested; see [Supported models](#supported-models).
 - [Installation](#installation)
 - [Room cleaning](#room-cleaning)
 - [The map](#the-map)
+- [Zone and spot cleaning](#zone-and-spot-cleaning)
 - [Good to know](#good-to-know)
 - [Services](#services)
 - [Troubleshooting](#troubleshooting)
@@ -139,18 +140,38 @@ Cliff detection is deliberately not exposed.
 
 ## Installation
 
-### HACS
+The integration is in the default catalog of the Home Assistant Marketplace
+(called HACS before Home Assistant 2026.11).
 
-1. In HACS, open the three-dot menu and choose **Custom repositories**.
-2. Add `https://github.com/stefanelul2000/ha-ezviz-vacuum` with the type
-   **Integration**.
-3. Download **EZVIZ Robot Vacuum**, then restart Home Assistant.
-4. Go to **Settings → Devices & services → Add integration**, choose
-   **EZVIZ Robot Vacuum** and sign in with your EZVIZ email or phone number
-   and password. Keep the default server unless your account is on the
-   Russian one; other regions are found automatically. If EZVIZ sends a
-   verification code, enter it in the next step.
-5. With several robots on the account, pick one and repeat for the others.
+### Home Assistant 2026.11 or newer (Marketplace)
+
+[![Open the EZVIZ Robot Vacuum in the Home Assistant Marketplace.](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=stefanelul2000&repository=ha-ezviz-vacuum&category=integration)
+
+1. Click the button above, or go to **Settings → Marketplace** and search for
+   **EZVIZ Robot Vacuum**.
+2. Click **Download**. The setup opens by itself; no restart is needed for the
+   first install.
+
+### Home Assistant 2026.7 to 2026.10 (HACS)
+
+[![Open the EZVIZ Robot Vacuum in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=stefanelul2000&repository=ha-ezviz-vacuum&category=integration)
+
+1. Click the button above, or open **HACS** and search for
+   **EZVIZ Robot Vacuum**.
+2. Download it, then restart Home Assistant.
+
+### Setting up
+
+[![Add the EZVIZ Robot Vacuum integration to Home Assistant.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=ezviz_vacuum)
+
+1. Click the button above, or go to **Settings → Devices & services → Add
+   integration** and choose **EZVIZ Robot Vacuum**. (The button works once
+   the integration is downloaded.)
+2. Sign in with your EZVIZ email or phone number and password. Keep the
+   default server unless your account is on the Russian one; other regions
+   are found automatically. If EZVIZ sends a verification code, enter it in
+   the next step.
+3. With several robots on the account, pick one and repeat for the others.
 
 If the session ever expires, Home Assistant shows a **Re-authenticate**
 prompt; sign in again and everything is kept.
@@ -159,7 +180,7 @@ prompt; sign in again and everything is kept.
 
 Copy `custom_components/ezviz_vacuum` into the `custom_components` folder of
 your Home Assistant configuration, restart, and add the integration as in
-step 4.
+[Setting up](#setting-up).
 
 ### Upgrading from 1.0
 
@@ -251,6 +272,76 @@ type: picture-entity
 entity: image.ezviz_rs20_max_map
 show_name: false
 show_state: false
+```
+
+## Zone and spot cleaning
+
+Clean any part of the map, not just whole rooms. Coordinates are map grid
+cells (about 5 cm each), the same ones the map image is drawn in.
+
+```yaml
+action: ezviz_vacuum.clean_spot
+data:
+  entity_id: vacuum.ezviz_rs20_max
+  point_x: 1271
+  point_y: 1015
+```
+
+```yaml
+action: ezviz_vacuum.clean_zone
+data:
+  entity_id: vacuum.ezviz_rs20_max
+  zones:
+    - [1254, 997, 1288, 1034]
+  fan_mode: strong
+  water_quantity: high
+  clean_times: 2
+```
+
+Suction, water and passes are optional and default to the robot's whole-home
+settings. `clean_spot` takes an optional `size` (default 36 cells). The
+fields are `point_x` and `point_y` because a bare `y` is a boolean in YAML.
+
+The map image's `last_zones` attribute holds the rectangles of the last zone
+or spot clean, so a zone drawn once on the map can be copied into a script or
+a predefined zone of the map card.
+
+To pick the spot by tapping the map, use the
+[Xiaomi Vacuum Map Card](https://github.com/PiotrMachowski/lovelace-xiaomi-vacuum-map-card):
+the map image's `calibration_points` attribute converts taps into robot
+coordinates.
+
+```yaml
+type: custom:xiaomi-vacuum-map-card
+entity: vacuum.ezviz_rs20_max
+vacuum_platform: default
+map_source:
+  camera: image.ezviz_rs20_max_map
+calibration_source:
+  entity: image.ezviz_rs20_max_map
+  attribute: calibration_points
+map_modes:
+  - name: Spot
+    icon: mdi:map-marker
+    selection_type: MANUAL_POINT
+    coordinates_rounding: true
+    run_immediately: false
+    service_call_schema:
+      service: ezviz_vacuum.clean_spot
+      service_data:
+        entity_id: "[[entity_id]]"
+        point_x: "[[point_x]]"
+        point_y: "[[point_y]]"
+  - name: Zone
+    icon: mdi:select-drag
+    selection_type: MANUAL_RECTANGLE
+    coordinates_rounding: true
+    max_selections: 5
+    service_call_schema:
+      service: ezviz_vacuum.clean_zone
+      service_data:
+        entity_id: "[[entity_id]]"
+        zones: "[[selection]]"
 ```
 
 ## Good to know

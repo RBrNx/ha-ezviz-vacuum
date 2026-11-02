@@ -6,8 +6,8 @@ from collections.abc import Mapping
 from functools import partial
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.const import CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -33,6 +33,8 @@ from .const import (
     DOMAIN,
     SERVICE_API_REQUEST,
     SERVICE_CAMERA_DIAGNOSTICS,
+    SERVICE_CLEAN_SPOT,
+    SERVICE_CLEAN_ZONE,
     SERVICE_FEATURE_REQUEST,
     SERVICE_INSPECT,
     SERVICE_MAP_DIAGNOSTICS,
@@ -41,6 +43,8 @@ from .const import (
 from .coordinator import EzvizVacuumCoordinator
 from .helpers import feature
 from .mapdata import decode_path
+from .settings import FAN_SPEEDS, WATER_LEVELS
+from .zones import DEFAULT_SPOT_SIZE, normalize_zones, spot_zone
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -56,7 +60,15 @@ PLATFORMS = [
 type EzvizVacuumConfigEntry = ConfigEntry[EzvizVacuumCoordinator]
 
 ATTR_SERIAL = "serial"
+ATTR_ENTITY_ID = "entity_id"
 _SERIAL_SCHEMA = {vol.Optional(ATTR_SERIAL): cv.string}
+_CLEAN_SCHEMA = {
+    **_SERIAL_SCHEMA,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
+    vol.Optional("fan_mode"): vol.In(list(FAN_SPEEDS)),
+    vol.Optional("water_quantity"): vol.In(list(WATER_LEVELS)),
+    vol.Optional("clean_times"): vol.All(vol.Coerce(int), vol.Range(min=1, max=3)),
+}
 
 _SENSITIVE_PARTS = (
     "accesscode",
@@ -105,11 +117,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Reload so the per-room entities move to or from their room devices."""
-    await hass.config_entries.async_reload(entry.entry_id)
-
-
 def _remove_empty_room_devices(
     hass: HomeAssistant, entry: ConfigEntry, serial: str
 ) -> None:
@@ -139,26 +146,42 @@ async def async_setup_entry(hass: HomeAssistant, entry: EzvizVacuumConfigEntry) 
     if not isinstance(token, Mapping) or not token.get("session_id"):
         raise ConfigEntryAuthFailed("Sign in to your EZVIZ account")
 
-    def save_token(new_token: dict[str, Any]) -> None:
-        """Store a renewed session; called from the client's worker thread."""
-        hass.loop.call_soon_threadsafe(_store_token, hass, entry, new_token)
+    account = account_key(entry)
+    sessions = account_sessions(hass)
+    cloud = sessions.get(account) if account else None
+    if cloud is None:
+        # Robots on the same account share one session: renewing it for one
+        # robot would otherwise sign the others out.
+        def save_token(new_token: dict[str, Any]) -> None:
+            """Store a renewed session; called from the client's worker thread."""
+            hass.loop.call_soon_threadsafe(_store_account_token, hass, entry, new_token)
 
-    cloud = await hass.async_add_executor_job(
-        partial(EzvizCloud.from_token, dict(token), on_token_updated=save_token)
-    )
-    try:
-        await hass.async_add_executor_job(cloud.refresh)
-    except EzvizAuthTokenExpired as err:
-        raise ConfigEntryAuthFailed(
-            "The EZVIZ login has expired; please sign in again"
-        ) from err
-    except PyEzvizError as err:
-        raise ConfigEntryNotReady(f"Could not reach the EZVIZ cloud: {err}") from err
-    except Exception as err:
-        raise ConfigEntryNotReady(f"Could not reach the EZVIZ cloud: {err}") from err
+        cloud = await hass.async_add_executor_job(
+            partial(EzvizCloud.from_token, dict(token), on_token_updated=save_token)
+        )
+        try:
+            await hass.async_add_executor_job(cloud.refresh)
+        except EzvizAuthTokenExpired as err:
+            raise ConfigEntryAuthFailed(
+                "The EZVIZ login has expired; please sign in again"
+            ) from err
+        except PyEzvizError as err:
+            raise ConfigEntryNotReady(
+                f"Could not reach the EZVIZ cloud: {err}"
+            ) from err
+        except Exception as err:
+            raise ConfigEntryNotReady(
+                f"Could not reach the EZVIZ cloud: {err}"
+            ) from err
+        if account:
+            sessions[account] = cloud
 
     coordinator = EzvizVacuumCoordinator(hass, entry, cloud)
-    await coordinator.async_config_entry_first_refresh()
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except Exception:
+        await _async_release_session(hass, entry, cloud)
+        raise
     entry.runtime_data = coordinator
     _migrate_to_serial(hass, entry, coordinator.serial)
 
@@ -174,10 +197,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: EzvizVacuumConfigEntry) 
             hass.config_entries.async_schedule_reload(entry.entry_id)
 
     entry.async_on_unload(coordinator.async_add_listener(_reload_when_rooms_change))
-    entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     _remove_empty_room_devices(hass, entry, coordinator.serial)
     _register_services(hass)
     return True
+
+
+def account_key(entry: ConfigEntry) -> str:
+    """Return the EZVIZ account an entry signs in with (empty if unknown)."""
+    return str(entry.data.get(CONF_USERNAME) or "").strip().casefold()
+
+
+def account_sessions(hass: HomeAssistant) -> dict[str, EzvizCloud]:
+    """Return the shared EZVIZ session of each signed-in account."""
+    return hass.data.setdefault(DOMAIN, {}).setdefault("sessions", {})
 
 
 def _store_token(
@@ -187,6 +219,39 @@ def _store_token(
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_TOKEN: token}
         )
+
+
+def _store_account_token(
+    hass: HomeAssistant, entry: ConfigEntry, token: dict[str, Any]
+) -> None:
+    """Save a renewed session for every robot of the account."""
+    account = account_key(entry)
+    for other in hass.config_entries.async_entries(DOMAIN):
+        if other.entry_id == entry.entry_id or (
+            account and account_key(other) == account
+        ):
+            _store_token(hass, other, token)
+
+
+async def _async_release_session(
+    hass: HomeAssistant, entry: ConfigEntry, cloud: EzvizCloud
+) -> None:
+    """Close the session when no other loaded robot uses it."""
+    for other in hass.config_entries.async_entries(DOMAIN):
+        if other.entry_id == entry.entry_id:
+            continue
+        runtime = getattr(other, "runtime_data", None)
+        if (
+            other.state is ConfigEntryState.LOADED
+            and isinstance(runtime, EzvizVacuumCoordinator)
+            and runtime.cloud is cloud
+        ):
+            return
+    sessions = account_sessions(hass)
+    account = account_key(entry)
+    if account and sessions.get(account) is cloud:
+        sessions.pop(account)
+    await hass.async_add_executor_job(cloud.close)
 
 
 def _migrate_to_serial(hass: HomeAssistant, entry: ConfigEntry, serial: str) -> None:
@@ -208,6 +273,22 @@ def _migrate_to_serial(hass: HomeAssistant, entry: ConfigEntry, serial: str) -> 
 
 def _coordinator(hass: HomeAssistant, call: ServiceCall) -> EzvizVacuumCoordinator:
     """Return the robot addressed by a service call (default: the first)."""
+    entity_id = call.data.get(ATTR_ENTITY_ID)
+    if entity_id:
+        registry_entry = er.async_get(hass).async_get(entity_id)
+        entry = (
+            hass.config_entries.async_get_entry(registry_entry.config_entry_id)
+            if registry_entry is not None and registry_entry.config_entry_id
+            else None
+        )
+        runtime = getattr(entry, "runtime_data", None) if entry else None
+        if (
+            entry is None
+            or entry.domain != DOMAIN
+            or not isinstance(runtime, EzvizVacuumCoordinator)
+        ):
+            raise ServiceValidationError(f"{entity_id} is not a loaded EZVIZ robot")
+        return runtime
     wanted = str(call.data.get(ATTR_SERIAL) or "").strip().upper()
     loaded = [
         entry.runtime_data
@@ -347,6 +428,63 @@ def _register_services(hass: HomeAssistant) -> None:  # noqa: C901
         )
         return _sanitize(result)
 
+    def _clean_options(call: ServiceCall) -> dict[str, Any]:
+        return {
+            "fan_mode": call.data.get("fan_mode"),
+            "water_quantity": call.data.get("water_quantity"),
+            "clean_times": call.data.get("clean_times"),
+        }
+
+    async def async_clean_zone(call: ServiceCall) -> None:
+        """Clean one or more rectangles of the map."""
+        coordinator = await _ready(_coordinator(hass, call))
+        try:
+            zones = normalize_zones(call.data["zones"])
+        except ValueError as err:
+            raise ServiceValidationError(str(err)) from err
+        await coordinator.async_clean_zones(zones, **_clean_options(call))
+
+    async def async_clean_spot(call: ServiceCall) -> None:
+        """Clean a square around one point of the map."""
+        coordinator = await _ready(_coordinator(hass, call))
+        try:
+            zone = spot_zone(
+                call.data["point_x"], call.data["point_y"], call.data["size"]
+            )
+        except ValueError as err:
+            raise ServiceValidationError(str(err)) from err
+        await coordinator.async_clean_zones([zone], **_clean_options(call))
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CLEAN_ZONE,
+        async_clean_zone,
+        schema=vol.Schema(
+            {
+                **_CLEAN_SCHEMA,
+                vol.Required("zones"): vol.All(
+                    cv.ensure_list,
+                    [vol.All(vol.ExactSequence([vol.Coerce(float)] * 4))],
+                ),
+            }
+        ),
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CLEAN_SPOT,
+        async_clean_spot,
+        schema=vol.Schema(
+            {
+                **_CLEAN_SCHEMA,
+                vol.Required("point_x"): vol.Coerce(float),
+                vol.Required("point_y"): vol.Coerce(float),
+                vol.Optional("size", default=DEFAULT_SPOT_SIZE): vol.All(
+                    vol.Coerce(float), vol.Range(min=4, max=200)
+                ),
+            }
+        ),
+    )
+
     serial_only = vol.Schema(_SERIAL_SCHEMA)
     for name, handler, response in (
         (SERVICE_INSPECT, async_inspect, SupportsResponse.ONLY),
@@ -403,7 +541,7 @@ async def async_unload_entry(
     """Unload a robot."""
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unloaded:
-        await hass.async_add_executor_job(entry.runtime_data.cloud.close)
+        await _async_release_session(hass, entry, entry.runtime_data.cloud)
     if unloaded and len(hass.config_entries.async_entries(DOMAIN)) <= 1:
         for name in (
             SERVICE_INSPECT,
@@ -412,6 +550,8 @@ async def async_unload_entry(
             SERVICE_REFRESH_CAMERA,
             SERVICE_FEATURE_REQUEST,
             SERVICE_API_REQUEST,
+            SERVICE_CLEAN_ZONE,
+            SERVICE_CLEAN_SPOT,
         ):
             hass.services.async_remove(DOMAIN, name)
     return unloaded

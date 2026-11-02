@@ -3,6 +3,14 @@
   "config": {
     "step": {
       "user": {
+        "title": "Add an EZVIZ robot",
+        "description": "Add a robot from an EZVIZ account that is already signed in, or sign in to another account.",
+        "menu_options": {
+          "known_account": "Add a robot from an account already signed in",
+          "sign_in": "Sign in to an EZVIZ account"
+        }
+      },
+      "sign_in": {
         "title": "Sign in to EZVIZ",
         "description": "Sign in with the account your robot vacuum is added to in the EZVIZ app. The password is used once to sign in and is not stored.",
         "data": {
@@ -12,6 +20,13 @@
         },
         "data_description": {
           "url": "Leave the default unless your account is on the Russian server or you were given another address; other regions are found automatically."
+        }
+      },
+      "known_account": {
+        "title": "Choose the account",
+        "description": "Add a robot from this EZVIZ account; no password is needed.",
+        "data": {
+          "account": "EZVIZ account"
         }
       },
       "sms_code": {
@@ -463,6 +478,74 @@
           "description": "Optional extra request headers."
         }
       }
+    },
+    "clean_zone": {
+      "name": "Clean zone",
+      "description": "Cleans one or more rectangles of the active map, like a zone clean in the EZVIZ app.",
+      "fields": {
+        "zones": {
+          "name": "Zones",
+          "description": "List of rectangles as [x1, y1, x2, y2] in map coordinates (see the map's calibration_points attribute)."
+        },
+        "entity_id": {
+          "name": "Robot",
+          "description": "The robot vacuum. Alternative to the serial."
+        },
+        "serial": {
+          "name": "Robot serial",
+          "description": "Serial number of the robot. Leave empty to use the first configured robot."
+        },
+        "fan_mode": {
+          "name": "Suction",
+          "description": "Leave empty to use the robot's whole-home setting."
+        },
+        "water_quantity": {
+          "name": "Water level",
+          "description": "Leave empty to use the robot's whole-home setting."
+        },
+        "clean_times": {
+          "name": "Passes",
+          "description": "Leave empty to use the robot's whole-home setting."
+        }
+      }
+    },
+    "clean_spot": {
+      "name": "Clean spot",
+      "description": "Cleans a square around one point of the active map, like a spot clean in the EZVIZ app.",
+      "fields": {
+        "point_x": {
+          "name": "X",
+          "description": "X coordinate on the map."
+        },
+        "point_y": {
+          "name": "Y",
+          "description": "Y coordinate on the map."
+        },
+        "size": {
+          "name": "Size",
+          "description": "Side of the square in map cells (about 5 cm each)."
+        },
+        "entity_id": {
+          "name": "Robot",
+          "description": "The robot vacuum. Alternative to the serial."
+        },
+        "serial": {
+          "name": "Robot serial",
+          "description": "Serial number of the robot. Leave empty to use the first configured robot."
+        },
+        "fan_mode": {
+          "name": "Suction",
+          "description": "Leave empty to use the robot's whole-home setting."
+        },
+        "water_quantity": {
+          "name": "Water level",
+          "description": "Leave empty to use the robot's whole-home setting."
+        },
+        "clean_times": {
+          "name": "Passes",
+          "description": "Leave empty to use the robot's whole-home setting."
+        }
+      }
     }
   },
   "options": {
@@ -475,6 +558,23 @@
         "data_description": {
           "room_devices": "Show each room's settings (suction, water level, passes) as a device of its own, linked to the robot, instead of on the robot's page."
         }
+      }
+    }
+  },
+  "selector": {
+    "fan_mode": {
+      "options": {
+        "quiet": "Quiet",
+        "normal": "Normal",
+        "strong": "Strong",
+        "super": "Max"
+      }
+    },
+    "water_quantity": {
+      "options": {
+        "low": "Low",
+        "middle": "Medium",
+        "high": "High"
       }
     }
   }

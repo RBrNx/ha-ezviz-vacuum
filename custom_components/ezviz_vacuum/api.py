@@ -17,6 +17,7 @@ from .const import (
     SETTING_ACTIONS,
     WRITABLE_FEATURES,
 )
+from .zones import temp_region_payload
 
 
 def language_headers(language: str | None) -> dict[str, str] | None:
@@ -285,6 +286,36 @@ class EzvizVacuumApi:
             domain="SweeperCleanTask",
             identifier="StartRegionClean",
             payload=payload,
+        )
+
+    def start_temp_region_clean(
+        self,
+        serial: str,
+        *,
+        map_id: int,
+        zones: list[tuple[int, int, int, int]],
+        fan_mode: str,
+        water_quantity: str,
+        clean_times: int,
+    ) -> dict[str, Any]:
+        """Clean rectangles drawn on the map (the app's zone and spot clean).
+
+        Corners are ``(left, top, right, bottom)`` in map grid coordinates.
+        """
+        if not zones:
+            raise ValueError("No zone given")
+        return self._iot_request(
+            serial,
+            endpoint="action",
+            domain="SweeperCleanTask",
+            identifier="StartTempRegionClean",
+            payload=temp_region_payload(
+                map_id,
+                zones,
+                fan_mode=fan_mode,
+                water_quantity=water_quantity,
+                clean_times=clean_times,
+            ),
         )
 
     def client_diagnostics(self) -> dict[str, Any]:
