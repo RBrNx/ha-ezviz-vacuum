@@ -478,6 +478,74 @@
           "description": "Optionele extra verzoekheaders."
         }
       }
+    },
+    "clean_zone": {
+      "name": "Zone reinigen",
+      "description": "Reinigt een of meer rechthoeken op de actieve kaart, zoals zonereiniging in de EZVIZ-app.",
+      "fields": {
+        "zones": {
+          "name": "Zones",
+          "description": "Lijst met rechthoeken als [x1, y1, x2, y2] in kaartcoördinaten (zie het attribuut calibration_points van de kaart)."
+        },
+        "entity_id": {
+          "name": "Robot",
+          "description": "De robotstofzuiger. Alternatief voor het serienummer."
+        },
+        "serial": {
+          "name": "Serienummer robot",
+          "description": "Serienummer van de robot. Laat leeg om de eerste robot te gebruiken."
+        },
+        "fan_mode": {
+          "name": "Zuigkracht",
+          "description": "Laat leeg om de instelling voor het hele huis te gebruiken."
+        },
+        "water_quantity": {
+          "name": "Waterniveau",
+          "description": "Laat leeg om de instelling voor het hele huis te gebruiken."
+        },
+        "clean_times": {
+          "name": "Rondes",
+          "description": "Laat leeg om de instelling voor het hele huis te gebruiken."
+        }
+      }
+    },
+    "clean_spot": {
+      "name": "Plek reinigen",
+      "description": "Reinigt een vierkant rond één punt op de actieve kaart, zoals puntreiniging in de EZVIZ-app.",
+      "fields": {
+        "point_x": {
+          "name": "X",
+          "description": "X-coördinaat op de kaart."
+        },
+        "point_y": {
+          "name": "Y",
+          "description": "Y-coördinaat op de kaart."
+        },
+        "size": {
+          "name": "Grootte",
+          "description": "Zijde van het vierkant in kaartcellen (ongeveer 5 cm per cel)."
+        },
+        "entity_id": {
+          "name": "Robot",
+          "description": "De robotstofzuiger. Alternatief voor het serienummer."
+        },
+        "serial": {
+          "name": "Serienummer robot",
+          "description": "Serienummer van de robot. Laat leeg om de eerste robot te gebruiken."
+        },
+        "fan_mode": {
+          "name": "Zuigkracht",
+          "description": "Laat leeg om de instelling voor het hele huis te gebruiken."
+        },
+        "water_quantity": {
+          "name": "Waterniveau",
+          "description": "Laat leeg om de instelling voor het hele huis te gebruiken."
+        },
+        "clean_times": {
+          "name": "Rondes",
+          "description": "Laat leeg om de instelling voor het hele huis te gebruiken."
+        }
+      }
     }
   },
   "options": {
@@ -490,6 +558,23 @@
         "data_description": {
           "room_devices": "Toon de instellingen van elke ruimte (zuigkracht, waterniveau, schoonmaakbeurten) als een eigen apparaat, gekoppeld aan de robot, in plaats van op de pagina van de robot."
         }
+      }
+    }
+  },
+  "selector": {
+    "fan_mode": {
+      "options": {
+        "quiet": "Stil",
+        "normal": "Normaal",
+        "strong": "Sterk",
+        "super": "Max"
+      }
+    },
+    "water_quantity": {
+      "options": {
+        "low": "Laag",
+        "middle": "Gemiddeld",
+        "high": "Hoog"
       }
     }
   }

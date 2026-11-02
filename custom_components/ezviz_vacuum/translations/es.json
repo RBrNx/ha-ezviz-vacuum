@@ -478,6 +478,74 @@
           "description": "Cabeceras adicionales opcionales."
         }
       }
+    },
+    "clean_zone": {
+      "name": "Clean zone",
+      "description": "Cleans one or more rectangles of the active map, like a zone clean in the EZVIZ app.",
+      "fields": {
+        "zones": {
+          "name": "Zones",
+          "description": "List of rectangles as [x1, y1, x2, y2] in map coordinates (see the map's calibration_points attribute)."
+        },
+        "entity_id": {
+          "name": "Robot",
+          "description": "The robot vacuum. Alternative to the serial."
+        },
+        "serial": {
+          "name": "Robot serial",
+          "description": "Serial number of the robot. Leave empty to use the first configured robot."
+        },
+        "fan_mode": {
+          "name": "Suction",
+          "description": "Leave empty to use the robot's whole-home setting."
+        },
+        "water_quantity": {
+          "name": "Water level",
+          "description": "Leave empty to use the robot's whole-home setting."
+        },
+        "clean_times": {
+          "name": "Passes",
+          "description": "Leave empty to use the robot's whole-home setting."
+        }
+      }
+    },
+    "clean_spot": {
+      "name": "Clean spot",
+      "description": "Cleans a square around one point of the active map, like a spot clean in the EZVIZ app.",
+      "fields": {
+        "point_x": {
+          "name": "X",
+          "description": "X coordinate on the map."
+        },
+        "point_y": {
+          "name": "Y",
+          "description": "Y coordinate on the map."
+        },
+        "size": {
+          "name": "Size",
+          "description": "Side of the square in map cells (about 5 cm each)."
+        },
+        "entity_id": {
+          "name": "Robot",
+          "description": "The robot vacuum. Alternative to the serial."
+        },
+        "serial": {
+          "name": "Robot serial",
+          "description": "Serial number of the robot. Leave empty to use the first configured robot."
+        },
+        "fan_mode": {
+          "name": "Suction",
+          "description": "Leave empty to use the robot's whole-home setting."
+        },
+        "water_quantity": {
+          "name": "Water level",
+          "description": "Leave empty to use the robot's whole-home setting."
+        },
+        "clean_times": {
+          "name": "Passes",
+          "description": "Leave empty to use the robot's whole-home setting."
+        }
+      }
     }
   },
   "options": {
@@ -490,6 +558,23 @@
         "data_description": {
           "room_devices": "Mostrar los ajustes de cada habitación (succión, nivel de agua, pasadas) como un dispositivo propio, vinculado al robot, en lugar de en la página del robot."
         }
+      }
+    }
+  },
+  "selector": {
+    "fan_mode": {
+      "options": {
+        "quiet": "Quiet",
+        "normal": "Normal",
+        "strong": "Strong",
+        "super": "Max"
+      }
+    },
+    "water_quantity": {
+      "options": {
+        "low": "Low",
+        "middle": "Medium",
+        "high": "High"
       }
     }
   }

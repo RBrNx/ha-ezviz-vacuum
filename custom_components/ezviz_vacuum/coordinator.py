@@ -38,9 +38,10 @@ from .const import (
     EVENT_MATCH_SECONDS,
     EVENT_RECENT_DAYS,
 )
-from .mapdata import build_layers, decode_room_names
+from .mapdata import Grid, build_layers, decode_room_names
 from .maprender import render_svg
-from .settings import Setting, apply_write
+from .settings import MapCleanSetting, Setting, apply_write
+from .zones import Zone
 
 
 class EzvizVacuumCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -68,6 +69,10 @@ class EzvizVacuumCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.map_image: bytes | None = None
         self.map_image_updated: datetime | None = None
         self.map_error: str | None = None
+        # The grid the map image was drawn from, for click-to-clean cards.
+        self.map_grid: Grid | None = None
+        # The last zone/spot clean sent, to copy into saved zones.
+        self.last_zones: list[Zone] = []
         self._map_cache: dict[str, tuple[int | None, dict[str, Any]]] = {}
         self._map_show_path: bool | None = None
         self._map_cache_id: int | None = None
@@ -433,6 +438,8 @@ class EzvizVacuumCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         image = await self.hass.async_add_executor_job(
             partial(render_svg, layers, names, show_path=show_path)
         )
+        if layers.grid is not None:
+            self.map_grid = layers.grid
         if image is not None and image != self.map_image:
             self.map_image = image
             self.map_image_updated = dt_util.utcnow()
@@ -545,6 +552,43 @@ class EzvizVacuumCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             map_id=map_id,
             room_ids=[int(item) for item in requested],
         )
+        await self.async_request_refresh()
+
+    async def async_clean_zones(
+        self,
+        zones: list[Zone],
+        *,
+        fan_mode: str | None = None,
+        water_quantity: str | None = None,
+        clean_times: int | None = None,
+    ) -> None:
+        """Clean rectangles on the active map (the app's zone/spot clean).
+
+        Settings that are not given follow the robot's whole-home settings.
+        """
+        if self.robot_api is None:
+            raise HomeAssistantError("The robot client is not ready yet")
+        device = self.data.get("device", {})
+        task = self.data.get("task")
+        map_id = robot.active_map_id(device, task)
+        if map_id is None:
+            raise HomeAssistantError("The robot has not reported its map yet")
+        await self._async_call(
+            self.robot_api.start_temp_region_clean,
+            self.serial,
+            map_id=map_id,
+            zones=zones,
+            fan_mode=fan_mode
+            or MapCleanSetting("fanMode").read(device, task)
+            or "normal",
+            water_quantity=water_quantity
+            or MapCleanSetting("waterQuantity").read(device, task)
+            or "middle",
+            clean_times=clean_times
+            or MapCleanSetting("cleanTimes").read(device, task)
+            or 1,
+        )
+        self.last_zones = list(zones)
         await self.async_request_refresh()
 
     async def async_camera_trace(self) -> dict[str, Any]:
