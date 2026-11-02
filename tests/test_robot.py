@@ -86,6 +86,40 @@ class MapTests(unittest.TestCase):
         self.assertEqual(robot.rooms(device, 2), [("0", "Room 0"), ("3", "Room 3")])
         self.assertEqual(robot.rooms(device, 4), [])
 
+    def test_map_rooms_name_the_device_rooms_from_the_map(self) -> None:
+        names = {0: "Laundry Room", 3: "Room 4", 6: "Kitchen"}
+        self.assertEqual(
+            robot.map_rooms(
+                self._re4_device(
+                    [{"mapID": 2, "room": [{"roomID": 0}, {"roomID": 3}]}]
+                ),
+                2,
+                names,
+            ),
+            [("0", "Laundry Room"), ("3", "Room 4")],
+        )
+
+    def test_map_rooms_fall_back_to_the_map_when_the_device_has_none(self) -> None:
+        # The RE4 can report RoomCustomCleanCfg as a bare flag.
+        names = {6: "Kitchen", 0: "Laundry Room"}
+        self.assertEqual(
+            robot.map_rooms(self._re4_device(True), 2, names),
+            [("0", "Laundry Room"), ("6", "Kitchen")],
+        )
+        self.assertEqual(robot.map_rooms(self._re4_device(True), 2, {}), [])
+
+    @staticmethod
+    def _re4_device(room_clean_cfg: object) -> dict:
+        return {
+            "FEATURE_INFO": {
+                "0": {
+                    "SweepingRobot": {
+                        "SweeperMapMgr": {"RoomCustomCleanCfg": room_clean_cfg}
+                    }
+                }
+            }
+        }
+
     def test_room_clean_configs_for_map(self) -> None:
         configs = robot.room_clean_configs(fixtures.device(), 2)
         self.assertEqual([room["roomID"] for room in configs], [8, 9])

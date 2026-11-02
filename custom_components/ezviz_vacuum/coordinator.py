@@ -426,9 +426,9 @@ class EzvizVacuumCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
         )
         names = {
-            int(room_id): self.room_names.get(int(room_id)) or name
-            for room_id, name in robot.rooms(
-                self._device, map_id, self.hass.config.language
+            int(room_id): name
+            for room_id, name in robot.map_rooms(
+                self._device, map_id, self.room_names, self.hass.config.language
             )
         }
         # Vector geometry lets a client draw a native, interactive map rather
