@@ -3,6 +3,14 @@
   "config": {
     "step": {
       "user": {
+        "title": "Añadir un robot EZVIZ",
+        "description": "Añade un robot de una cuenta EZVIZ que ya ha iniciado sesión o inicia sesión en otra cuenta.",
+        "menu_options": {
+          "known_account": "Añadir un robot de una cuenta que ya ha iniciado sesión",
+          "sign_in": "Iniciar sesión en una cuenta EZVIZ"
+        }
+      },
+      "sign_in": {
         "title": "Iniciar sesión en EZVIZ",
         "description": "Inicia sesión con la cuenta en la que el robot aspirador está añadido en la app EZVIZ. La contraseña solo se usa para iniciar sesión y no se guarda.",
         "data": {
@@ -12,6 +20,13 @@
         },
         "data_description": {
           "url": "Deja el valor predeterminado salvo que tu cuenta esté en el servidor ruso o te hayan dado otra dirección; las demás regiones se detectan automáticamente."
+        }
+      },
+      "known_account": {
+        "title": "Elige la cuenta",
+        "description": "Añade un robot de esta cuenta EZVIZ; no hace falta contraseña.",
+        "data": {
+          "account": "Cuenta EZVIZ"
         }
       },
       "sms_code": {

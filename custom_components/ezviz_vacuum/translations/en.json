@@ -3,6 +3,14 @@
   "config": {
     "step": {
       "user": {
+        "title": "Add an EZVIZ robot",
+        "description": "Add a robot from an EZVIZ account that is already signed in, or sign in to another account.",
+        "menu_options": {
+          "known_account": "Add a robot from an account already signed in",
+          "sign_in": "Sign in to an EZVIZ account"
+        }
+      },
+      "sign_in": {
         "title": "Sign in to EZVIZ",
         "description": "Sign in with the account your robot vacuum is added to in the EZVIZ app. The password is used once to sign in and is not stored.",
         "data": {
@@ -12,6 +20,13 @@
         },
         "data_description": {
           "url": "Leave the default unless your account is on the Russian server or you were given another address; other regions are found automatically."
+        }
+      },
+      "known_account": {
+        "title": "Choose the account",
+        "description": "Add a robot from this EZVIZ account; no password is needed.",
+        "data": {
+          "account": "EZVIZ account"
         }
       },
       "sms_code": {

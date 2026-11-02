@@ -3,6 +3,14 @@
   "config": {
     "step": {
       "user": {
+        "title": "Aggiungi un robot EZVIZ",
+        "description": "Aggiungi un robot da un account EZVIZ già connesso oppure accedi a un altro account.",
+        "menu_options": {
+          "known_account": "Aggiungi un robot da un account già connesso",
+          "sign_in": "Accedi a un account EZVIZ"
+        }
+      },
+      "sign_in": {
         "title": "Accedi a EZVIZ",
         "description": "Accedi con l'account a cui il robot aspirapolvere è aggiunto nell'app EZVIZ. La password serve solo per l'accesso e non viene salvata.",
         "data": {
@@ -12,6 +20,13 @@
         },
         "data_description": {
           "url": "Lascia il valore predefinito, a meno che il tuo account sia sul server russo o ti sia stato dato un altro indirizzo; le altre regioni vengono rilevate automaticamente."
+        }
+      },
+      "known_account": {
+        "title": "Scegli l'account",
+        "description": "Aggiungi un robot da questo account EZVIZ; non serve la password.",
+        "data": {
+          "account": "Account EZVIZ"
         }
       },
       "sms_code": {

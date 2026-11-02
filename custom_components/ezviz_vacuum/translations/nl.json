@@ -3,6 +3,14 @@
   "config": {
     "step": {
       "user": {
+        "title": "EZVIZ-robot toevoegen",
+        "description": "Voeg een robot toe van een EZVIZ-account waarop al is aangemeld, of meld je aan bij een ander account.",
+        "menu_options": {
+          "known_account": "Robot toevoegen van een account waarop al is aangemeld",
+          "sign_in": "Aanmelden bij een EZVIZ-account"
+        }
+      },
+      "sign_in": {
         "title": "Aanmelden bij EZVIZ",
         "description": "Meld je aan met het account waaraan je robotstofzuiger in de EZVIZ-app is toegevoegd. Het wachtwoord wordt één keer gebruikt om aan te melden en wordt niet opgeslagen.",
         "data": {
@@ -12,6 +20,13 @@
         },
         "data_description": {
           "url": "Laat de standaardwaarde staan, tenzij je account op de Russische server staat of je een ander adres hebt gekregen; andere regio's worden automatisch gevonden."
+        }
+      },
+      "known_account": {
+        "title": "Kies het account",
+        "description": "Voeg een robot toe van dit EZVIZ-account; er is geen wachtwoord nodig.",
+        "data": {
+          "account": "EZVIZ-account"
         }
       },
       "sms_code": {
