@@ -5,6 +5,9 @@
 - The integration no longer reloads every time it saves a renewed EZVIZ
   session; it reloads only when its options change. Thanks @frenck for
   spotting this in the HACS review.
+- Ready for the Home Assistant Marketplace (2026.11): the manifest declares
+  its category (Appliances & cleaning), and the README has install buttons
+  for the Marketplace, HACS and the setup.
 
 ## 1.2.0
 

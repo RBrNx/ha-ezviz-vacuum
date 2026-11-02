@@ -1,6 +1,6 @@
 # EZVIZ Robot Vacuum for Home Assistant
 
-[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories)
+[![HACS Default](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://hacs.xyz/)
 [![Version](https://img.shields.io/github/v/release/stefanelul2000/ha-ezviz-vacuum)](https://github.com/stefanelul2000/ha-ezviz-vacuum/releases)
 ![Home Assistant](https://img.shields.io/badge/Home%20Assistant-2026.7%2B-18BCF2)
 [![License](https://img.shields.io/github/license/stefanelul2000/ha-ezviz-vacuum)](https://github.com/stefanelul2000/ha-ezviz-vacuum/blob/main/LICENSE)
@@ -139,18 +139,38 @@ Cliff detection is deliberately not exposed.
 
 ## Installation
 
-### HACS
+The integration is in the default catalog of the Home Assistant Marketplace
+(called HACS before Home Assistant 2026.11).
 
-1. In HACS, open the three-dot menu and choose **Custom repositories**.
-2. Add `https://github.com/stefanelul2000/ha-ezviz-vacuum` with the type
-   **Integration**.
-3. Download **EZVIZ Robot Vacuum**, then restart Home Assistant.
-4. Go to **Settings → Devices & services → Add integration**, choose
-   **EZVIZ Robot Vacuum** and sign in with your EZVIZ email or phone number
-   and password. Keep the default server unless your account is on the
-   Russian one; other regions are found automatically. If EZVIZ sends a
-   verification code, enter it in the next step.
-5. With several robots on the account, pick one and repeat for the others.
+### Home Assistant 2026.11 or newer (Marketplace)
+
+[![Open the EZVIZ Robot Vacuum in the Home Assistant Marketplace.](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=stefanelul2000&repository=ha-ezviz-vacuum&category=integration)
+
+1. Click the button above, or go to **Settings → Marketplace** and search for
+   **EZVIZ Robot Vacuum**.
+2. Click **Download**. The setup opens by itself; no restart is needed for the
+   first install.
+
+### Home Assistant 2026.7 to 2026.10 (HACS)
+
+[![Open the EZVIZ Robot Vacuum in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=stefanelul2000&repository=ha-ezviz-vacuum&category=integration)
+
+1. Click the button above, or open **HACS** and search for
+   **EZVIZ Robot Vacuum**.
+2. Download it, then restart Home Assistant.
+
+### Setting up
+
+[![Add the EZVIZ Robot Vacuum integration to Home Assistant.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=ezviz_vacuum)
+
+1. Click the button above, or go to **Settings → Devices & services → Add
+   integration** and choose **EZVIZ Robot Vacuum**. (The button works once
+   the integration is downloaded.)
+2. Sign in with your EZVIZ email or phone number and password. Keep the
+   default server unless your account is on the Russian one; other regions
+   are found automatically. If EZVIZ sends a verification code, enter it in
+   the next step.
+3. With several robots on the account, pick one and repeat for the others.
 
 If the session ever expires, Home Assistant shows a **Re-authenticate**
 prompt; sign in again and everything is kept.
@@ -159,7 +179,7 @@ prompt; sign in again and everything is kept.
 
 Copy `custom_components/ezviz_vacuum` into the `custom_components` folder of
 your Home Assistant configuration, restart, and add the integration as in
-step 4.
+[Setting up](#setting-up).
 
 ### Upgrading from 1.0
 
