@@ -19,6 +19,8 @@
   Xiaomi Vacuum Map Card can turn a tap on the map into robot coordinates.
 - The map image's `last_zones` attribute shows the last zone or spot clean, to
   copy into saved zones.
+- Robots that report no room list (some RE4s) get their rooms, room names
+  and area mapping from the map's room layer instead (#11).
 
 ## 1.2.0
 
