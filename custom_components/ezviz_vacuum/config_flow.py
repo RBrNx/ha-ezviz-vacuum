@@ -13,6 +13,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import callback
@@ -274,8 +275,12 @@ class EzvizVacuumConfigFlow(ConfigFlow, domain=DOMAIN):
         }
 
 
-class EzvizVacuumOptionsFlow(OptionsFlow):
-    """Choose how the robot's entities are organised."""
+class EzvizVacuumOptionsFlow(OptionsFlowWithReload):
+    """Choose how the robot's entities are organised.
+
+    Home Assistant reloads the entry only when the options change, not when
+    a renewed EZVIZ session is saved to the entry's data.
+    """
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

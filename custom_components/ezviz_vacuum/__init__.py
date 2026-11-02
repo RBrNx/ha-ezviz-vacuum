@@ -105,11 +105,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Reload so the per-room entities move to or from their room devices."""
-    await hass.config_entries.async_reload(entry.entry_id)
-
-
 def _remove_empty_room_devices(
     hass: HomeAssistant, entry: ConfigEntry, serial: str
 ) -> None:
@@ -174,7 +169,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EzvizVacuumConfigEntry) 
             hass.config_entries.async_schedule_reload(entry.entry_id)
 
     entry.async_on_unload(coordinator.async_add_listener(_reload_when_rooms_change))
-    entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     _remove_empty_room_devices(hass, entry, coordinator.serial)
     _register_services(hass)
     return True

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.1
+
+- The integration no longer reloads every time it saves a renewed EZVIZ
+  session; it reloads only when its options change. Thanks @frenck for
+  spotting this in the HACS review.
+
 ## 1.2.0
 
 RE4 support and a lot of polish, found and tested on real RE4 robots by
